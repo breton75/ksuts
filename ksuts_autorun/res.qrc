@@ -1,0 +1,7 @@
+<RCC>
+    <qresource prefix="/png">
+        <file>png/view-stock-account.png</file>
+        <file>png/view-form.png</file>
+        <file>png/view-form-action.png</file>
+    </qresource>
+</RCC>

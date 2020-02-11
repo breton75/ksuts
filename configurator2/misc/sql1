@@ -1,0 +1,29 @@
+with a as (SELECT sensors.id as sensor_id,
+       sensors.designation as sensor_designation,
+       ifc_types.designation as ifc_type,
+       sensors.ifc_name as ifc_name,
+       ifc_protocols.designation as ifc_protocol,
+       sensors.data_type as data_type,
+       sensors.data_length as sensor_data_length,
+       sensors.description as sensor_description
+  FROM sensors
+  left join ifc_protocols on ifc_protocols.id = sensors.ifc_protocol
+  left join ifc_types on ifc_types.id = sensors.ifc_type
+)
+select a.sensor_id,
+       a.sensor_designation,
+       a.ifc_type,
+       a.ifc_name,
+       a.ifc_protocol,
+       a.data_type,
+       a.sensor_data_length,
+       a.sensor_description,
+       signals.id as signal_id,
+       signals.designation as signal_designation,
+       signals.data_offset as signal_data_offset,
+       signals.data_length as signal_data_length,
+       signals.description as signal_description
+  FROM signals
+  right full join a on a.sensor_id = signals.sensor_id
+  
+

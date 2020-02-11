@@ -1,0 +1,8 @@
+<RCC>
+    <qresource prefix="/">
+        <file>Network.png</file>
+        <file>Danger.ico</file>
+        <file>Close.png</file>
+        <file>Win.png</file>
+    </qresource>
+</RCC>

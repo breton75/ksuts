@@ -1,0 +1,25 @@
+<RCC>
+    <qresource prefix="/signals">
+        <file>icons/all_down.ico</file>
+        <file>icons/all_up.ico</file>
+        <file>icons/one_down.ico</file>
+        <file>icons/one_up.ico</file>
+        <file>icons/maintenance.ico</file>
+        <file>icons/015upload1_99960.ico</file>
+        <file>icons/107cpu_99914.ico</file>
+        <file>icons/146soundwaves_99890.ico</file>
+        <file>icons/ticklinear_106227.ico</file>
+        <file>icons/tick.png</file>
+        <file>icons/cloud_48122.ico</file>
+        <file>icons/health-graph-1_48043.ico</file>
+        <file>icons/server-network-1_47932.ico</file>
+        <file>icons/window-programming_47832.ico</file>
+        <file>icons/cog-box_48120.ico</file>
+        <file>icons/hammer-anvil_48050.ico</file>
+        <file>icons/1systemerroralt_103270.ico</file>
+        <file>icons/2virtualbox_103102.ico</file>
+        <file>icons/3systemconfigsamba_103331.ico</file>
+        <file>icons/4terminal_103094.ico</file>
+        <file>icons/application-default-icon_37713.ico</file>
+    </qresource>
+</RCC>

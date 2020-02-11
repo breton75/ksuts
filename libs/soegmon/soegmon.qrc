@@ -1,0 +1,7 @@
+<RCC>
+  <qresource prefix="newPrefix">
+    <file>../../../icons/Material Design Icons/ic_stop_128_28859_32.png</file>
+    <file>../../../icons/Material Design Icons/ic_play_circle_outline_128_28558_32.png</file>
+    <file>../../../icons/Material Design Icons/ic_loop_128_28425_32.png</file>
+  </qresource>
+</RCC>

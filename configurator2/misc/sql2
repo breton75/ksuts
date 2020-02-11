@@ -1,0 +1,11 @@
+SELECT sensors.id as id,
+       sensors.designation as sensor_name,
+       ifc_types.designation as ifc_type_name,
+       ifc_protocols.designation as ifc_protocol_name,
+       sensors.ifc_name as ifc_name,
+       (select case when sensors.data_type=1 then 'Analog' else 'Digital' end) as data_type,
+       sensors.data_length as data_length,
+       sensors.description as description
+  FROM sensors
+  LEFT JOIN ifc_types ON sensors.ifc_type = ifc_types.id
+  LEFT JOIN ifc_protocols ON sensors.ifc_protocol = ifc_protocols.id

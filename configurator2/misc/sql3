@@ -1,0 +1,39 @@
+with s as (
+
+    SELECT device_types.id as devtype_id,
+       device_types.designation as devtype_designation,
+       device_types.ifc_type_id as devtype_ifc_type_id,
+       ifc_types.designation as devtype_ifc_type_name,
+       
+       device_types.ifc_protocol_id as devtype_ifc_protocol_id,
+       ifc_protocols.designation as devtype_ifc_protocol_name, 
+       
+       device_types.ifc_port_name as devtype_ifc_port_name,
+       
+       (select case when device_types.data_type=1 then 'Analog' else 'Digital' end) as device_data_type, 
+       device_types.data_length as devtype_data_length,
+       device_types.driver_lib_path as devtype_driver_lib_path,
+       device_types.description as devtype_description
+  FROM device_types
+  LEFT JOIN ifc_types ON ifc_types.id = device_types.ifc_type_id
+  LEFT JOIN ifc_protocols  ON ifc_protocols.id = device_types.ifc_protocol_id
+
+)
+SELECT devices.id as device_id,
+       devices.device_name as device_name,
+       devices.device_type_id as device_type_id,
+       devices.description as device_description,
+       s.devtype_ifc_type_id as device_ifc_type_id,
+       s.devtype_ifc_type_name as device_ifc_type_name,       
+       s.devtype_ifc_protocol_id as device_ifc_protocol_id,
+       s.devtype_ifc_protocol_name as device_ifc_protocol_name, 
+
+       s.devtype_ifc_port_name as device_ifc_port_name,
+       s.device_data_type as device_data_type, 
+       s.devtype_data_length as device_data_length,
+       s.devtype_driver_lib_path as device_driver_lib_path,
+       s.devtype_description as device_type_description
+       
+  FROM devices
+  LEFT JOIN s ON s.devtype_id = devices.device_type_id
+  ORDER BY devices.device_type_id

@@ -1,0 +1,53 @@
+with
+minor1 AS (
+    SELECT id,
+            repository_name,
+            host,
+            port,
+            login,
+            pass,
+            dbname,
+            table_name
+    FROM repositories
+),
+minor2 AS (
+    SELECT id,
+            repository_name,
+            host,
+            port,
+            login,
+            pass,
+            dbname,
+            table_name
+    FROM repositories
+),
+minor3 AS (
+    SELECT id,
+            repository_name,
+            host,
+            port,
+            login,
+            pass,
+            dbname,
+            table_name
+    FROM repositories
+)
+SELECT signals.id,
+       signals.device_id,
+       signals.signal_name,
+       signals.data_offset,
+       signals.data_length,
+       signals.description,
+       signals.major_repository_id as  signal_major_repository_id,
+       signals.minor_repository1_id as signal_minor_repository1_id,
+       signals.minor_repository2_id as signal_minor_repository2_id,
+       signals.minor_repository3_id as signal_minor_repository3_id,
+       repositories.repository_name as signal_major_repository_name,
+       minor1.repository_name as signal_minor_repository1_name,
+       minor2.repository_name as signal_minor_repository2_name,
+       minor3.repository_name as signal_minor_repository3_name
+  FROM signals
+LEFT JOIN repositories ON repositories.id = signals.major_repository_id
+LEFT JOIN minor1 ON minor1.id = signals.minor_repository1_id
+LEFT JOIN minor2 ON minor2.id = signals.minor_repository2_id
+LEFT JOIN minor3 ON minor3.id = signals.minor_repository3_id

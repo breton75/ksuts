@@ -1,0 +1,10 @@
+<RCC>
+  <qresource prefix="/">
+    <file>images/pisikga_cat_animal_9421_64.png</file>
+    <file>images/Sugar_Cube_icon-icons.com_68685_64.png</file>
+    <file>images/pisikga_cat_animal_9421_128.png</file>
+    <file>images/Cat-icon_30345_64.png</file>
+    <file>images/kwin_9519_64.png</file>
+    <file>images/fsview_9629_64.png</file>
+  </qresource>
+</RCC>
