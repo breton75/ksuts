@@ -9,6 +9,7 @@
 
 #include <QtWidgets/QTabWidget>
 #include <QtWidgets/QVBoxLayout>
+#include <QtWidgets/QTextEdit>
 
 #include "../../svlib/sv_pgdb.h"
 #include "sv_abstractsystem.h"

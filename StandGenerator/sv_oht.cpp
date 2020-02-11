@@ -1,11 +1,15 @@
 #include "sv_oht.h"
 
-SvOHT::SvOHT():
+svlog::SvLog ohtlog;
+
+SvOHT::SvOHT(QTextEdit *textLog):
   SvAbstractSystem(),
   p_widget(new QWidget), 
   ui(new Ui::MainWidget)  
 {
   ui->setupUi(p_widget);
+  
+  ohtlog.assignLog(textLog);
   
   p_state.state = RunState::FINISHED;
   p_state.mode = EditMode::SAVED; 
@@ -21,11 +25,16 @@ SvOHT::SvOHT():
   for(int i = 0; i < RegimCodes.count(); ++i)
     ui->cbRegim_0x13->addItem(RegimCodes.at(i).first);
   
-  for(int i = 0; i < URSStatesCodes.count(); ++i)
+  for(int i = 0; i < URSStatesCodes.count(); ++i) {
     ui->cbURSState_0x13->addItem(URSStatesCodes.at(i).first);
+   
+    
+  }
       
   
   for(int i = 0; i < DirectionsCodes.count(); ++i) {
+    
+    ui->tabWidget_2
     
     ui->listDirections_0x13->addItem(DirectionsCodes.at(i).first);
     ui->listDirections_0x13->item(i)->setCheckState(Qt::Unchecked);
@@ -245,28 +254,29 @@ void SvOHT::on_bnEditData_clicked()
 bool SvOHT::setData()
 {
   bool result = p_edit_mutex.tryLock(3000);
-//  qDebug() << "lock" << result;
+
   if(result) {
 
     for(int i = 0; i < p_data.data_0x13.count(); ++i) {
       
       if(ui->listDirections_0x13->item(i)->checkState() == Qt::Checked) {
         
-        p_data.data_0x13[i].set(StatesCodes.at(ui->cbState_0x13->currentIndex()).second,
-                                   RegimCodes.at(ui->cbRegim_0x13->currentIndex()).second,
-                                   URSStatesCodes.at(ui->cbURSState_0x13->currentIndex()).second,
-                                   quint8(ui->checkOtklVent_0x13->isChecked() ? 0x01 : 0x00));
+        p_data.data_0x13[i].byte1.set(StatesCodes.at(ui->cbState_0x13->currentIndex()).second,
+                                      RegimCodes.at(ui->cbRegim_0x13->currentIndex()).second);
+        
+        p_data.data_0x13[i].byte2.set(URSStatesCodes.at(ui->cbURSState_0x13->currentIndex()).second,
+                                      OtklVentCodes.value(ui->checkOtklVent_0x13->isChecked()));
         
       } else {
       
-        p_data.data_0x13[i].set(0, 0, 0, 0);
+        p_data.data_0x13[i].byte1.set(0, 0);
+        p_data.data_0x13[i].byte2.set(0, 0);
       
       }
     
     
     }
     
-//    qDebug() << "unlock";
     p_edit_mutex.unlock();
     
   }
@@ -307,29 +317,21 @@ void SvOHTThread::run()
      
      if(p_mutex->tryLock(3000)) {
        
-       QByteArray b = QByteArray::fromHex(QString("01100AA00022441342"
-                                                  "010000000000"
-                                                  "020000000000"
-                                                  "030000000000"
-                                                  "040000000000"
-                                                  "050000000000"
-                                                  "060000000000"
-                                                  "070000000000"
-                                                  "080000000000"
-                                                  "090000000000"
-                                                  "0A0000000000"
-                                                  "0B0000000000"
-                                                  "0000").toUtf8());
+       QByteArray b = QByteArray::fromHex(DefByteArray_0x13.toUtf8());
        
        for(int i = 0; i < DirectionsCodes.count(); ++i) {
          
-         b[10 + i] = p_data->data_0x13.at(i).byte1.toUint8();
-//         b[9 + i] |= p_data->data_0x13.at(i).byte1.regim << 8;
-         b[11 + i] = p_data->data_0x13.at(i).byte2.toUint8();
-//         b[10 + i] |= p_data->data_0x13.at(i).byte2.otkl_vent << 7;
+         b[9 + i * 6 + 0] = p_data->data_0x13.at(i).byte0.toUint8();
+         b[9 + i * 6 + 1] = p_data->data_0x13.at(i).byte1.toUint8();
+         b[9 + i * 6 + 2] = p_data->data_0x13.at(i).byte2.toUint8();
          
        }
-       qDebug() << QString(b.toHex().toUpper());
+       
+       quint16 crc = CRC::MODBUS_CRC16((uchar*)b.data(), b.length());
+       b[b.length() - 2] = crc & 0xFF;
+       b[b.length() - 1] = crc >> 8;
+       
+       ohtlog << svlog::TimeZZZ << svlog::out << svlog::Data << QString(b.toHex().toUpper()) << svlog::endl;
        
        p_mutex->unlock();
        

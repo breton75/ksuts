@@ -12,6 +12,7 @@
 #include "type_0x13.h"
 
 #include "../../global/dev_defs.h"
+#include "../../svlib/sv_log.h"
 
 namespace Ui {
   class MainWidget;
@@ -32,12 +33,10 @@ class SvOHT : public SvAbstractSystem //, public QObject
   Q_OBJECT
   
 public:
-  SvOHT(/*const QWidget* parentWidget*/);
+  SvOHT(QTextEdit *textLog);
   ~SvOHT();
   
   QWidget* widget() const { return p_widget; }
-  
-//  SystemState state() const { return p_state; }
   
   
 private:
@@ -48,7 +47,6 @@ private:
   
   OHTData p_data;
 
-  
   void setState(RunState state);
   void setMode(EditMode mode);
   

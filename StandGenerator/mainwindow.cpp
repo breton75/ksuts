@@ -65,7 +65,10 @@ bool MainWindow::readDevices()
     
     if(code == SYSTEM_OHT) {
       
-      SvOHT* oht = new SvOHT();
+      QTextEdit* text_log = new QTextEdit(ui->tabLogs);
+      ui->tabLogs->addTab(text_log, q.value("device_name").toString());
+      
+      SvOHT* oht = new SvOHT(text_log);
       ui->tabWidget->addTab(oht->widget(), q.value("device_name").toString());
       oht->widget()->show();
       
