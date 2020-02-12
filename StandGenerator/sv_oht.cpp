@@ -1,43 +1,56 @@
 #include "sv_oht.h"
 
-svlog::SvLog ohtlog;
+//svlog::SvLog ohtlog;
 
 SvOHT::SvOHT(QTextEdit *textLog):
   SvAbstractSystem(),
-  p_widget(new QWidget), 
+  p_main_widget(new QWidget), 
   ui(new Ui::MainWidget)  
 {
-  ui->setupUi(p_widget);
+  ui->setupUi(p_main_widget);
   
   ohtlog.assignLog(textLog);
+
+  load0x13();
+  load0x19();
   
-  p_state.state = RunState::FINISHED;
-  p_state.mode = EditMode::SAVED; 
+  p_main_widget->setVisible(true);
   
-  ui->listDirections_0x13->clear();
-  ui->cbRegim_0x13->clear();
-  ui->cbState_0x13->clear();
-  ui->cbURSState_0x13->clear();  
+  setState(RunState::FINISHED);
   
-  for(int i = 0; i < StatesCodes.count(); ++i)
-    ui->cbState_0x13->addItem(StatesCodes.at(i).first);
+  connect(ui->bnStartStop, &QPushButton::pressed, this, &SvOHT::on_bnStartStop_clicked);
+  connect(ui->bnEditData, &QPushButton::clicked, this, &SvOHT::on_bnEditData_clicked);
   
-  for(int i = 0; i < RegimCodes.count(); ++i)
-    ui->cbRegim_0x13->addItem(RegimCodes.at(i).first);
-  
-  for(int i = 0; i < URSStatesCodes.count(); ++i) {
-    ui->cbURSState_0x13->addItem(URSStatesCodes.at(i).first);
-   
-    
-  }
-      
-  
+}
+
+void SvOHT::load0x13()
+{
+  p_data.data_0x13.clear();
+  p_0x13_widgets.clear();
   for(int i = 0; i < DirectionsCodes.count(); ++i) {
     
-    ui->tabWidget_2
+    T0x13Widget* ui13 = new T0x13Widget(ui->scrollArea);
+    ui13->setupUi(ui13->widget);
     
-    ui->listDirections_0x13->addItem(DirectionsCodes.at(i).first);
-    ui->listDirections_0x13->item(i)->setCheckState(Qt::Unchecked);
+    ui->vlayDirections->addWidget(ui13->widget);
+    
+    p_0x13_widgets.append(ui13);
+    
+    ui13->groupValues_0x13->setTitle(DirectionsCodes.at(i).first);
+    ui13->groupValues_0x13->setChecked(false);
+    
+    ui13->cbRegim_0x13->clear();
+    ui13->cbState_0x13->clear();
+    ui13->cbURSState_0x13->clear();  
+    
+    for(int i = 0; i < StatesCodes.count(); ++i)
+      ui13->cbState_0x13->addItem(StatesCodes.at(i).first);
+    
+    for(int i = 0; i < RegimCodes.count(); ++i)
+      ui13->cbRegim_0x13->addItem(RegimCodes.at(i).first);
+    
+    for(int i = 0; i < URSStatesCodes.count(); ++i) 
+      ui13->cbURSState_0x13->addItem(URSStatesCodes.at(i).first);
     
     p_data.data_0x13.append(Type_0x13(DirectionsCodes.at(i).second,
                                       StatesCodes.at(0).second,
@@ -46,30 +59,49 @@ SvOHT::SvOHT(QTextEdit *textLog):
                                       0));
     
   }
+}
+
+void SvOHT::load0x19()
+{
+  ui->listType0x19->clear();
   
-  p_widget->setVisible(true);
-  
-  connect(ui->bnStartStop, &QPushButton::pressed, this, &SvOHT::startStopPressed);
-  connect(ui->bnEditData, &QPushButton::clicked, this, &SvOHT::on_bnEditData_clicked);
-  
+  foreach (Type_0x19_value v19, type_0x19_values) {
+    
+    QListWidgetItem* lwi = new QListWidgetItem(QString("%1 [%2:%3]").arg(v19.name)
+                                               .arg(v19.byte).arg(v19.bit), ui->listType0x19);
+    lwi->setCheckState(Qt::Unchecked);
+    
+    lwi->setBackgroundColor(v19.byte % 2 ? QColor(200,200,200) : QColor(255, 255, 255));
+    p_0x19_items.insert(lwi, v19);
+    
+  }
 }
 
 SvOHT::~SvOHT()
 {
+  if(p_thread)
+    delete p_thread;
+  
   delete ui;
-  delete p_widget;
+  delete p_main_widget;
+  
+  foreach (T0x13Widget* w, p_0x13_widgets)
+    delete w;
   
   deleteLater();
 }
 
-void SvOHT::startStopPressed()
+
+
+void SvOHT::on_bnStartStop_clicked()
 {
   switch (p_state.state) {
     
     case RunState::RUNNING:
 
       setState(RunState::STOPPING);
-      p_thread->stop();
+      
+      threadFinished();
       
       break;
       
@@ -80,7 +112,7 @@ void SvOHT::startStopPressed()
       SerialParamsParser p(ui->editPortParams->text());
       if(!p.parse()) {
         
-        qDebug() << p.lastError();
+        ohtlog << svlog::Error << p.lastError() << svlog::endl;
         
         setState(RunState::FINISHED);
         
@@ -91,7 +123,10 @@ void SvOHT::startStopPressed()
       p_port_params = p.serialParams();
       
       p_thread = new SvOHTThread(&p_port_params, ui->spinInterval->value(), &p_edit_mutex, &p_data);
-      connect(p_thread, &SvOHTThread::finished, this, &SvOHT::threadFinished);
+//      connect(p_thread, &SvOHTThread::finished, this, &SvOHT::threadFinished);
+//      connect(p_thread, &SvAbstractSystemThread::finished, p_thread, &SvAbstractSystemThread::deleteLater);
+      connect(p_thread, &SvAbstractSystemThread::logthr, this, &SvOHT::logthr);
+      
 //      connect(p_thread, &SvOHTThread::finished, p_thread, &QThread::deleteLater);
       
       try {
@@ -102,7 +137,7 @@ void SvOHT::startStopPressed()
         
       } catch(SvException& e) {
         
-        qDebug() << e.error;
+        ohtlog << svlog::Error << e.error << svlog::endl;
         
         threadFinished();
         
@@ -137,7 +172,7 @@ void SvOHT::threadFinished()
 
 void SvOHT::setState(RunState state)
 {
-  foreach (QWidget* w, p_widget->findChildren<QWidget*>())
+  foreach (QWidget* w, p_main_widget->findChildren<QWidget*>())
     w->setEnabled(false);
 
   
@@ -151,11 +186,12 @@ void SvOHT::setState(RunState state)
     case RunState::STOPPING:
       
       p_state.state = RunState::STOPPING;
+      
       break;
       
     case RunState::RUNNING:
       
-      foreach (QWidget* w, p_widget->findChildren<QWidget*>())
+      foreach (QWidget* w, p_main_widget->findChildren<QWidget*>())
         w->setEnabled(true);
       
       ui->editPortParams->setEnabled(false);
@@ -163,21 +199,18 @@ void SvOHT::setState(RunState state)
       
       p_state.state = RunState::RUNNING;
       
-      setMode(EditMode::SAVED);
-      
       ui->bnStartStop->setText("Стоп");
       ui->bnStartStop->setStyleSheet("background-color: tomato");
-                
+      
       break;
       
       
     case RunState::FINISHED:
       
-      foreach (QWidget* w, p_widget->findChildren<QWidget*>())
+      foreach (QWidget* w, p_main_widget->findChildren<QWidget*>())
         w->setEnabled(true);
       
       p_state.state = RunState::FINISHED;
-      p_state.mode = EditMode::SAVED;
       
       ui->bnStartStop->setText("Старт");
       ui->bnStartStop->setStyleSheet("background-color: palegreen;");
@@ -187,6 +220,8 @@ void SvOHT::setState(RunState state)
     default:
       break;
   }
+  
+  setMode(EditMode::SAVED);
   
   qApp->processEvents();
   
@@ -202,7 +237,7 @@ void SvOHT::setMode(EditMode mode)
       
       ui->bnEditData->setText("Принять");
       
-      foreach (QWidget* w, ui->group0x13->findChildren<QWidget*>())
+      foreach (QWidget* w, ui->scrollArea->findChildren<QWidget*>())
         w->setEnabled(true);
       
       break;
@@ -211,8 +246,8 @@ void SvOHT::setMode(EditMode mode)
       
       ui->bnEditData->setText("Изменить");
       
-      foreach (QWidget* w, ui->group0x13->findChildren<QWidget*>())
-        w->setEnabled(false);
+      foreach (T0x13Widget* w, p_0x13_widgets) // ui->scrollAreaWidgetContents->findChildren<QWidget*>())
+        w->widget->setEnabled(p_state.state == RunState::FINISHED);
       
       break;      
       
@@ -220,7 +255,8 @@ void SvOHT::setMode(EditMode mode)
       break;
   }
   
-  ui->bnEditData->setEnabled(true);
+  ui->bnEditData->setEnabled(p_state.state == RunState::RUNNING);
+//  ui->scrollArea->setEnabled(true);
   
 }
 
@@ -259,13 +295,13 @@ bool SvOHT::setData()
 
     for(int i = 0; i < p_data.data_0x13.count(); ++i) {
       
-      if(ui->listDirections_0x13->item(i)->checkState() == Qt::Checked) {
+      if(p_0x13_widgets.at(i)->groupValues_0x13->isChecked()) {
         
-        p_data.data_0x13[i].byte1.set(StatesCodes.at(ui->cbState_0x13->currentIndex()).second,
-                                      RegimCodes.at(ui->cbRegim_0x13->currentIndex()).second);
+        p_data.data_0x13[i].byte1.set(StatesCodes.at(p_0x13_widgets.at(i)->cbState_0x13->currentIndex()).second,
+                                      RegimCodes.at(p_0x13_widgets.at(i)->cbRegim_0x13->currentIndex()).second);
         
-        p_data.data_0x13[i].byte2.set(URSStatesCodes.at(ui->cbURSState_0x13->currentIndex()).second,
-                                      OtklVentCodes.value(ui->checkOtklVent_0x13->isChecked()));
+        p_data.data_0x13[i].byte2.set(URSStatesCodes.at(p_0x13_widgets.at(i)->cbURSState_0x13->currentIndex()).second,
+                                      OtklVentCodes.value(p_0x13_widgets.at(i)->checkOtklVent_0x13->isChecked()));
         
       } else {
       
@@ -285,6 +321,12 @@ bool SvOHT::setData()
   
 }
 
+void SvOHT::logthr(const QString& str)
+{
+  ohtlog << svlog::Data << svlog::TimeZZZ << svlog::out << str << svlog::endl;
+}
+
+
 /**         SvOHTThread         **/
 SvOHTThread::SvOHTThread(SerialPortParams *params, quint64 timeout, QMutex *mutex, OHTData *data):
   p_port_params(params),
@@ -295,6 +337,17 @@ SvOHTThread::SvOHTThread(SerialPortParams *params, quint64 timeout, QMutex *mute
   p_data = data;
 }
 
+SvOHTThread::~SvOHTThread()
+{
+  stop();
+}
+
+void SvOHTThread::stop()
+{
+  is_active = false;
+  while(this->isRunning()) qApp->processEvents();
+}
+
 void SvOHTThread::open() throw(SvException&)
 {
   p_port.setPortName(p_port_params->portname);
@@ -303,10 +356,22 @@ void SvOHTThread::open() throw(SvException&)
   p_port.setFlowControl(p_port_params->flowcontrol);
   p_port.setDataBits(p_port_params->databits);
   p_port.setParity(p_port_params->parity);
-  
+    
   if(!p_port.open(QIODevice::ReadWrite))
     throw exception.assign(p_port.errorString());
-    
+  
+  // именно после open!
+  p_port.moveToThread(this);
+  
+  connect(&p_port, &QSerialPort::readyRead, this, &SvOHTThread::readyRead);
+  
+}
+
+void SvOHTThread::readyRead()
+{
+  QByteArray b = p_port.readAll();
+  
+  emit logthr(QString(b.toHex().toUpper()));
 }
 
 void SvOHTThread::run() 
@@ -325,23 +390,32 @@ void SvOHTThread::run()
          b[9 + i * 6 + 1] = p_data->data_0x13.at(i).byte1.toUint8();
          b[9 + i * 6 + 2] = p_data->data_0x13.at(i).byte2.toUint8();
          
+         if(!is_active) break;
        }
+       
+       if(!is_active) break;
        
        quint16 crc = CRC::MODBUS_CRC16((uchar*)b.data(), b.length());
        b[b.length() - 2] = crc & 0xFF;
        b[b.length() - 1] = crc >> 8;
+
+       emit logthr(QString(b.toHex().toUpper())); //, svlog::out, svlog::Data);
+//       ohtlog << svlog::TimeZZZ << svlog::out << svlog::Data << QString(b.toHex().toUpper()) << svlog::endl;
+//       ohtlog << "dsds" << svlog::endl;
        
-       ohtlog << svlog::TimeZZZ << svlog::out << svlog::Data << QString(b.toHex().toUpper()) << svlog::endl;
+       p_port.write(b);
        
        p_mutex->unlock();
        
      }
      
+     if(!is_active) break;
      
      QThread::msleep(p_timeout);
-//     qDebug() << SerialParamsParser::getSring(*p_port_params);
+
    }
    
-   emit finished();
+   p_port.close();
+   
 }
 

@@ -8,6 +8,7 @@
 #include <QMutex>
 
 #include "../../svlib/sv_exception.h"
+#include "../../svlib/sv_log.h"
 
 enum SystemType {
   UNDEFINED,
@@ -76,13 +77,14 @@ class SvAbstractSystemThread: public QThread
   
 public:
   SvAbstractSystemThread() {}
-//  virtual ~SvAbstractSystemThread() = 0;
+//  ~SvAbstractSystemThread() = 0;
 
   virtual void open() throw(SvException&) = 0;
   virtual void stop() = 0;
   
 signals:
-  void finished();
+//  void finished();
+  void logthr(const QString& str); //, svlog::MessageBuns mb, svlog::MessageTypes mt);
   
 };
 

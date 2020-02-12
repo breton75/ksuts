@@ -1,22 +1,31 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
+svlog::SvLog mainlog;
+
 MainWindow::MainWindow(QWidget *parent) :
   QMainWindow(parent),
   ui(new Ui::MainWindow)
 {
   ui->setupUi(this);
   
+  AppParams::loadLayout(this);
   
+  p_logs.clear();
+  p_systems.clear();
   
+//  QTextEdit* text_log = new QTextEdit(ui->tabLogs);
+//  ui->tabLogs->addTab(text_log, "Основной");
+  mainlog.assignLog(ui->textMainLog);
+      
   QSqlError err = SvPGDB::instance()->connectToDB("cms_db_modified", "172.16.4.11", 5432, "postgres", "postgres");
   if(err.type() != QSqlError::NoError)
   {
-     qDebug() << err.text();
+     mainlog << svlog::Error << err.text() << svlog::endl;
   }
   else
   {
-    qDebug() << "connected to db";
+    mainlog << svlog::Success << "connected to db" << svlog::endl;
     
     readDevices();
     
@@ -38,6 +47,17 @@ MainWindow::MainWindow(QWidget *parent) :
 
 MainWindow::~MainWindow()
 {
+  foreach (QTextEdit* te, p_logs)
+    delete te;
+  
+  foreach (SvAbstractSystem* sy, p_systems)
+    delete sy;  
+  
+  foreach (QDockWidget* dock, p_docks)
+    delete dock;
+  
+  AppParams::saveLayout(this);
+  
   delete ui;
 }
 
@@ -54,34 +74,47 @@ bool MainWindow::readDevices()
   
   if(serr.type() != QSqlError::NoError) {
     
-    qDebug() << serr.text();
+    mainlog << svlog::Error << serr.text() << svlog::endl;
     return false;
     
   }
+
 
   while(q.next()) {
     
     QString code = q.value("system_code").toString();
     
-    if(code == SYSTEM_OHT) {
+    if(code == SYSTEM_OXT) {
       
-      QTextEdit* text_log = new QTextEdit(ui->tabLogs);
-      ui->tabLogs->addTab(text_log, q.value("device_name").toString());
+      QDockWidget* dock = new QDockWidget(q.value("device_name").toString(), this);
+      dock->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable);
+      
+      p_docks.append(dock);
+      
+      QMainWindow::addDockWidget(Qt::BottomDockWidgetArea, dock);
+      QMainWindow::tabifyDockWidget(ui->dockMainLog, dock);
+
+      QTextEdit* text_log = new QTextEdit(dock);
+      dock->setWidget(text_log);
+//      text_log->setVisible(true);
       
       SvOHT* oht = new SvOHT(text_log);
       ui->tabWidget->addTab(oht->widget(), q.value("device_name").toString());
       oht->widget()->show();
       
+      p_logs.append(text_log);
+      p_systems.append(oht);
+      
 //      connect(oht, &SvOHT::start_stop, this, &MainWindow::startStop);
           
     }
-    else if(code == "POMP") {
+    else if(code == SYSTEM_OPA) {
       
     }
-    else if(code == "SKTV") {
+    else if(code == SYSTEM_KTV) {
       
     }
-    else if(code == "SKM") {
+    else if(code == SYSTEM_SKM) {
       
     }
     
@@ -89,6 +122,8 @@ bool MainWindow::readDevices()
     
   }
   q.finish();
+  
+  return true;
   
   
 }
