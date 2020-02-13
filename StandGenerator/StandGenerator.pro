@@ -29,8 +29,9 @@ SOURCES += \
     ../../svlib/sv_config.cpp \
     ../../svlib/sv_log.cpp \
     ../../svlib/sv_pgdb.cpp \
-    sv_oht.cpp \
-    ../../svlib/sv_settings.cpp
+    oht/sv_oht.cpp \
+    ../../svlib/sv_settings.cpp \
+    skm/sv_skm.cpp
 
 HEADERS += \
         mainwindow.h \
@@ -38,15 +39,20 @@ HEADERS += \
     ../../svlib/sv_log.h \
     ../../svlib/sv_pgdb.h \
     sv_abstractsystem.h \
-    sv_oht.h \
+    oht/sv_oht.h \
     ../global/dev_defs.h \
     ../../svlib/sv_exception.h \
-    type_0x13.h \
+    oht/type_0x13.h \
     ../../svlib/sv_settings.h \
-    type_0x19.h
+    oht/type_0x19.h \
+    oht/type_0x14.h \
+    skm/sv_skm.h \
+    skm/type_0x01.h \
+    skm/type_0x02.h
 
 FORMS += \
         mainwindow.ui \
-    oht.ui \
-    type13values.ui \
-    type19values.ui
+    oht/oht.ui \
+    oht/type13values.ui \
+    skm/skm.ui \
+    skm/type01values.ui

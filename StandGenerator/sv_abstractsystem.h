@@ -59,7 +59,7 @@ public:
   
   virtual void setMode(EditMode mode) = 0;
   
-  virtual bool setData() = 0;
+  virtual void setData() = 0;
   
 protected:
   SystemType p_type;
