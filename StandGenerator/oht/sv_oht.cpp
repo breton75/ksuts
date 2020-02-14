@@ -361,8 +361,8 @@ void SvOHT::setData()
     }
     
     quint16 crc_0x13 = CRC::MODBUS_CRC16((uchar*)p_data.data_0x13.data(), p_data.data_0x13.length());
-    p_data.data_0x13[p_data.data_0x13.length() - 2] = crc_0x13 & 0xFF;
-    p_data.data_0x13[p_data.data_0x13.length() - 1] = crc_0x13 >> 8;
+    p_data.data_0x13.append(crc_0x13 & 0xFF);
+    p_data.data_0x13.append(crc_0x13 >> 8);
     
 //    for(int i = 0; i < p_data.data_0x13.count(); ++i) {
       
@@ -395,8 +395,8 @@ void SvOHT::setData()
     }
     
     quint16 crc_0x19 = CRC::MODBUS_CRC16((uchar*)p_data.data_0x19.data(), p_data.data_0x19.length());
-    p_data.data_0x19[p_data.data_0x19.length() - 2] = crc_0x19 & 0xFF;
-    p_data.data_0x19[p_data.data_0x19.length() - 1] = crc_0x19 >> 8;
+    p_data.data_0x19.append(crc_0x19 & 0xFF);
+    p_data.data_0x19.append(crc_0x19 >> 8);
     
     
     // type 0x14
@@ -412,8 +412,8 @@ void SvOHT::setData()
     }
     
     quint16 crc_0x14 = CRC::MODBUS_CRC16((uchar*)p_data.data_0x14.data(), p_data.data_0x14.length());
-    p_data.data_0x14[p_data.data_0x14.length() - 2] = crc_0x14 & 0xFF;
-    p_data.data_0x14[p_data.data_0x14.length() - 1] = crc_0x14 >> 8;
+    p_data.data_0x14.append(crc_0x14 & 0xFF);
+    p_data.data_0x14.append(crc_0x14 >> 8);
     
     
     // send reset
@@ -518,8 +518,8 @@ void SvOHTThread::run()
          p_data->data_counter[8] = p_data->count >> 8;
          
          quint16 crc_0x05 = CRC::MODBUS_CRC16((uchar*)p_data->data_counter.data(), p_data->data_counter.length());
-         p_data->data_counter[p_data->data_counter.length() - 2] = crc_0x05 & 0xFF;
-         p_data->data_counter[p_data->data_counter.length() - 1] = crc_0x05 >> 8;
+         p_data->data_counter.append(crc_0x05 & 0xFF);
+         p_data->data_counter.append(crc_0x05 >> 8);
          
          p_data->count++;
          

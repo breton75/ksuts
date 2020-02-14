@@ -116,6 +116,25 @@ bool MainWindow::readDevices()
     }
     else if(code == SYSTEM_SKM) {
       
+      QDockWidget* dock = new QDockWidget(q.value("device_name").toString(), this);
+      dock->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable);
+      
+      p_docks.append(dock);
+      
+      QMainWindow::addDockWidget(Qt::BottomDockWidgetArea, dock);
+      QMainWindow::tabifyDockWidget(ui->dockMainLog, dock);
+
+      QTextEdit* text_log = new QTextEdit(dock);
+      dock->setWidget(text_log);
+//      text_log->setVisible(true);
+      
+      SvSKM* skm = new SvSKM(text_log);
+      ui->tabWidget->addTab(skm->widget(), q.value("device_name").toString());
+      skm->widget()->show();
+      
+      p_logs.append(text_log);
+      p_systems.append(skm);
+      
     }
     
 

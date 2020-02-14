@@ -36,7 +36,6 @@ const QString DefByteArray_duty = "01100a00000204"
                                   "dccf";
 
 const QString DefByteArray_counter = "01100a05000102"
-                                     "0000"
                                      "0000";
 
 const QString DefByteArray_reset = "01100a00000204"

@@ -182,7 +182,7 @@
       <item>
        <widget class="QTabWidget" name="tabWidget_2">
         <property name="currentIndex">
-         <number>0</number>
+         <number>1</number>
         </property>
         <widget class="QWidget" name="tab0x02">
          <attribute name="title">
@@ -239,7 +239,7 @@
                <number>2</number>
               </property>
               <item>
-               <layout class="QVBoxLayout" name="vlayDirections"/>
+               <layout class="QVBoxLayout" name="vlayCameras"/>
               </item>
              </layout>
             </widget>

@@ -30,17 +30,6 @@ public:
   QWidget* widget = nullptr;
 };
 
-const QString DefByteArray_duty = "01100a00000204"
-                                  "00010000"
-                                  "dccf";
-
-const QString DefByteArray_counter = "01100a05000102"
-                                     "0000"
-                                     "0000";
-
-const QString DefByteArray_reset = "01100a00000204"
-                                   "77000000"
-                                   "2FD3";
 
 struct SKMData {
 
@@ -117,7 +106,7 @@ private:
   
   SvException exception;
   
-  int p_delay = 20;
+  int p_delay = 200;
   
   void run() override;
 

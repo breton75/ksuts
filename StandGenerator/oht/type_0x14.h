@@ -23,8 +23,7 @@ struct Type_0x14_value {
 };
 
 const QString DefByteArray_0x14 = "01100AFA0003061404"
-                                  "00000000"
-                                  "0000";
+                                  "00000000";
 
 const QVector<Type_0x14_value> type_0x14_values = {Type_0x14_value("СДГ МГ3.1", 0, 0),
                                                    Type_0x14_value("СДГ МГ1.1", 0, 1),

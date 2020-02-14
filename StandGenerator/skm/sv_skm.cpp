@@ -39,33 +39,35 @@ void SvSKM::load0x01()
     T0x01Widget* ui01 = new T0x01Widget(ui->scrollArea);
     ui01->setupUi(ui01->widget);
     
-    ui->vlayDirections->addWidget(ui01->widget);
+    ui->vlayCameras->addWidget(ui01->widget);
     
-    T0x01Widget.append(ui01);
+    p_0x01_widgets.append(ui01);
     
-    ui01->groupValues_0x01->setTitle(VinCameraCodes.at(i).first);
-    ui01->groupValues_0x01->setChecked(false);
+    ui01->groupData_0x01->setTitle(VinCameraCodes.at(i).first);
+    ui01->groupData_0x01->setChecked(false);
     
-    ui01->cbFactor_0x01->clear();
-    
-    for(int i = 0; i < FaktorCodes.count(); ++i)
-      ui01->cbFactor_0x01->addItem(FaktorCodes.at(i).first);
+    ui01->listFaktors->clear();
+    for(int i = 0; i < FaktorCodes.count(); ++i) {
+      
+      QListWidgetItem* lwi = new QListWidgetItem(FaktorCodes.at(i).first, ui01->listFaktors);
+      lwi->setCheckState(Qt::Unchecked);
+    }
     
   }
 }
 
 void SvSKM::load0x02()
 {
-  ui->listType0x19->clear();
+  ui->listType0x02->clear();
   
-  foreach (Type_0x19_value v19, type_0x19_values) {
+  foreach (Type_0x02_value v02, type_0x02_values) {
     
-    QListWidgetItem* lwi = new QListWidgetItem(QString("%1 [%2:%3]").arg(v19.name)
-                                               .arg(v19.byte).arg(v19.bit), ui->listType0x19);
+    QListWidgetItem* lwi = new QListWidgetItem(QString("%1 [%2:%3]").arg(v02.name)
+                                               .arg(v02.byte).arg(v02.bit), ui->listType0x02);
     lwi->setCheckState(Qt::Unchecked);
     
-    lwi->setBackgroundColor(v19.byte % 2 ? QColor(230,230,230) : QColor(255, 255, 255));
-    p_0x19_items.insert(lwi, v19);
+    lwi->setBackgroundColor(v02.byte % 2 ? QColor(230,230,230) : QColor(255, 255, 255));
+    p_0x02_items.insert(lwi, v02);
     
   }
 }
@@ -297,56 +299,70 @@ void SvSKM::setData()
   if(p_edit_mutex.tryLock(3000)) {
 
     // type 0x01
-    p_data.data_0x01 = QByteArray::fromHex(DefByteArray_0x01.toUtf8());
+    QByteArray new_data = QByteArray();
     
     for(int i = 0; i < VinCameraCodes.count(); ++i) {
       
-      Type_0x01 cur_0x01 = Type_0x01(VinCameraCodes.at(i).second,
-                               FaktorCodes.at(p_0x01_widgets.at(i)->cbFactor_0x01->currentIndex()).second);
+      T0x01Widget* curw = p_0x01_widgets.at(i);
       
-      p_data.data_0x01[9 + i * 6 + 0] = cur_0x01.byte0.toUint8();
-      p_data.data_0x01[9 + i * 6 + 1] = cur_0x01.byte1.toUint8();
-      p_data.data_0x01[9 + i * 6 + 2] = cur_0x01.byte2.toUint8();
+      if(!curw->groupData_0x01->isChecked())
+        continue;
+      
+      new_data.append(VinCameraCodes.at(i).second);
+      
+      quint8 fcount = 0;
+      QByteArray faktors = QByteArray();
+      for(int j = 0; j < FaktorCodes.count(); ++j) {
+        
+        if(curw->listFaktors->item(j)->checkState() != Qt::Checked)
+          continue;
+        
+        fcount++;
+        faktors.append(FaktorCodes.at(i).second);
+        
+      }
+      
+      new_data.append(fcount).append(faktors);
       
     }
     
     quint16 crc_0x01 = CRC::MODBUS_CRC16((uchar*)p_data.data_0x01.data(), p_data.data_0x01.length());
-    p_data.data_0x01[p_data.data_0x01.length() - 2] = crc_0x01 & 0xFF;
-    p_data.data_0x01[p_data.data_0x01.length() - 1] = crc_0x01 >> 8;
+    new_data.append(crc_0x01 & 0xFF).append(crc_0x01 >> 8);
     
-//    for(int i = 0; i < p_data.data_0x13.count(); ++i) {
+    int i = 0;
+    while (i < new_data.length()) {
       
-//      if(p_0x13_widgets.at(i)->groupValues_0x13->isChecked()) {
+      if((new_data.at(i) == 0x1F) || (new_data.at(i) == 0x2F)) {
         
-//        p_data.data_0x13[i].byte1.set(StatesCodes.at(p_0x13_widgets.at(i)->cbState_0x13->currentIndex()).second,
-//                                      RegimCodes.at(p_0x13_widgets.at(i)->cbRegim_0x13->currentIndex()).second);
+        new_data.insert(i, new_data.at(i) == 0x1F ? 0x1F : 0x2F);
+        i++;
         
-//        p_data.data_0x13[i].byte2.set(URSStatesCodes.at(p_0x13_widgets.at(i)->cbURSState_0x13->currentIndex()).second,
-//                                      OtklVentCodes.value(p_0x13_widgets.at(i)->checkOtklVent_0x13->isChecked()));
-        
-//      } else {
+      }
       
-//        p_data.data_0x13[i].byte1.set(0, 0);
-//        p_data.data_0x13[i].byte2.set(0, 0);
-      
-//      }
-//    }
+      i++;
+        
+    }
+    
+    p_data.data_0x01 = QByteArray::fromHex(DefByteArray_0x01.toUtf8());
+    p_data.data_0x01.append(new_data);
+    p_data.data_0x01.append(0x2F).append(0x55);
+    
     
     // type 0x02
     p_data.data_0x02 = QByteArray::fromHex(QString(DefByteArray_0x02).toUtf8());
+    
     foreach (QListWidgetItem* wi, p_0x02_items.keys()) {
      
       if(wi->checkState() == Qt::Checked) {
         
         Type_0x02_value cur_0x02 = p_0x02_items.value(wi);
-        p_data.data_0x02[9 + cur_0x02.byte] = p_data.data_0x02.at(9 + cur_0x02.byte) | quint8(1 << cur_0x02.bit);
+        p_data.data_0x02[5 + cur_0x02.byte] = p_data.data_0x02.at(5 + cur_0x02.byte) | quint8(1 << cur_0x02.bit);
         
       }
     }
     
     quint16 crc_0x02 = CRC::MODBUS_CRC16((uchar*)p_data.data_0x02.data(), p_data.data_0x02.length());
-    p_data.data_0x02[p_data.data_0x02.length() - 2] = crc_0x02 & 0xFF;
-    p_data.data_0x02[p_data.data_0x02.length() - 1] = crc_0x02 >> 8;
+    p_data.data_0x02.append(crc_0x02 & 0xFF).append(crc_0x02 >> 8);
     
     
     p_edit_mutex.unlock();

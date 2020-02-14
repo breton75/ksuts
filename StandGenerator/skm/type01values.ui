@@ -6,12 +6,12 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>560</width>
-    <height>73</height>
+    <width>602</width>
+    <height>124</height>
    </rect>
   </property>
   <property name="sizePolicy">
-   <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+   <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
     <horstretch>0</horstretch>
     <verstretch>0</verstretch>
    </sizepolicy>
@@ -19,9 +19,9 @@
   <property name="windowTitle">
    <string>Form</string>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout">
+  <layout class="QVBoxLayout" name="verticalLayout_2">
    <item>
-    <widget class="QGroupBox" name="groupValues_0x01">
+    <widget class="QGroupBox" name="groupData_0x01">
      <property name="font">
       <font>
        <weight>75</weight>
@@ -37,109 +37,67 @@
      <property name="checked">
       <bool>true</bool>
      </property>
-     <layout class="QVBoxLayout" name="verticalLayout_2">
+     <layout class="QVBoxLayout" name="verticalLayout">
       <item>
-       <layout class="QHBoxLayout" name="horizontalLayout_3">
+       <widget class="QListWidget" name="listFaktors">
+        <property name="flow">
+         <enum>QListView::LeftToRight</enum>
+        </property>
+        <property name="isWrapping" stdset="0">
+         <bool>true</bool>
+        </property>
+        <property name="wordWrap">
+         <bool>true</bool>
+        </property>
         <item>
-         <widget class="QLabel" name="label_3">
-          <property name="minimumSize">
-           <size>
-            <width>100</width>
-            <height>0</height>
-           </size>
-          </property>
-          <property name="maximumSize">
-           <size>
-            <width>80</width>
-            <height>16777215</height>
-           </size>
-          </property>
-          <property name="font">
-           <font>
-            <weight>50</weight>
-            <bold>false</bold>
-           </font>
-          </property>
-          <property name="text">
-           <string>Фактор сработки</string>
-          </property>
-          <property name="alignment">
-           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-          </property>
-         </widget>
+         <property name="text">
+          <string>Новый элемент</string>
+         </property>
+         <property name="checkState">
+          <enum>PartiallyChecked</enum>
+         </property>
         </item>
         <item>
-         <widget class="QComboBox" name="cbFactor_0x01">
-          <property name="font">
-           <font>
-            <weight>50</weight>
-            <bold>false</bold>
-           </font>
-          </property>
-          <property name="sizeAdjustPolicy">
-           <enum>QComboBox::AdjustToContents</enum>
-          </property>
-          <item>
-           <property name="text">
-            <string>0x00 – Норма (после сброса)</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>0x07 – ПУСК (идет отсчет времени)</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>0x08 – ОТМЕНА (отсчет времени приостановлен)</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>0x09 – Открытие УРС (УР)</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>0x0A – УРС не открылся</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>0x0B – УРС открылся</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>0x0C – ПУСК ПП (выдача пусковых импульсов на ЗПУ)</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>0x0D – Не сработали СДГ</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>0x0E – ПУСК ПРОШЕЛ</string>
-           </property>
-          </item>
-         </widget>
+         <property name="text">
+          <string>Новый элемент</string>
+         </property>
+         <property name="checkState">
+          <enum>PartiallyChecked</enum>
+         </property>
         </item>
         <item>
-         <spacer name="horizontalSpacer">
-          <property name="orientation">
-           <enum>Qt::Horizontal</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>40</width>
-            <height>20</height>
-           </size>
-          </property>
-         </spacer>
+         <property name="text">
+          <string>Новый элемент</string>
+         </property>
+         <property name="checkState">
+          <enum>PartiallyChecked</enum>
+         </property>
         </item>
-       </layout>
+        <item>
+         <property name="text">
+          <string>Новый элемент</string>
+         </property>
+         <property name="checkState">
+          <enum>PartiallyChecked</enum>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Новый элемент</string>
+         </property>
+         <property name="checkState">
+          <enum>PartiallyChecked</enum>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Новый элемент</string>
+         </property>
+         <property name="checkState">
+          <enum>PartiallyChecked</enum>
+         </property>
+        </item>
+       </widget>
       </item>
      </layout>
     </widget>
