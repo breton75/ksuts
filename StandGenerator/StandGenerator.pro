@@ -31,7 +31,8 @@ SOURCES += \
     ../../svlib/sv_pgdb.cpp \
     oht/sv_oht.cpp \
     ../../svlib/sv_settings.cpp \
-    skm/sv_skm.cpp
+    skm/sv_skm.cpp \
+    opa/sv_opa.cpp
 
 HEADERS += \
         mainwindow.h \
@@ -48,11 +49,19 @@ HEADERS += \
     oht/type_0x14.h \
     skm/sv_skm.h \
     skm/type_0x01.h \
-    skm/type_0x02.h
+    skm/type_0x02.h \
+    opa/sv_opa.h \
+    opa/opa_type_0x02.h \
+    opa/opa_type_0x03.h \
+    opa/opa_type_0x04.h \
+    opa/opa_type_0x19.h \
+    ../ksuts_devices/opa/opa_defs.h
 
 FORMS += \
         mainwindow.ui \
     oht/oht.ui \
     oht/type13values.ui \
     skm/skm.ui \
-    skm/type01values.ui
+    skm/type01values.ui \
+    opa/opa.ui \
+    opa/opa_type03values.ui

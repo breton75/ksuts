@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>OPA_Type0x03Widget</class>
+ <widget class="QWidget" name="OPA_Type0x03Widget">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>560</width>
+    <height>73</height>
+   </rect>
+  </property>
+  <property name="sizePolicy">
+   <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+    <horstretch>0</horstretch>
+    <verstretch>0</verstretch>
+   </sizepolicy>
+  </property>
+  <property name="windowTitle">
+   <string>Form</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <widget class="QGroupBox" name="groupValues_0x13">
+     <property name="font">
+      <font>
+       <weight>75</weight>
+       <bold>true</bold>
+      </font>
+     </property>
+     <property name="title">
+      <string>Активировать</string>
+     </property>
+     <property name="checkable">
+      <bool>true</bool>
+     </property>
+     <property name="checked">
+      <bool>true</bool>
+     </property>
+     <layout class="QVBoxLayout" name="verticalLayout_2">
+      <item>
+       <layout class="QHBoxLayout" name="horizontalLayout_3">
+        <item>
+         <widget class="QLabel" name="label_3">
+          <property name="minimumSize">
+           <size>
+            <width>150</width>
+            <height>0</height>
+           </size>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>150</width>
+            <height>16777215</height>
+           </size>
+          </property>
+          <property name="font">
+           <font>
+            <weight>50</weight>
+            <bold>false</bold>
+           </font>
+          </property>
+          <property name="text">
+           <string>Уровень пож. опасности</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QComboBox" name="cbState_0x03">
+          <property name="font">
+           <font>
+            <weight>50</weight>
+            <bold>false</bold>
+           </font>
+          </property>
+          <property name="sizeAdjustPolicy">
+           <enum>QComboBox::AdjustToContents</enum>
+          </property>
+          <item>
+           <property name="text">
+            <string>0x00 – Норма (после сброса)</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>0x07 – ПУСК (идет отсчет времени)</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>0x08 – ОТМЕНА (отсчет времени приостановлен)</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>0x09 – Открытие УРС (УР)</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>0x0A – УРС не открылся</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>0x0B – УРС открылся</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>0x0C – ПУСК ПП (выдача пусковых импульсов на ЗПУ)</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>0x0D – Не сработали СДГ</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>0x0E – ПУСК ПРОШЕЛ</string>
+           </property>
+          </item>
+         </widget>
+        </item>
+        <item>
+         <spacer name="horizontalSpacer">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+       </layout>
+      </item>
+     </layout>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

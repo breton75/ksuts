@@ -1,0 +1,84 @@
+#ifndef OPA_TYPE_0X19_H
+#define OPA_TYPE_0X19_H
+
+#include <qglobal.h>
+#include <QMap>
+#include <QVector>
+#include <QPair>
+
+struct OPA_Type_0x19_value {
+  
+  QString name;
+  quint8 byte;
+  quint8 bit;
+
+  OPA_Type_0x19_value() { }
+  OPA_Type_0x19_value(QString name, quint8 byte, quint8 bit)
+  {
+    this->name = name;
+    this->byte = byte;
+    this->bit = bit;
+  }
+  
+};
+
+const QString OPA_DefByteArray_0x19 = "01100a06000810190e"
+                                  "0000000000000000000000000000";
+
+const QVector<OPA_Type_0x19_value> OPA_type_0x19_values = {OPA_Type_0x19_value("Обобщенный признак любой неисправности", 0, 0),
+                                                   OPA_Type_0x19_value("Обобщенный признак неисправности цепей питания", 0, 1),
+                                                   OPA_Type_0x19_value("Обобщенный признак неисправности шлейфов (Обрыв/КЗ)", 0, 2),
+                                                   OPA_Type_0x19_value("Обобщенный признак неисправности извещателей (включая МАК)", 0, 3),
+                                                   OPA_Type_0x19_value("Обобщенный признак неисправности модулей (Нет питания/Нет связи)", 0, 4),
+                                                   OPA_Type_0x19_value("Обобщенный признак неисправности ОСЗ (Обрыв/КЗ)", 0, 5),
+                                                   OPA_Type_0x19_value("Обобщенный признак неисправности пусковых цепей (Обрыв)", 0, 6),
+                                                   OPA_Type_0x19_value("Обобщенный признак неисправности СДГ/УР (Обрыв)", 0, 7),
+                                                   
+                                                   OPA_Type_0x19_value("СДГ МГ3.1", 1, 0),
+                                                   OPA_Type_0x19_value("СДГ МГ1.1", 1, 1),
+                                                   OPA_Type_0x19_value("СДГ УР1.4", 1, 2), 
+                                                   OPA_Type_0x19_value("СДГ УР1.5", 1, 3), 
+                                                   OPA_Type_0x19_value("СДГ МГ1.2", 1, 4),
+                                                   OPA_Type_0x19_value("СДГ УР1.2", 1, 5), 
+                                                   OPA_Type_0x19_value("СДГ МГ1.3", 1, 6),
+                                                   OPA_Type_0x19_value("СДГ УР1.1", 1, 7),
+                                                   
+                                                   OPA_Type_0x19_value("СДГ УР1.3", 2, 0),
+                                                   OPA_Type_0x19_value("СДГ МГ2.1", 2, 1),
+                                                   OPA_Type_0x19_value("СДГ УР2.4", 2, 2), 
+                                                   OPA_Type_0x19_value("СДГ УР2.5", 2, 3), 
+                                                   OPA_Type_0x19_value("СДГ МГ2.2", 2, 4),
+                                                   OPA_Type_0x19_value("СДГ УР2.2", 2, 5), 
+                                                   OPA_Type_0x19_value("СДГ МГ2.3", 2, 6),
+                                                   OPA_Type_0x19_value("СДГ УР2.1", 2, 7),
+                                                   
+                                                   OPA_Type_0x19_value("СДГ УР2.3", 3, 0),
+                                                   
+                                                   OPA_Type_0x19_value("ПУО-2 ПУ40-УР1.1 МО",  4, 0),
+                                                   OPA_Type_0x19_value("ПУО-2 ПУ40-УР1.2 ДГО", 4, 1),
+                                                   OPA_Type_0x19_value("ПУО-2 ПУ40-УР1.3 ОВМ", 4, 2),
+                                                   OPA_Type_0x19_value("ПУО-2 ПУ40-УР1.4ГРЩ1", 4, 3),
+                                                   OPA_Type_0x19_value("ПУО-2 ПУ40-УР1.5ГРЩ2", 4, 4),
+                                                   OPA_Type_0x19_value("ПТ-12МР ПУ40-ЗПУ1.2",  4, 5),
+                                                   OPA_Type_0x19_value("ПТ-12МР ПУ40-ЗПУ1.1",  4, 6),
+                                                   OPA_Type_0x19_value("ПТ-12МР ПУ40-ЗПУ1.3",  4, 7),
+                                                   
+                                                   OPA_Type_0x19_value("ПУО-2 ПУ40-УР2.1 МО",  5, 0),
+                                                   OPA_Type_0x19_value("ПУО-2 ПУ40-УР2.2 ДГО", 5, 1),
+                                                   OPA_Type_0x19_value("ПУО-2 ПУ40-УР2.3 ОВМ", 5, 2),
+                                                   OPA_Type_0x19_value("ПУО-2 ПУ40-УР2.4ГРЩ1", 5, 3),
+                                                   OPA_Type_0x19_value("ПУО-2 ПУ40-УР2.5ГРЩ2", 5, 4),
+                                                   OPA_Type_0x19_value("ПТ-12МР ПУ40-ЗПУ2.2",  5, 5),
+                                                   OPA_Type_0x19_value("ПТ-12МР ПУ40-ЗПУ2.1",  5, 6),
+                                                   OPA_Type_0x19_value("ПТ-12МР ПУ40-ЗПУ2.3",  5, 7),
+                                                   
+                                                   OPA_Type_0x19_value("УТЕЧКА ПУ40-БПК2", 6, 0),
+                                                   OPA_Type_0x19_value("НЕИСПР.ПУ40-БПК2", 6, 1),
+                                                   OPA_Type_0x19_value("УТЕЧКА ПУ40-БПК3", 6, 2),
+                                                   OPA_Type_0x19_value("НЕИСПР.ПУ40-БПК3", 6, 3),
+                                                   OPA_Type_0x19_value("УТЕЧКА ПУ40-БПК1", 6, 4),
+                                                   OPA_Type_0x19_value("НЕИСПР.ПУ40-БПК1", 6, 5)};
+                                                   
+
+
+#endif // OPA_TYPE_0X19_H
