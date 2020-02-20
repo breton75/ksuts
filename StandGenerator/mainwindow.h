@@ -17,6 +17,7 @@
 #include "sv_abstractsystem.h"
 #include "oht/sv_oht.h"
 #include "skm/sv_skm.h"
+#include "opa/sv_opa.h"
 
 
 
@@ -37,6 +38,8 @@ public:
   explicit MainWindow(QWidget *parent = 0);
   ~MainWindow();
   
+  bool readDevices();
+  
 private:
   Ui::MainWindow *ui;
 //  QMap<QString, AbstractSystemThread*> p_threads;
@@ -47,7 +50,6 @@ private:
   
   bool constructUI();
   
-  bool readDevices();
   
 private slots:
   void startStop(SvAbstractSystem* system);

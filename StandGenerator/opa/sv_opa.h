@@ -6,6 +6,9 @@
 #include <QDateTime>
 #include <QSerialPort>
 #include <QVector>
+#include <QTableWidget>
+#include <QTableWidgetItem>
+#include <QCommandLineParser>
 
 #include "sv_abstractsystem.h"
 #include "opa_type_0x03.h"
@@ -14,7 +17,7 @@
 #include "opa_type_0x02.h"
 
 #include "ui_opa.h"
-#include "ui_opa_type13values.h"
+#include "ui_opa_type03values.h"
 
 #include "../../global/dev_defs.h"
 #include "../../svlib/sv_log.h"
@@ -33,27 +36,29 @@ namespace Ui {
 //  QWidget* widget = nullptr;
 //}; 
 
-class T0x03Widget: public Ui::OPA_Type0x03Widget
-{
-public:
-  T0x03Widget(QWidget* parent): Ui::OPA_Type0x03Widget(), widget(new QWidget(parent)) {  }
-  QWidget* widget = nullptr;
-};
+//class T0x03Widget: public Ui::OPA_Type0x03Widget
+//{
+//public:
+//  T0x03Widget(QWidget* parent): Ui::OPA_Type0x03Widget(), widget(new QWidget(parent)) {  }
+//  QWidget* widget = nullptr;
+//};
 
-const QString DefByteArray_duty = "01100a00000204"
+const QString OPA_DefByteArray_duty = "01100a00000204"
                                   "00010000"
                                   "dccf";
 
-const QString DefByteArray_counter = "01100a05000102"
+const QString OPA_DefByteArray_counter = "01100a05000102"
                                      "0000";
 
-const QString DefByteArray_reset = "01100a00000204"
+const QString OPA_DefByteArray_reset = "01100a00000204"
                                    "77000000"
                                    "2FD3";
 
 struct OPAData {
 
-  QByteArray data_0x02;
+  QMap<quint16, QPair<quint16, quint8>> data_0x02;
+//  QByteArray data_0x02;
+  
   QByteArray data_0x03;
   QByteArray data_0x04;
   QByteArray data_0x19;
@@ -67,12 +72,20 @@ struct OPAData {
   
 };
 
+struct OPA_DeviceParams
+{
+  OPA_DeviceParams() {}
+  
+  quint16 RegisterAddress;
+  
+};
+
 class SvOPA : public SvAbstractSystem //, public QObject
 {
   Q_OBJECT
   
 public:
-  SvOPA(QTextEdit *textLog);
+  SvOPA(QTextEdit *textLog, const QString& device_params);
   ~SvOPA();
   
   QWidget* widget() const { return p_main_widget; }
@@ -82,24 +95,33 @@ private:
   QWidget* p_main_widget;
   Ui::OPA_MainWidget* ui;
   
-  QVector<T0x03Widget*> p_0x02_widgets;
+//  QVector<T0x03Widget*> p_0x03_widgets;
+//  OPA_Type_0x02_WidgetItems p_0x02_widget_items;
+  QMap<quint16, OPA_Type_0x02*> p_0x02_items;
   QMap<QListWidgetItem*, OPA_Type_0x19_value> p_0x19_items;
   QMap<QListWidgetItem*, OPA_Type_0x04_value> p_0x04_items;
   
   SerialPortParams p_port_params;
+  OPA_DeviceParams p_device_params;
   
   OPAData p_data;
   
-  svlog::SvLog ohtlog;
+  svlog::SvLog opalog;
+  
+  SvException p_except;
   
   void setState(RunState state);
   void setMode(EditMode mode);
   
   void setData();
   
+  void load0x02();
   void load0x03();
   void load0x19();
   void load0x04();
+  
+  bool parseDeviceParams(const QString &params);
+  
   
 public slots:
   void logthr(const QString& str); //, svlog::MessageBuns mb, svlog::MessageTypes mt);
@@ -112,6 +134,7 @@ private slots:
   void on_bnStartStop_clicked();
   
   void on_bnSendReset_clicked();
+  void tableItemChanged(QTableWidgetItem*item);
   
 signals:
   void start_stop(SvAbstractSystem*);
@@ -124,7 +147,7 @@ class SvOPAThread: public SvAbstractSystemThread
   Q_OBJECT
   
 public:
-  SvOPAThread(SerialPortParams *params, quint64 timeout, QMutex *mutex, OPAData *data);
+  SvOPAThread(SerialPortParams *serial_params, OPA_DeviceParams* device_params, quint64 timeout, QMutex *mutex, OPAData *data);
   ~SvOPAThread();
   
   void open() throw(SvException&) override;
@@ -134,6 +157,7 @@ private:
   QSerialPort p_port;
   
   SerialPortParams* p_port_params;
+  OPA_DeviceParams* p_device_params;
   
   quint64 p_timeout;
   quint64 p_last_epoch;

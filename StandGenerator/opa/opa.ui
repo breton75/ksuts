@@ -67,6 +67,33 @@
        </layout>
       </item>
       <item>
+       <layout class="QHBoxLayout" name="horizontalLayout_3">
+        <item>
+         <widget class="QLabel" name="label_3">
+          <property name="minimumSize">
+           <size>
+            <width>120</width>
+            <height>0</height>
+           </size>
+          </property>
+          <property name="text">
+           <string>Праметры устройства</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLineEdit" name="editDeviceParams">
+          <property name="text">
+           <string>-register=0400</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item>
        <layout class="QHBoxLayout" name="horizontalLayout_2">
         <item>
          <widget class="QLabel" name="label_2">
@@ -229,7 +256,7 @@
                <x>0</x>
                <y>0</y>
                <width>863</width>
-               <height>355</height>
+               <height>472</height>
               </rect>
              </property>
              <layout class="QVBoxLayout" name="verticalLayout_8">
@@ -282,263 +309,178 @@
          </attribute>
          <layout class="QVBoxLayout" name="verticalLayout_7">
           <item>
-           <widget class="QScrollArea" name="scrollArea_0x02">
-            <property name="widgetResizable">
+           <widget class="QTableWidget" name="table0x02">
+            <property name="editTriggers">
+             <set>QAbstractItemView::NoEditTriggers</set>
+            </property>
+            <property name="alternatingRowColors">
              <bool>true</bool>
             </property>
-            <widget class="QWidget" name="scrollAreaWidgetContents_2">
-             <property name="geometry">
-              <rect>
-               <x>0</x>
-               <y>0</y>
-               <width>863</width>
-               <height>500</height>
-              </rect>
+            <property name="selectionMode">
+             <enum>QAbstractItemView::SingleSelection</enum>
+            </property>
+            <property name="gridStyle">
+             <enum>Qt::SolidLine</enum>
+            </property>
+            <property name="sortingEnabled">
+             <bool>true</bool>
+            </property>
+            <attribute name="horizontalHeaderShowSortIndicator" stdset="0">
+             <bool>true</bool>
+            </attribute>
+            <attribute name="verticalHeaderVisible">
+             <bool>false</bool>
+            </attribute>
+            <attribute name="verticalHeaderShowSortIndicator" stdset="0">
+             <bool>true</bool>
+            </attribute>
+            <row>
+             <property name="text">
+              <string>Новая строка</string>
              </property>
-             <layout class="QVBoxLayout" name="verticalLayout_11">
-              <item>
-               <widget class="QSplitter" name="splitter">
-                <property name="orientation">
-                 <enum>Qt::Vertical</enum>
-                </property>
-                <widget class="QTabWidget" name="tabCurrent">
-                 <property name="font">
-                  <font>
-                   <weight>75</weight>
-                   <bold>true</bold>
-                  </font>
-                 </property>
-                 <property name="tabPosition">
-                  <enum>QTabWidget::North</enum>
-                 </property>
-                 <property name="currentIndex">
-                  <number>0</number>
-                 </property>
-                 <widget class="QWidget" name="tab_3">
-                  <attribute name="title">
-                   <string>Сигналы к отправке</string>
-                  </attribute>
-                  <layout class="QVBoxLayout" name="verticalLayout_9">
-                   <property name="spacing">
-                    <number>2</number>
-                   </property>
-                   <property name="leftMargin">
-                    <number>2</number>
-                   </property>
-                   <property name="topMargin">
-                    <number>2</number>
-                   </property>
-                   <property name="rightMargin">
-                    <number>2</number>
-                   </property>
-                   <property name="bottomMargin">
-                    <number>2</number>
-                   </property>
-                   <item>
-                    <widget class="QTableView" name="tableCurrent">
-                     <property name="selectionBehavior">
-                      <enum>QAbstractItemView::SelectRows</enum>
-                     </property>
-                     <property name="sortingEnabled">
-                      <bool>true</bool>
-                     </property>
-                    </widget>
-                   </item>
-                  </layout>
-                 </widget>
-                </widget>
-                <widget class="QFrame" name="frameButtons">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                 <property name="minimumSize">
-                  <size>
-                   <width>0</width>
-                   <height>32</height>
-                  </size>
-                 </property>
-                 <property name="maximumSize">
-                  <size>
-                   <width>16777215</width>
-                   <height>32</height>
-                  </size>
-                 </property>
-                 <property name="frameShape">
-                  <enum>QFrame::StyledPanel</enum>
-                 </property>
-                 <property name="frameShadow">
-                  <enum>QFrame::Raised</enum>
-                 </property>
-                 <layout class="QHBoxLayout" name="horizontalLayout_3">
-                  <property name="leftMargin">
-                   <number>0</number>
-                  </property>
-                  <property name="topMargin">
-                   <number>0</number>
-                  </property>
-                  <property name="rightMargin">
-                   <number>0</number>
-                  </property>
-                  <property name="bottomMargin">
-                   <number>0</number>
-                  </property>
-                  <item>
-                   <widget class="QPushButton" name="bnRemoveAll">
-                    <property name="text">
-                     <string/>
-                    </property>
-                    <property name="icon">
-                     <iconset resource="../../configurator2/res.qrc">
-                      <normaloff>:/signals/icons/one_down.ico</normaloff>:/signals/icons/one_down.ico</iconset>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QPushButton" name="bnRemoveSelected">
-                    <property name="text">
-                     <string/>
-                    </property>
-                    <property name="icon">
-                     <iconset resource="../../configurator2/res.qrc">
-                      <normaloff>:/signals/icons/all_down.ico</normaloff>:/signals/icons/all_down.ico</iconset>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <spacer name="horizontalSpacer_2">
-                    <property name="orientation">
-                     <enum>Qt::Horizontal</enum>
-                    </property>
-                    <property name="sizeType">
-                     <enum>QSizePolicy::MinimumExpanding</enum>
-                    </property>
-                    <property name="sizeHint" stdset="0">
-                     <size>
-                      <width>40</width>
-                      <height>20</height>
-                     </size>
-                    </property>
-                   </spacer>
-                  </item>
-                  <item>
-                   <widget class="QLabel" name="label_3">
-                    <property name="enabled">
-                     <bool>false</bool>
-                    </property>
-                    <property name="text">
-                     <string>Поиск</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QLineEdit" name="editSearch">
-                    <property name="enabled">
-                     <bool>false</bool>
-                    </property>
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                      <horstretch>0</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <spacer name="horizontalSpacer_5">
-                    <property name="orientation">
-                     <enum>Qt::Horizontal</enum>
-                    </property>
-                    <property name="sizeType">
-                     <enum>QSizePolicy::MinimumExpanding</enum>
-                    </property>
-                    <property name="sizeHint" stdset="0">
-                     <size>
-                      <width>40</width>
-                      <height>20</height>
-                     </size>
-                    </property>
-                   </spacer>
-                  </item>
-                  <item>
-                   <widget class="QPushButton" name="bnAddSelected">
-                    <property name="text">
-                     <string/>
-                    </property>
-                    <property name="icon">
-                     <iconset resource="../../configurator2/res.qrc">
-                      <normaloff>:/signals/icons/all_up.ico</normaloff>:/signals/icons/all_up.ico</iconset>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QPushButton" name="bnAddAll">
-                    <property name="text">
-                     <string/>
-                    </property>
-                    <property name="icon">
-                     <iconset resource="../../configurator2/res.qrc">
-                      <normaloff>:/signals/icons/one_up.ico</normaloff>:/signals/icons/one_up.ico</iconset>
-                    </property>
-                   </widget>
-                  </item>
-                 </layout>
-                </widget>
-                <widget class="QTabWidget" name="tabAvailable">
-                 <property name="font">
-                  <font>
-                   <weight>75</weight>
-                   <bold>true</bold>
-                  </font>
-                 </property>
-                 <property name="tabPosition">
-                  <enum>QTabWidget::South</enum>
-                 </property>
-                 <property name="currentIndex">
-                  <number>0</number>
-                 </property>
-                 <widget class="QWidget" name="tab">
-                  <attribute name="title">
-                   <string>Доступные сигналы</string>
-                  </attribute>
-                  <layout class="QVBoxLayout" name="verticalLayout_10">
-                   <property name="spacing">
-                    <number>2</number>
-                   </property>
-                   <property name="leftMargin">
-                    <number>2</number>
-                   </property>
-                   <property name="topMargin">
-                    <number>2</number>
-                   </property>
-                   <property name="rightMargin">
-                    <number>2</number>
-                   </property>
-                   <property name="bottomMargin">
-                    <number>2</number>
-                   </property>
-                   <item>
-                    <widget class="QTableView" name="tableAvailable">
-                     <property name="editTriggers">
-                      <set>QAbstractItemView::NoEditTriggers</set>
-                     </property>
-                     <property name="selectionBehavior">
-                      <enum>QAbstractItemView::SelectRows</enum>
-                     </property>
-                     <property name="sortingEnabled">
-                      <bool>true</bool>
-                     </property>
-                    </widget>
-                   </item>
-                  </layout>
-                 </widget>
-                </widget>
-               </widget>
-              </item>
-             </layout>
-            </widget>
+            </row>
+            <row>
+             <property name="text">
+              <string>Новая строка</string>
+             </property>
+            </row>
+            <row>
+             <property name="text">
+              <string>Новая строка</string>
+             </property>
+            </row>
+            <column>
+             <property name="text">
+              <string>Индекс</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>Сигнал</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>Датчик</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>Тип</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>Помещение</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>Описание</string>
+             </property>
+            </column>
+            <item row="0" column="0">
+             <property name="text">
+              <string>763</string>
+             </property>
+            </item>
+            <item row="0" column="1">
+             <property name="text">
+              <string>BI82_12SS1_DTV7_dT</string>
+             </property>
+             <property name="checkState">
+              <enum>Unchecked</enum>
+             </property>
+            </item>
+            <item row="0" column="2">
+             <property name="text">
+              <string>12СС1-ДТВ7</string>
+             </property>
+            </item>
+            <item row="0" column="3">
+             <property name="text">
+              <string>Дифф. температуры</string>
+             </property>
+            </item>
+            <item row="0" column="4">
+             <property name="text">
+              <string>Подбашенное отд.</string>
+             </property>
+            </item>
+            <item row="0" column="5">
+             <property name="text">
+              <string>Сработка 12СС1-ДТВ7 изменение температуры в  Подбашенном отд. 10 гр.Ц. в мин.</string>
+             </property>
+            </item>
+            <item row="1" column="0">
+             <property name="text">
+              <string>785</string>
+             </property>
+            </item>
+            <item row="1" column="1">
+             <property name="text">
+              <string>BI82_12SS1_RV6</string>
+             </property>
+             <property name="checkState">
+              <enum>Unchecked</enum>
+             </property>
+             <property name="flags">
+              <set>ItemIsSelectable|ItemIsUserCheckable|ItemIsEnabled</set>
+             </property>
+            </item>
+            <item row="1" column="2">
+             <property name="text">
+              <string>12СС1-РВ6</string>
+             </property>
+            </item>
+            <item row="1" column="3">
+             <property name="text">
+              <string>Ручной извещатель</string>
+             </property>
+            </item>
+            <item row="1" column="4">
+             <property name="text">
+              <string>Помещение изд.9К38</string>
+             </property>
+            </item>
+            <item row="1" column="5">
+             <property name="text">
+              <string>Сработка 12СС1-РВ6 в Помещение изд. 9К38</string>
+             </property>
+            </item>
+            <item row="2" column="0">
+             <property name="text">
+              <string>2636</string>
+             </property>
+            </item>
+            <item row="2" column="1">
+             <property name="text">
+              <string>BI27_7SS1_DK11_T_1</string>
+             </property>
+             <property name="checkState">
+              <enum>Unchecked</enum>
+             </property>
+            </item>
+            <item row="2" column="2">
+             <property name="text">
+              <string>7СС1-ДК11</string>
+             </property>
+            </item>
+            <item row="2" column="3">
+             <property name="text">
+              <string>Температура</string>
+             </property>
+            </item>
+            <item row="2" column="4">
+             <property name="text">
+              <string>Пом.насос стан кран</string>
+             </property>
+            </item>
+            <item row="2" column="5">
+             <property name="text">
+              <string>Сработка 7СС1-ДК11 температура в Пом. насос стан кран. 1-ый порог.</string>
+             </property>
+            </item>
            </widget>
           </item>
          </layout>
@@ -550,8 +492,6 @@
    </item>
   </layout>
  </widget>
- <resources>
-  <include location="../../configurator2/res.qrc"/>
- </resources>
+ <resources/>
  <connections/>
 </ui>
