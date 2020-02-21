@@ -15,6 +15,7 @@
 #include "opa_type_0x19.h"
 #include "opa_type_0x04.h"
 #include "opa_type_0x02.h"
+#include "alert_level_dialog.h"
 
 #include "ui_opa.h"
 #include "ui_opa_type03values.h"
@@ -22,6 +23,7 @@
 #include "../../global/dev_defs.h"
 #include "../../svlib/sv_log.h"
 #include "../../svlib/sv_settings.h"
+
 
 namespace Ui {
   class OPA_MainWidget;
@@ -43,23 +45,13 @@ namespace Ui {
 //  QWidget* widget = nullptr;
 //};
 
-const QString OPA_DefByteArray_duty = "01100a00000204"
-                                  "00010000"
-                                  "dccf";
-
-const QString OPA_DefByteArray_counter = "01100a05000102"
-                                     "0000";
-
-const QString OPA_DefByteArray_reset = "01100a00000204"
-                                   "77000000"
-                                   "2FD3";
-
 struct OPAData {
 
   QMap<quint16, QPair<quint16, quint8>> data_0x02;
 //  QByteArray data_0x02;
   
-  QByteArray data_0x03;
+  QMap<quint16, QPair<quint16, quint8>> data_0x03;
+//  QByteArray data_0x03;
   QByteArray data_0x04;
   QByteArray data_0x19;
   
@@ -98,8 +90,9 @@ private:
 //  QVector<T0x03Widget*> p_0x03_widgets;
 //  OPA_Type_0x02_WidgetItems p_0x02_widget_items;
   QMap<quint16, OPA_Type_0x02*> p_0x02_items;
+  QMap<quint16, OPA_Type_0x03*> p_0x03_items;
   QMap<QListWidgetItem*, OPA_Type_0x19_value> p_0x19_items;
-  QMap<QListWidgetItem*, OPA_Type_0x04_value> p_0x04_items;
+  QMap<quint16, OPA_Type_0x04_value> p_0x04_items;
   
   SerialPortParams p_port_params;
   OPA_DeviceParams p_device_params;
@@ -134,7 +127,10 @@ private slots:
   void on_bnStartStop_clicked();
   
   void on_bnSendReset_clicked();
-  void tableItemChanged(QTableWidgetItem*item);
+  void table0x02ItemChanged(QTableWidgetItem*item);
+  void table0x03ItemChanged(QTableWidgetItem*item);
+  
+  void on_table0x02_doubleClicked(const QModelIndex &index);
   
 signals:
   void start_stop(SvAbstractSystem*);

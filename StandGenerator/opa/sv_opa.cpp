@@ -1,5 +1,6 @@
 #include "sv_opa.h"
 
+extern AlertLevelDialog* ALERT_LEVEL_DLG;
 //svlog::SvLog ohtlog;
 
 SvOPA::SvOPA(QTextEdit *textLog, const QString &device_params):
@@ -21,7 +22,7 @@ SvOPA::SvOPA(QTextEdit *textLog, const QString &device_params):
   opalog.assignLog(textLog);
 
   load0x02();
-//  load0x03();
+  load0x03();
 //  load0x19();
 //  load0x04();
   
@@ -29,7 +30,7 @@ SvOPA::SvOPA(QTextEdit *textLog, const QString &device_params):
   p_data.data_duty = QByteArray::fromHex(QString(OPA_DefByteArray_duty).toUtf8());
   p_data.data_reset = QByteArray::fromHex(QString(OPA_DefByteArray_reset).toUtf8());
   
-  setData();
+//  setData();
   setState(RunState::FINISHED);
   
   p_main_widget->setVisible(true);
@@ -37,6 +38,54 @@ SvOPA::SvOPA(QTextEdit *textLog, const QString &device_params):
   connect(ui->bnStartStop, &QPushButton::pressed, this, &SvOPA::on_bnStartStop_clicked);
   connect(ui->bnEditData, &QPushButton::clicked, this, &SvOPA::on_bnEditData_clicked);
   connect(ui->bnSendReset, &QPushButton::clicked, this, &SvOPA::on_bnSendReset_clicked);
+  
+}
+
+void SvOPA::table0x02ItemChanged(QTableWidgetItem* item)
+{
+//  qDebug() << item->column() << (item->checkState() == Qt::Checked ? true : false);
+  if(item->column() > 0) return;
+  
+  // для сортировки
+  item->setData(Qt::DisplayRole, item->checkState() == Qt::Checked ? true : false);
+}
+
+void SvOPA::table0x03ItemChanged(QTableWidgetItem* item)
+{
+//  qDebug() << item->column() << (item->checkState() == Qt::Checked ? true : false);
+  if(item->column() > 0) return;
+  
+  if((item->checkState() == Qt::Checked) && item->data(Qt::DisplayRole).toBool() || 
+     (item->checkState() == Qt::Unchecked) && !item->data(Qt::DisplayRole).toBool())
+    return;
+  
+  // для сортировки
+  item->setData(Qt::DisplayRole, item->checkState() == Qt::Checked ? true : false);
+  
+  // задаем значение уровня пожарной опасности
+  if(item->checkState() == Qt::Checked) {
+    
+    ALERT_LEVEL_DLG = new AlertLevelDialog(item->tableWidget());
+    
+    if(ALERT_LEVEL_DLG->exec() == QDialog::Accepted) {
+      
+      quint16 signal_index = item->data(Qt::UserRole).toUInt();
+      p_0x03_items.value(signal_index)->alert_level = ALERT_LEVEL_DLG->selected_alert_level;
+      
+      p_0x03_items.value(signal_index)->item_alert_level->setText(
+            QString("0x%1").arg(QString::number(ALERT_LEVEL_DLG->selected_alert_level, 16).toUpper())
+            );
+      
+    }
+    else {
+      
+      item->setCheckState(Qt::Unchecked);
+      
+    }
+    
+    delete ALERT_LEVEL_DLG;
+    
+  }
   
 }
 
@@ -54,21 +103,22 @@ void SvOPA::load0x02()
   
   try {
     
-    if(SvPGDB::instance()->execSQL(OPA_select_signals, &q).type() != QSqlError::NoError)
+    if(SvPGDB::instance()->execSQL(OPA_select_signals_0x02, &q).type() != QSqlError::NoError)
       p_except.raise(SvPGDB::instance()->lastError().text());
 
     int row = 0;
     while (q.next()) {
       
+      // для корректной сортировки в таблице
+      QTableWidgetItem* sindx = new QTableWidgetItem("");
+      sindx->setData(Qt::DisplayRole, q.value("signal_index").toInt());
+      
       OPA_Type_0x02* t0x02 = new OPA_Type_0x02(new QTableWidgetItem(""),
-                                               new QTableWidgetItem(q.value("signal_index").toString()),
+                                               sindx,
                                                new QTableWidgetItem(q.value("signal_name").toString()),
-                                               new QTableWidgetItem(q.value("sensor_number").toString()),
                                                new QTableWidgetItem(q.value("sensor_name").toString()),
-                                               new QTableWidgetItem(q.value("alert_type_index").toString()),
                                                new QTableWidgetItem(q.value("alert_type_name").toString()),
                                                new QTableWidgetItem(q.value("placement_name").toString()),
-                                               new QTableWidgetItem(q.value("signal_marker").toString()),
                                                new QTableWidgetItem(q.value("signal_description").toString()));
       
       // привязываем итемы к виджету
@@ -89,8 +139,9 @@ void SvOPA::load0x02()
     }
       
     ui->table0x02->resizeColumnsToContents();
+    ui->table0x02->setSelectionBehavior(QAbstractItemView::SelectRows);
     
-    connect(ui->table0x02, &QTableWidget::itemChanged, this, &SvOPA::tableItemChanged);
+    connect(ui->table0x02, &QTableWidget::itemChanged, this, &SvOPA::table0x02ItemChanged);
 
   }
   
@@ -103,34 +154,70 @@ void SvOPA::load0x02()
   }
 }
 
-void SvOPA::tableItemChanged(QTableWidgetItem* item)
-{
-  qDebug() << item->column() << (item->checkState() == Qt::Checked ? true : false);
-}
-
 void SvOPA::load0x03()
 {
-//  p_data.data_0x03.clear();
-//  p_0x03_widgets.clear();
-//  for(int i = 0; i < OPA_DirectionsCodes.count(); ++i) {
+  p_data.data_0x03.clear();
+  p_0x03_items.clear();
+  
+  for(int i = 0; i < ui->table0x03->rowCount(); ++i)
+    ui->table0x03->removeRow(0);
+  
+  QSqlQuery q(SvPGDB::instance()->db);
+  
+  ui->table0x03->setColumnCount(5);
+  
+  try {
     
-//    T0x03Widget* ui03 = new T0x03Widget(ui->scrollArea_0x03);
-//    ui03->setupUi(ui03->widget);
+    if(SvPGDB::instance()->execSQL(OPA_select_signals_0x03, &q).type() != QSqlError::NoError)
+      p_except.raise(SvPGDB::instance()->lastError().text());
+    int row = 0;
+    while (q.next()) {
+      
+      // чтобы назначать уровень пож. опасности
+      QTableWidgetItem* chbx = new QTableWidgetItem("");
+//      chbx->setData(Qt::UserRole, q.value("signal_index").toUInt());
+      
+      // для корректной сортировки в таблице
+      QTableWidgetItem* sindx = new QTableWidgetItem("");
+      sindx->setData(Qt::DisplayRole, q.value("signal_index").toUInt());
+      
+      OPA_Type_0x03* t0x03 = new OPA_Type_0x03(chbx,
+                                               new QTableWidgetItem(""),
+                                               sindx,
+                                               new QTableWidgetItem(q.value("signal_name").toString()),
+                                               new QTableWidgetItem(q.value("signal_description").toString()));
+      
+      // привязываем итемы к виджету
+      ui->table0x03->setRowCount(++row);
+      
+      for(int col = 0; col < t0x03->items.count(); ++col) {
+        ui->table0x03->setItem(row - 1, col, t0x03->items.at(col));
+        
+      }
+      
+      // формируем данные для обработки
+      t0x03->signal_index = q.value("signal_index").toUInt();
+      t0x03->room_number = q.value("signal_marker").toUInt();
+      t0x03->alert_level = 0;
+      
+      p_0x03_items.insert(t0x03->signal_index, t0x03);
+      
+    }
+      
+    ui->table0x03->resizeColumnsToContents();
+    ui->table0x03->setSelectionBehavior(QAbstractItemView::SelectRows);
     
-//    ui->vlayDirections->addWidget(ui03->widget);
+    connect(ui->table0x03, &QTableWidget::itemChanged, this, &SvOPA::table0x03ItemChanged);
+
+  }
+  
+  catch(SvException& e) {
     
-//    p_0x03_widgets.append(ui03);
+    opalog << svlog::Critical << e.error << svlog::endl;
     
-//    ui03->groupValues_0x13->setTitle(DirectionsCodes.at(i).first);
-//    ui03->groupValues_0x13->setChecked(false);
+    q.finish();
     
-//    ui03->cbState_0x03->clear();
-    
-//    for(int i = 0; i < OPA_StatesCodes.count(); ++i)
-//      ui03->cbState_0x03->addItem(OPA_StatesCodes.at(i).first);
-    
-   
-//  }
+  }
 }
 
 void SvOPA::load0x19()
@@ -211,7 +298,7 @@ void SvOPA::on_bnStartStop_clicked()
       
       p_port_params = p.serialParams();
       
-      if(parseDeviceParams(ui->editDeviceParams->text())) {
+      if(!parseDeviceParams(ui->editDeviceParams->text())) {
         
         opalog << svlog::Critical << "Ошибка при парсинге параметров устройства" << svlog::endl;
         
@@ -336,9 +423,17 @@ void SvOPA::setMode(EditMode mode)
       
       ui->bnEditData->setText("Принять");
       
+      // 0x02
+      foreach(OPA_Type_0x02* item_0x02, p_0x02_items.values())
+        foreach (QTableWidgetItem* item, item_0x02->items)
+          item->setFlags(item->flags() | Qt::ItemIsEnabled );
+       
+//        item_0x02->item_check_box->setFlags(Qt::ItemIsUserCheckable | Qt::ItemIsEnabled | Qt::ItemIsSelectable);
+      
       // 0x03
-      foreach (QWidget* w, ui->scrollArea_0x03->findChildren<QWidget*>())
-        w->setEnabled(true);
+      foreach(OPA_Type_0x03* item_0x03, p_0x03_items.values())
+        foreach (QTableWidgetItem* item, item_0x03->items)
+          item->setFlags(item->flags() | Qt::ItemIsEnabled );
       
       // 0x19
       for (int i = 0; i < ui->listType0x19->count(); ++i)
@@ -354,9 +449,21 @@ void SvOPA::setMode(EditMode mode)
       
       ui->bnEditData->setText("Изменить");
       
+      // 0x02
+      foreach(OPA_Type_0x02* item_0x02, p_0x02_items.values()) 
+        foreach (QTableWidgetItem* item, item_0x02->items)
+          item->setFlags(p_state.state == RunState::FINISHED ? item->flags() | Qt::ItemIsEnabled :
+                                                               item->flags() & (Qt::ItemIsUserCheckable | Qt::ItemIsSelectable));
+      
       // 0x03
-//      foreach (T0x03Widget* w, p_0x03_widgets) // ui->scrollAreaWidgetContents->findChildren<QWidget*>())
-//        w->widget->setEnabled(p_state.state == RunState::FINISHED);
+      foreach(OPA_Type_0x03* item_0x03, p_0x03_items.values()) 
+        foreach (QTableWidgetItem* item, item_0x03->items)
+          item->setFlags(p_state.state == RunState::FINISHED ? item->flags() | Qt::ItemIsEnabled :
+                                                               item->flags() & (Qt::ItemIsUserCheckable | Qt::ItemIsSelectable));
+      
+//        item_0x02->item_check_box->setFlags(p_state.state == RunState::FINISHED ? 
+//                                                Qt::ItemIsUserCheckable | Qt::ItemIsEnabled | Qt::ItemIsSelectable :
+//                                                Qt::NoItemFlags);
       
       // 0x19
       for (int i = 0; i < ui->listType0x19->count(); ++i)
@@ -412,16 +519,17 @@ void SvOPA::setData()
 {
   if(p_edit_mutex.tryLock(3000)) {
 
-    // type 0x02
+    /** type 0x02 **/
 //    p_data.data_0x02_map.clear();  здесь не очищаем!!
     
     foreach (quint16 signal_index, p_0x02_items.keys()) {
       
       // 1ый вариант: поставили галочку, а в списке на отправку сигнала нет
-      if((p_0x02_items.value(signal_index)->item_signal_index->checkState() == Qt::Checked) && 
+      Qt::CheckState state = p_0x02_items.value(signal_index)->item_check_box->checkState();
+      
+      if((state == Qt::Checked) && 
           !p_data.data_0x02.contains(signal_index))
       {
-        
         p_data.data_0x02.insert(signal_index,
                                 qMakePair<quint16, quint8>(
                                   p_0x02_items.value(signal_index)->sensor_number,
@@ -430,7 +538,7 @@ void SvOPA::setData()
       }
       
       // 2ой вариант: галочка снята, а в списке на отправку сигнал есть
-      else if((p_0x02_items.value(signal_index)->item_signal_index->checkState() == Qt::Unchecked) && 
+      else if((p_0x02_items.value(signal_index)->item_check_box->checkState() == Qt::Unchecked) && 
               p_data.data_0x02.contains(signal_index))
       {
         // отправляем по этому сигналу сброс
@@ -442,44 +550,40 @@ void SvOPA::setData()
     }
 
     
-    // type 0x03
-    p_data.data_0x03 = QByteArray::fromHex(OPA_DefByteArray_0x03.toUtf8());
-    
-    for(int i = 0; i < OPA_DirectionsCodes.count(); ++i) {
-      
-//      OPA_Type_0x03 cur_0x03 = OPA_Type_0x03(OPA_DirectionsCodes.at(i).second,
-//                               OPA_StatesCodes.at(p_0x03_widgets.at(i)->cbState_0x03->currentIndex()).second,
-//                               0,0,0);
-      
-//      p_data.data_0x03[9 + i * 6 + 0] = cur_0x03.byte0.toUint8();
-//      p_data.data_0x03[9 + i * 6 + 1] = cur_0x03.byte1.toUint8();
-//      p_data.data_0x03[9 + i * 6 + 2] = cur_0x03.byte2.toUint8();
-      
+    /** type 0x03  **/
+    {
+      foreach (quint16 signal_index, p_0x03_items.keys()) {
+
+        // 1ый вариант: поставили галочку, а в списке на отправку сигнала нет
+        Qt::CheckState state = p_0x03_items.value(signal_index)->item_check_box->checkState();
+        
+        if((state == Qt::Checked) && 
+           !p_data.data_0x03.contains(signal_index))
+        {
+          p_data.data_0x03.insert(signal_index,
+                                  qMakePair<quint16, quint8>(
+                                    p_0x03_items.value(signal_index)->room_number,
+                                    p_0x03_items.value(signal_index)->alert_level));
+          
+        }
+        
+        // 2ой вариант: галочка снята, а в списке на отправку сигнал есть
+        else if((state == Qt::Unchecked) && 
+                p_data.data_0x03.contains(signal_index))
+        {
+          // удаляем сигнал из списка на отправку
+          p_data.data_0x03.remove(signal_index);
+          
+          // отправляем по этому сигналу сброс
+          //p_data.data_0x02[signal_index].second = 0x00;
+        }
+        
+        // в прочих случаях ничего не делаем
+//        qDebug() << "end";
+      }
     }
     
-    quint16 crc_0x03 = CRC::MODBUS_CRC16((uchar*)p_data.data_0x03.data(), p_data.data_0x03.length());
-    p_data.data_0x03.append(crc_0x03 & 0xFF);
-    p_data.data_0x03.append(crc_0x03 >> 8);
-    
-//    for(int i = 0; i < p_data.data_0x03.count(); ++i) {
-      
-//      if(p_0x03_widgets.at(i)->groupValues_0x13->isChecked()) {
-        
-//        p_data.data_0x03[i].byte1.set(StatesCodes.at(p_0x03_widgets.at(i)->cbState_0x13->currentIndex()).second,
-//                                      RegimCodes.at(p_0x03_widgets.at(i)->cbRegim_0x13->currentIndex()).second);
-        
-//        p_data.data_0x03[i].byte2.set(URSStatesCodes.at(p_0x03_widgets.at(i)->cbURSState_0x13->currentIndex()).second,
-//                                      OtklVentCodes.value(p_0x03_widgets.at(i)->checkOtklVent_0x13->isChecked()));
-        
-//      } else {
-      
-//        p_data.data_0x03[i].byte1.set(0, 0);
-//        p_data.data_0x03[i].byte2.set(0, 0);
-      
-//      }
-//    }
-    
-    // type 0x19
+    /** type 0x19  **/
     p_data.data_0x19 = QByteArray::fromHex(QString(OPA_DefByteArray_0x19).toUtf8());
     foreach (QListWidgetItem* wi, p_0x19_items.keys()) {
      
@@ -497,20 +601,20 @@ void SvOPA::setData()
     
     
     // type 0x14
-    p_data.data_0x04 = QByteArray::fromHex(QString(OPA_DefByteArray_0x04).toUtf8());
-    foreach (QListWidgetItem* wi, p_0x04_items.keys()) {
+//    p_data.data_0x04 = QByteArray::fromHex(QString(OPA_DefByteArray_0x04).toUtf8());
+//    foreach (QListWidgetItem* wi, p_0x04_items.keys()) {
      
-      if(wi->checkState() == Qt::Checked) {
+//      if(wi->checkState() == Qt::Checked) {
         
-        OPA_Type_0x04_value cur_0x14 = p_0x04_items.value(wi);
-        p_data.data_0x04[9 + cur_0x14.byte] = p_data.data_0x04.at(9 + cur_0x14.byte) | quint8(1 << cur_0x14.bit);
+//        OPA_Type_0x04_value cur_0x14 = p_0x04_items.value(wi);
+//        p_data.data_0x04[9 + cur_0x14.byte] = p_data.data_0x04.at(9 + cur_0x14.byte) | quint8(1 << cur_0x14.bit);
         
-      }
-    }
+//      }
+//    }
     
-    quint16 crc_0x04 = CRC::MODBUS_CRC16((uchar*)p_data.data_0x04.data(), p_data.data_0x04.length());
-    p_data.data_0x04.append(crc_0x04 & 0xFF);
-    p_data.data_0x04.append(crc_0x04 >> 8);
+//    quint16 crc_0x04 = CRC::MODBUS_CRC16((uchar*)p_data.data_0x04.data(), p_data.data_0x04.length());
+//    p_data.data_0x04.append(crc_0x04 & 0xFF);
+//    p_data.data_0x04.append(crc_0x04 >> 8);
     
     
     // send reset
@@ -546,15 +650,16 @@ bool SvOPA::parseDeviceParams(const QString& params)
   parser.addOption(QCommandLineOption("register", "register", "register", "0000"));
   
   
-  quint32 d;
-  bool ok;
-  
   try {
     
-    if(!parser.parse(params_list)) p_except.raise(QString("Wrong params: %1").arg(params));      
-
+    if(!parser.parse(params_list))
+      p_except.raise(QString("Wrong params: %1").arg(params)); 
+    
+    bool ok = false;
     p_device_params.RegisterAddress = parser.value("register").toUInt(&ok, 16); 
-    if(!ok) p_except.raise(QString("Wrong params: %1").arg(params));
+    
+    if(!ok)
+      p_except.raise(QString("Неверное число в параметрах: %1").arg(params));
     
     return true;
       
@@ -567,6 +672,15 @@ bool SvOPA::parseDeviceParams(const QString& params)
   }
 }
 
+void SvOPA::on_table0x02_doubleClicked(const QModelIndex &index)
+{
+  if(p_state.state == RunState::FINISHED || 
+     (p_state.state == RunState::RUNNING && p_state.mode == EditMode::EDITING)) {
+    
+//    index.
+    
+  }
+}
 
 
 /**         SvOPAThread         **/
@@ -578,6 +692,7 @@ SvOPAThread::SvOPAThread(SerialPortParams *serial_params, OPA_DeviceParams *devi
 {
   p_mutex = mutex;
   p_data = data;
+//  qDebug() << p_device_params->RegisterAddress;
 }
 
 SvOPAThread::~SvOPAThread()
@@ -625,14 +740,15 @@ void SvOPAThread::run()
      
      if(p_mutex->tryLock(3000)) {
        
+       /** 0x77 **/
        if(p_data->send_reset) {
          
-         p_data->data_reset[2] = (p_device_params->RegisterAddress + 0x0000) & 0xFF;
-         p_data->data_reset[3] = (p_device_params->RegisterAddress + 0x0000) >> 8;
+         p_data->data_reset[2] = (p_device_params->RegisterAddress + 0x0000) >> 8;
+         p_data->data_reset[3] = (p_device_params->RegisterAddress + 0x0000) & 0xFF;
          
          quint16 crc_0x77 = CRC::MODBUS_CRC16((uchar*)p_data->data_reset.data(), p_data->data_reset.length());
-         p_data->data_reset[p_data->data_reset.length() - 2] = crc_0x77 & 0xFF;
-         p_data->data_reset[p_data->data_reset.length() - 1] = crc_0x77 >> 8;
+         p_data->data_reset.append(crc_0x77 & 0xFF);
+         p_data->data_reset.append(crc_0x77 >> 8);
          
          emit logthr(QString(p_data->data_reset.toHex().toUpper()));
          
@@ -643,77 +759,125 @@ void SvOPAThread::run()
        }
        else {
        
-         // 0x00 duty
-         p_data->data_duty[2] = (p_device_params->RegisterAddress + 0x0000) & 0xFF;
-         p_data->data_duty[3] = (p_device_params->RegisterAddress + 0x0000) >> 8;
-         
-         quint16 crc_0x00 = CRC::MODBUS_CRC16((uchar*)p_data->data_duty.data(), p_data->data_duty.length());
-         p_data->data_duty[p_data->data_duty.length() - 2] = crc_0x00 & 0xFF;
-         p_data->data_duty[p_data->data_duty.length() - 1] = crc_0x00 >> 8;
-         
-         emit logthr(QString(p_data->data_duty.toHex().toUpper()));
-         p_port.write(p_data->data_duty);
-         QThread::msleep(p_delay);     // небольшая задержка между пакетами  
-         
-         // 0x05 counter
-         p_data->data_counter[2] = (p_device_params->RegisterAddress + 0x0005) & 0xFF;
-         p_data->data_counter[3] = (p_device_params->RegisterAddress + 0x0005) >> 8;
-         
-         p_data->data_counter[7] = p_data->count & 0xFF;
-         p_data->data_counter[8] = p_data->count >> 8;
-         
-         quint16 crc_0x05 = CRC::MODBUS_CRC16((uchar*)p_data->data_counter.data(), p_data->data_counter.length());
-         p_data->data_counter.append(crc_0x05 & 0xFF);
-         p_data->data_counter.append(crc_0x05 >> 8);
-         
-         p_data->count++;
-         
-         emit logthr(QString(p_data->data_counter.toHex().toUpper()));
-         p_port.write(p_data->data_counter);
-         QThread::msleep(p_delay);   // небольшая задержка между пакетами  
-         
-         // 0x02
-         QByteArray b0x02 = QByteArray::fromHex(QString(OPA_DefByteArray_0x02).toUtf8());
-         b0x02[2] = (p_device_params->RegisterAddress + 0x0010) & 0xFF;
-         b0x02[3] = (p_device_params->RegisterAddress + 0x0010) >> 8;
-         
-         quint16 regs_cnt = p_data->data_0x02.count() * 2 + 1;
-         quint8  byte_cnt = p_data->data_0x02.count() * 4 + 2;
-         quint8  data_len = p_data->data_0x02.count() * 4;
-         
-         b0x02[4] = regs_cnt & 0xFF;
-         b0x02[5] = regs_cnt >> 8;
-         b0x02[6] = byte_cnt;
-         b0x02[7] = 0x02;
-         b0x02[8] = data_len;
-         
-         foreach (quint16 signal_index, p_data->data_0x02.keys()) {
+         /** 0x00 duty  **/
+         {
+           p_data->data_duty = QByteArray::fromHex(QString(OPA_DefByteArray_duty).toUtf8());
            
-           quint16 sensor_num = p_data->data_0x02.value(signal_index).first;
-           quint8  faktor_val = p_data->data_0x02.value(signal_index).second;
+           p_data->data_duty[2] = (p_device_params->RegisterAddress + 0x0000) >> 8;
+           p_data->data_duty[3] = (p_device_params->RegisterAddress + 0x0000) & 0xFF;
            
-           b0x02.append(quint8(sensor_num & 0xFF));
-           b0x02.append(quint8(sensor_num >> 8));
-           b0x02.append(faktor_val);
-           b0x02.append(char(0));
+           quint16 crc_0x00 = CRC::MODBUS_CRC16((uchar*)p_data->data_duty.data(), p_data->data_duty.length());
+           p_data->data_duty.append(crc_0x00 & 0xFF);
+           p_data->data_duty.append(crc_0x00 >> 8);
            
+           emit logthr(QString(p_data->data_duty.toHex().toUpper()));
+           p_port.write(p_data->data_duty);
+           QThread::msleep(p_delay);     // небольшая задержка между пакетами  
          }
          
-         quint16 crc_0x02 = CRC::MODBUS_CRC16((uchar*)b0x02.data(), b0x02.length());
-         b0x02.append(crc_0x02 & 0xFF);
-         b0x02.append(crc_0x02 >> 8);
-         
-         emit logthr(QString(p_data->data_0x03.toHex().toUpper()));
-         p_port.write(p_data->data_0x03);
-         
-         // после отправки, удаляем из списка элементы, для которых фактор = 0
-         foreach (quint16 signal_index, p_data->data_0x02.keys()) {
+         /** 0x05 counter **/
+         {
+           p_data->data_counter = QByteArray::fromHex(QString(OPA_DefByteArray_counter).toUtf8());
            
-           if(p_data->data_0x02.value(signal_index).second == 0x00)
-             p_data->data_0x02.remove(signal_index);
+           p_data->data_counter[2] = (p_device_params->RegisterAddress + 0x0005) >> 8;
+           p_data->data_counter[3] = (p_device_params->RegisterAddress + 0x0005) & 0xFF;
            
+           p_data->data_counter[7] = p_data->count & 0xFF;
+           p_data->data_counter[8] = p_data->count >> 8;
+           
+           quint16 crc_0x05 = CRC::MODBUS_CRC16((uchar*)p_data->data_counter.data(), p_data->data_counter.length());
+           p_data->data_counter.append(crc_0x05 & 0xFF);
+           p_data->data_counter.append(crc_0x05 >> 8);
+           
+           p_data->count++;
+           
+           emit logthr(QString(p_data->data_counter.toHex().toUpper()));
+           p_port.write(p_data->data_counter);
+           QThread::msleep(p_delay);   // небольшая задержка между пакетами 
+         } 
+         
+         /** 0x02 **/
+         {
+           QByteArray b0x02 = QByteArray::fromHex(QString(OPA_DefByteArray_0x02).toUtf8());
+           
+           b0x02[2] = (p_device_params->RegisterAddress + 0x0010) >> 8;
+           b0x02[3] = (p_device_params->RegisterAddress + 0x0010) & 0xFF;
+           
+           quint16 regs_cnt = p_data->data_0x02.count() * 2 + 1;
+           quint8  byte_cnt = p_data->data_0x02.count() * 4 + 2;
+           quint8  data_len = p_data->data_0x02.count() * 4;
+           
+           b0x02[4] = regs_cnt >> 8;
+           b0x02[5] = regs_cnt & 0xFF;
+           b0x02[6] = byte_cnt;
+           b0x02[7] = 0x02;
+           b0x02[8] = data_len;
+           
+           foreach (quint16 signal_index, p_data->data_0x02.keys()) {
+             
+             quint16 sensor_num = p_data->data_0x02.value(signal_index).first;
+             quint8  faktor_val = p_data->data_0x02.value(signal_index).second;
+             
+             b0x02.append(quint8(sensor_num & 0xFF));
+             b0x02.append(quint8(sensor_num >> 8));
+             b0x02.append(faktor_val);
+             b0x02.append(char(0));
+             
+           }
+           
+           quint16 crc_0x02 = CRC::MODBUS_CRC16((uchar*)b0x02.data(), b0x02.length());
+           b0x02.append(crc_0x02 & 0xFF);
+           b0x02.append(crc_0x02 >> 8);
+           
+           emit logthr(QString(b0x02.toHex().toUpper()));
+           p_port.write(b0x02);
+           
+           // после отправки, удаляем из списка элементы, для которых фактор = 0
+           foreach (quint16 signal_index, p_data->data_0x02.keys()) {
+             
+             if(p_data->data_0x02.value(signal_index).second == 0x00)
+               p_data->data_0x02.remove(signal_index);
+             
+           }
          }
          
+         /** 0x03 **/
+         {
+           QByteArray b0x03 = QByteArray::fromHex(QString(OPA_DefByteArray_0x03).toUtf8());
+           
+           b0x03[2] = (p_device_params->RegisterAddress + 0x0050) >> 8;
+           b0x03[3] = (p_device_params->RegisterAddress + 0x0050) & 0xFF;
+           
+           quint16 regs_cnt = p_data->data_0x03.count() * 2 + 1;
+           quint8  byte_cnt = p_data->data_0x03.count() * 4 + 2;
+           quint8  data_len = p_data->data_0x03.count() * 4;
+           
+           b0x03[4] = regs_cnt >> 8;
+           b0x03[5] = regs_cnt & 0xFF;
+           b0x03[6] = byte_cnt;
+           b0x03[7] = 0x03;
+           b0x03[8] = data_len;
+           
+           foreach (quint16 signal_index, p_data->data_0x03.keys()) {
+             qDebug() << signal_index;
+             quint16 room_num = p_data->data_0x03.value(signal_index).first;
+             quint8  alert_lvl  = p_data->data_0x03.value(signal_index).second;
+             
+             b0x03.append(quint8(room_num & 0xFF));
+             b0x03.append(quint8(room_num >> 8));
+             b0x03.append(alert_lvl);
+             b0x03.append(char(0));
+             
+           }
+           
+           quint16 crc_0x03 = CRC::MODBUS_CRC16((uchar*)b0x03.data(), b0x03.length());
+           b0x03.append(crc_0x03 & 0xFF);
+           b0x03.append(crc_0x03 >> 8);
+           
+           emit logthr(QString(b0x03.toHex().toUpper()));
+           p_port.write(b0x03);
+           
+         }
          
          // 0x04
 //         emit logthr(QString(p_data->data_0x04.toHex().toUpper()));
@@ -725,7 +889,7 @@ void SvOPAThread::run()
 //         p_port.write(p_data->data_0x19);
 //         QThread::msleep(p_delay);   // небольшая задержка между пакетами  
          
-//         // 0x03
+         // 0x03
 //         emit logthr(QString(p_data->data_0x03.toHex().toUpper()));
 //         p_port.write(p_data->data_0x03);
        
@@ -745,4 +909,5 @@ void SvOPAThread::run()
    p_port.close();
    
 }
+
 

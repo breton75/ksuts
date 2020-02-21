@@ -2,6 +2,7 @@
 #include "ui_mainwindow.h"
 
 svlog::SvLog mainlog;
+extern SelectDeviceDialog* SELECT_DEVICE_DLG;
 
 MainWindow::MainWindow(QWidget *parent) :
   QMainWindow(parent),
@@ -32,9 +33,16 @@ MainWindow::MainWindow(QWidget *parent) :
 //    constructUI();
     
   }
+
+  QString ids = AppParams::readParam(this, "GENERAL", "Devices", "").toString();
   
-//  QThreadPool::globalInstance()->
-  
+  for(QString idx: ids.split(',')) {
+    
+    bool ok = false;
+    int index = idx.toInt(&ok);
+    if(ok)
+      readDevice(index);
+  }
   
   
   
@@ -58,19 +66,28 @@ MainWindow::~MainWindow()
   
   AppParams::saveLayout(this);
   
+  QString ids = "";
+  for(int index: p_device_indexes)
+    ids += QString::number(index) + ",";
+  
+  ids.chop(1);
+  
+  AppParams::saveParam(this, "GENERAL", "Devices", ids);
+  
   delete ui;
 }
 
-bool MainWindow::readDevices()
+bool MainWindow::readDevice(int index)
 {
   QSqlError serr;
   QSqlQuery q = QSqlQuery(SvPGDB::instance()->db);
   
-  serr = SvPGDB::instance()->execSQL("SELECT device_index, device_name, connection_params, devices.description, timeout, "
+  serr = SvPGDB::instance()->execSQL(QString("SELECT device_index, device_name, connection_params, devices.description, timeout, "
                      " devices.system_index system_index, systems.system_code system_code, systems.system_name system_name, "
                      " systems.driver_lib driver_lib, devices.device_params as device_params "
                      "FROM devices "
-                     "left join systems on devices.system_index = systems.index ", &q);
+                     "left join systems on devices.system_index = systems.index "
+                     "where device_index = %1").arg(index), &q);
   
   if(serr.type() != QSqlError::NoError) {
     
@@ -81,6 +98,8 @@ bool MainWindow::readDevices()
 
   int opacnt = 0;
   while(q.next()) {
+    
+    p_device_indexes.append(q.value("device_index").toInt());
     
     QString code = q.value("system_code").toString();
     
@@ -194,4 +213,15 @@ void MainWindow::startStop(SvAbstractSystem* system)
 //    default:
 //      break;
 //  }
+}
+
+void MainWindow::on_actionAddDevice_triggered()
+{
+    SELECT_DEVICE_DLG = new SelectDeviceDialog(this);
+    
+    if(SELECT_DEVICE_DLG->exec() == QDialog::Accepted)
+      readDevice(SELECT_DEVICE_DLG->selectedDeviceIndex);
+    
+    delete SELECT_DEVICE_DLG;    
+    
 }

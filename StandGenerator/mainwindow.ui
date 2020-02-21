@@ -41,6 +41,7 @@
    <attribute name="toolBarBreak">
     <bool>false</bool>
    </attribute>
+   <addaction name="actionAddDevice"/>
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
   <widget class="QDockWidget" name="dockMainLog">
@@ -64,8 +65,19 @@
     </layout>
    </widget>
   </widget>
+  <action name="actionAddDevice">
+   <property name="icon">
+    <iconset resource="../configurator2/res.qrc">
+     <normaloff>:/my_icons/Common/Icons/Super Mono Basic/add.ico</normaloff>:/my_icons/Common/Icons/Super Mono Basic/add.ico</iconset>
+   </property>
+   <property name="text">
+    <string>Добавить устройство</string>
+   </property>
+  </action>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
- <resources/>
+ <resources>
+  <include location="../configurator2/res.qrc"/>
+ </resources>
  <connections/>
 </ui>

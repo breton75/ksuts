@@ -5,107 +5,65 @@
 #include <QMap>
 #include <QVector>
 #include <QPair>
+#include <QTableWidgetItem>
 
-//struct OPA_Byte0
-//{
-//  quint8 direction;
-  
-//  quint8 toUint8() const { return direction; }
-//};
-
-//struct OPA_Byte1 {
-//  quint8 state: 4;
-//  quint8 regim: 4;
-  
-//  void set(quint8 state, quint8 regim) { this->state = state; this->regim = regim; }
-  
-//  quint8 toUint8() const { return quint8(state + (regim << 4)); }
-//};
-
-//struct OPA_Byte2
-//{
-//  quint8 :4;
-//  quint8 urs_state: 2;
-//  quint8 :1;
-//  quint8 otkl_vent: 1;
-  
-//  void set(quint8 urs_state, quint8 otkl_vent) { this->urs_state = urs_state; this->otkl_vent = otkl_vent; }
-  
-//  quint8 toUint8() const { return quint8((urs_state << 4) + (otkl_vent << 7)); }
-//};
-
-//struct OPA_Type_0x03 {
-  
-//  OPA_Byte0  byte0;
-//  OPA_Byte1  byte1;
-//  OPA_Byte2  byte2;
-//  quint8 byte3 = 0;
-//  quint8 byte4 = 0;
-//  quint8 byte5 = 0;
-  
-//  OPA_Type_0x03() { }
-//  OPA_Type_0x03(quint8 direction, quint8 state, quint8 regim, quint8 urs_state, quint8 otkl_vent)
-//  {
-//    byte0.direction = direction; // это значение одно для всех направлений
-//    byte1.set(state, regim);
-//    byte2.set(urs_state, otkl_vent);
-//  }
-  
-//};
-
-//const QMap<int, quint8> StatesCodes;
-
-const QVector<QPair<QString, quint8>> OPA_DirectionsCodes = {QPair<QString, quint8>("Шкиперская кладовая",  0x01),
-                                                         QPair<QString, quint8>("ГРЩN1(ОХТN1)",         0x02),
-                                                         QPair<QString, quint8>("ГРЩN2(ОХТN1)",         0x03),
-                                                         QPair<QString, quint8>("ДГО(ОХТN1)",           0x04),
-                                                         QPair<QString, quint8>("МО(ОХТN1)",            0x05),
-                                                         QPair<QString, quint8>("ОВМ(ОХТN1)",           0x06),
-                                                         QPair<QString, quint8>("ГРЩN1(ОХТN2)",         0x07),
-                                                         QPair<QString, quint8>("ГРЩN2(ОХТN2)",         0x08),
-                                                         QPair<QString, quint8>("ДГО(ОХТN2)",           0x09),
-                                                         QPair<QString, quint8>("МО(ОХТN2)",            0x0A),
-                                                         QPair<QString, quint8>("ОВМ(ОХТN2)",           0x0B)};
+const QString OPA_select_signals_0x03 = "SELECT signal_index, signal_name, sensors.sensor_name as sensor_name, "
+                                   "signals.sensor_number as sensor_number, alert_types.type_index as alert_type_index, "
+                                   "alert_types.type_name as alert_type_name, placements.placement_name as placement_name, "
+                                   "signal_marker as signal_marker, signals.description as signal_description "
+                                   "FROM signals "
+                                   "left join sensors on signals.sensor_number = sensors.sensor_number "
+                                   "left join alert_types on signals.alert_type_index = alert_types.type_index "
+                                   "left join placements on sensors.placement_index = placements.placement_index "
+                                   "where signals.device_index in (select device_index from devices where system_index = 1) "
+                                   "and signals.alert_type_index = 16 and signal_marker is not null "
+                                   "order by sensor_number, alert_type_index";
 
 
-const QVector<QPair<QString, quint8>> OPA_StatesCodes = {QPair<QString, quint8>("0x00 – Норма (после сброса)",                      0x00),
-                                                     QPair<QString, quint8>("0x07 – ПУСК (идет отсчет времени)",                0x07),
-                                                     QPair<QString, quint8>("0x08 – ОТМЕНА (отсчет времени приостановлен)",     0x08),
-                                                     QPair<QString, quint8>("0x09 – Открытие УРС (УР)",                         0x09),
-                                                     QPair<QString, quint8>("0x0A – УРС не открылся",                           0x0A),
-                                                     QPair<QString, quint8>("0x0B – УРС открылся",                              0x0B),
-                                                     QPair<QString, quint8>("0x0C – ПУСК ПП (выдача пусковых импульсов на ЗПУ)",0x0C),
-                                                     QPair<QString, quint8>("0x0D – Не сработали СДГ",                          0x0D),
-                                                     QPair<QString, quint8>("0x0E – ПУСК ПРОШЕЛ",                               0x0E)};
+struct OPA_Type_0x03 {
   
+  QTableWidgetItem* item_check_box;
+  QTableWidgetItem* item_alert_level;
+  QTableWidgetItem* item_signal_index;
+  QTableWidgetItem* item_signal_name;
+  QTableWidgetItem* item_signal_description;   
   
-const QVector<QPair<QString, quint8>> OPA_RegimCodes = {QPair<QString, quint8>("0x00 – Дежурный режим ЗАПРЕТ ПУСКА",                    0x00),
-                                                    QPair<QString, quint8>("0x01 – Дежурный режим АВТОМАТИКА ОТКЛЮЧЕНА",            0x01),
-                                                    QPair<QString, quint8>("0x03 – Режим пуска  - ПРИОСТАНОВЛЕН ОХТ",               0x03),
-                                                    QPair<QString, quint8>("0x04 – Режим пуска  - МЕСТНЫЙ (РУЧНОЙ)",                0x04),
-                                                    QPair<QString, quint8>("0x05 – Режим пуска  - ДИСТАНЦИОННЫЙ",                   0x05),
-                                                    QPair<QString, quint8>("0x07 – Режим пуска  - УДАЛЕННЫЙ ОТ СИСТЕМЫ УПРАВЛЕНИЯ", 0x07)};
-
-const QVector<QPair<QString, quint8>> OPA_URSStatesCodes = {QPair<QString, quint8>("0 – закрыто",             0x00),
-                                                        QPair<QString, quint8>("1 – частичное открытие",  0x01),
-                                                        QPair<QString, quint8>("2 – открылось",           0x02)};
+  QVector<QTableWidgetItem*> items;
   
-const QMap<bool, quint8> OPA_OtklVentCodes = {{false, 0x00},
-                                          {true,  0x01}};
+  quint16 signal_index;
+  quint16 room_number;
+  quint8  alert_level;
+  
+  OPA_Type_0x03() { }
+  
+  OPA_Type_0x03(QTableWidgetItem* item_check_box,
+                QTableWidgetItem* item_alert_level,
+                QTableWidgetItem* item_signal_index,
+                QTableWidgetItem* item_signal_name,
+                QTableWidgetItem* item_signal_description)
+  {
+    items.clear();
+    
+    this->item_check_box          = item_check_box;           items.append(item_check_box);   
+    this->item_alert_level        = item_alert_level;         items.append(item_alert_level);
+    this->item_signal_index       = item_signal_index;        items.append(item_signal_index);
+    this->item_signal_name        = item_signal_name;         items.append(item_signal_name);  
+    this->item_signal_description = item_signal_description;  items.append(item_signal_description);
+    
+    this->item_check_box->setFlags(Qt::ItemIsUserCheckable | Qt::ItemIsSelectable);
+    this->item_check_box->setCheckState(Qt::Unchecked);
+    
+    for(int i = 1; i < items.count(); ++i)
+      items.at(i)->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable);
+    
+  }
+};
 
-
-const QString OPA_DefByteArray_0x03 = "01100AA00022441342"
-                                  "010000000000"
-                                  "020000000000"
-                                  "030000000000"
-                                  "040000000000"
-                                  "050000000000"
-                                  "060000000000"
-                                  "070000000000"
-                                  "080000000000"
-                                  "090000000000"
-                                  "0A0000000000"
-                                  "0B0000000000";
+const QString OPA_DefByteArray_0x03 = "0110"            // получатель и отправитель
+                                      "0410"            // адрес регистра
+                                      "0003"            // кол-во регистров в посылке
+                                      "06"              // кол-во байт в посылке
+                                      "0300";           // тип данных и кол-во данных
 
 
 #endif // OPA_TYPE_0X03_H

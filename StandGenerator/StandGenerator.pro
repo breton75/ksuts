@@ -32,7 +32,9 @@ SOURCES += \
     oht/sv_oht.cpp \
     ../../svlib/sv_settings.cpp \
     skm/sv_skm.cpp \
-    opa/sv_opa.cpp
+    opa/sv_opa.cpp \
+    select_device_dialog.cpp \
+    alert_level_dialog.cpp
 
 HEADERS += \
         mainwindow.h \
@@ -55,7 +57,9 @@ HEADERS += \
     opa/opa_type_0x03.h \
     opa/opa_type_0x04.h \
     opa/opa_type_0x19.h \
-    ../ksuts_devices/opa/opa_defs.h
+    ../ksuts_devices/opa/opa_defs.h \
+    select_device_dialog.h \
+    alert_level_dialog.h
 
 FORMS += \
         mainwindow.ui \
@@ -64,4 +68,9 @@ FORMS += \
     skm/skm.ui \
     skm/type01values.ui \
     opa/opa.ui \
-    opa/opa_type03values.ui
+    opa/opa_type03values.ui \
+    select_device_dialog.ui \
+    alert_level_dialog.ui
+
+RESOURCES += \
+    ../configurator2/res.qrc

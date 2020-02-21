@@ -24,6 +24,7 @@
     <file>icons/application-default-icon_37713.ico</file>
   </qresource>
   <qresource prefix="my_icons">
+    <file>../../Common/Icons/Super Mono Basic/add.ico</file>
     <file>icons/001-cpu.png</file>
     <file>icons/1systemerroralt_103270.ico</file>
     <file>icons/002-cpu-1.png</file>

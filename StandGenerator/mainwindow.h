@@ -19,6 +19,7 @@
 #include "skm/sv_skm.h"
 #include "opa/sv_opa.h"
 
+#include "select_device_dialog.h"
 
 
 namespace Ui {
@@ -38,7 +39,7 @@ public:
   explicit MainWindow(QWidget *parent = 0);
   ~MainWindow();
   
-  bool readDevices();
+  bool readDevice(int index);
   
 private:
   Ui::MainWindow *ui;
@@ -48,12 +49,15 @@ private:
   QVector<SvAbstractSystem*> p_systems;
   QVector<QDockWidget*> p_docks;
   
+  QList<int> p_device_indexes;
+  
   bool constructUI();
   
   
 private slots:
   void startStop(SvAbstractSystem* system);
   
+  void on_actionAddDevice_triggered();
 };
 
 #endif // MAINWINDOW_H
