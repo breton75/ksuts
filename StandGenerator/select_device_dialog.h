@@ -23,6 +23,8 @@ public:
 private slots:
   void on_SelectDeviceDialog_accepted();
   
+  void on_listWidget_doubleClicked(const QModelIndex &index);
+  
 private:
   Ui::SelectDeviceDialog *ui;
   

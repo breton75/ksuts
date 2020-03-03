@@ -18,6 +18,8 @@
 #include "../../svlib/sv_log.h"
 #include "../../svlib/sv_settings.h"
 
+#include "../global/sv_serialeditor.h"
+
 namespace Ui {
   class SKM_MainWidget;
   class SKM_Type0x01Widget;
@@ -43,7 +45,7 @@ class SvSKM : public SvAbstractSystem //, public QObject
   Q_OBJECT
   
 public:
-  SvSKM(QTextEdit *textLog);
+  SvSKM(QTextEdit *textLog, const QString& name);
   ~SvSKM();
   
   QWidget* widget() const { return p_main_widget; }
@@ -80,6 +82,7 @@ private slots:
   
   void on_bnStartStop_clicked();
   
+  void on_bnSKMPortParams_clicked();
 };
 
 class SvSKMThread: public SvAbstractSystemThread

@@ -19,6 +19,8 @@
 #include "../../svlib/sv_log.h"
 #include "../../svlib/sv_settings.h"
 
+#include "../global/sv_serialeditor.h"
+
 namespace Ui {
   class MainWidget;
   class Type0x13Widget;
@@ -31,16 +33,16 @@ public:
   QWidget* widget = nullptr;
 };
 
-const QString DefByteArray_duty = "01100a00000204"
-                                  "00010000"
-                                  "dccf";
+const QString OHT_DefByteArray_duty = "01100a00000204"
+                                      "00010000"
+                                      "dccf";
 
-const QString DefByteArray_counter = "01100a05000102"
-                                     "0000";
+const QString OHT_DefByteArray_counter = "01100a05000102"
+                                         "0000";
 
-const QString DefByteArray_reset = "01100a00000204"
-                                   "77000000"
-                                   "2FD3";
+const QString OHT_DefByteArray_reset = "01100a00000204"
+                                       "77000000"
+                                       "2FD3";
 
 struct OHTData {
 
@@ -62,7 +64,7 @@ class SvOHT : public SvAbstractSystem //, public QObject
   Q_OBJECT
   
 public:
-  SvOHT(QTextEdit *textLog);
+  SvOHT(QTextEdit *textLog, const QString &name);
   ~SvOHT();
   
   QWidget* widget() const { return p_main_widget; }
@@ -103,6 +105,8 @@ private slots:
   
   void on_bnSendReset_clicked();
   
+  void on_bnOHTPortParams_clicked();
+  
 signals:
   void start_stop(SvAbstractSystem*);
   
@@ -134,7 +138,7 @@ private:
   
   SvException exception;
   
-  int p_delay = 20;
+  int p_delay = 1;
   
   void run() override;
 

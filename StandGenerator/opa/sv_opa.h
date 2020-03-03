@@ -24,6 +24,8 @@
 #include "../../svlib/sv_log.h"
 #include "../../svlib/sv_settings.h"
 
+#include "../global/sv_serialeditor.h"
+
 
 namespace Ui {
   class OPA_MainWidget;
@@ -31,19 +33,33 @@ namespace Ui {
 //  class OPA_Type0x02Widget;
 }
 
-//class T0x02Widget: public Ui::OPA_Type0x03Widget
-//{
-//public:
-//  T0x02Widget(QWidget* parent): Ui::OPA_Type0x02Widget(), widget(new QWidget(parent)) {  }
-//  QWidget* widget = nullptr;
-//}; 
 
-//class T0x03Widget: public Ui::OPA_Type0x03Widget
-//{
-//public:
-//  T0x03Widget(QWidget* parent): Ui::OPA_Type0x03Widget(), widget(new QWidget(parent)) {  }
-//  QWidget* widget = nullptr;
-//};
+const QString OPA_DefByteArray_duty = "0110"          // получатель и отправитель  
+                                      "0400"          // адрес регистра - у каждого устройства свой       
+                                      "0002"          // кол-во регистров в посылке
+                                      "04"            // кол-во байт в посылке     
+                                      "00010000";     // данные                    
+
+const QString OPA_DefByteArray_counter = "0110"        // получатель и отправитель  
+                                         "0405"        // адрес регистра            // 
+                                         "0001"        // кол-во регистров в посылке
+                                         "02"          // кол-во байт в посылке     
+                                         "0000";       // значение счетчика
+
+const QString OPA_DefByteArray_reset = "0110"           // получатель и отправитель  
+                                       "0400"           // адрес регистра            
+                                       "0002"           // кол-во регистров в посылке
+                                       "04"             // кол-во байт в посылке     
+                                       "77000000";      // данные
+
+const QString OPA_DefByteArray_0x02 = "0110"            // получатель и отправитель
+                                      "0410"            // адрес регистра
+                                      "0003"            // кол-во регистров в посылке
+                                      "06"              // кол-во байт в посылке
+                                      "0204";           // тип данных и кол-во данных
+
+
+
 
 struct OPAData {
 
@@ -77,7 +93,7 @@ class SvOPA : public SvAbstractSystem //, public QObject
   Q_OBJECT
   
 public:
-  SvOPA(QTextEdit *textLog, const QString& device_params);
+  SvOPA(QTextEdit *textLog, const QString& device_params, const QString &name);
   ~SvOPA();
   
   QWidget* widget() const { return p_main_widget; }
@@ -131,6 +147,8 @@ private slots:
   void table0x03ItemChanged(QTableWidgetItem*item);
   
   void on_table0x02_doubleClicked(const QModelIndex &index);
+  
+  void on_bnOPAPortParams_clicked();
   
 signals:
   void start_stop(SvAbstractSystem*);

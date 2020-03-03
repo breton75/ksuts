@@ -2,8 +2,8 @@
 
 //svlog::SvLog ohtlog;
 
-SvOHT::SvOHT(QTextEdit *textLog):
-  SvAbstractSystem(),
+SvOHT::SvOHT(QTextEdit *textLog, const QString& name):
+  SvAbstractSystem(name),
   p_main_widget(new QWidget), 
   ui(new Ui::MainWidget)  
 {
@@ -21,10 +21,6 @@ SvOHT::SvOHT(QTextEdit *textLog):
   load0x19();
   load0x14();
   
-  p_data.data_counter = QByteArray::fromHex(QString(DefByteArray_counter).toUtf8());
-  p_data.data_duty = QByteArray::fromHex(QString(DefByteArray_duty).toUtf8());
-  p_data.data_reset = QByteArray::fromHex(QString(DefByteArray_reset).toUtf8());
-  
   setData();
   setState(RunState::FINISHED);
   
@@ -33,6 +29,7 @@ SvOHT::SvOHT(QTextEdit *textLog):
   connect(ui->bnStartStop, &QPushButton::pressed, this, &SvOHT::on_bnStartStop_clicked);
   connect(ui->bnEditData, &QPushButton::clicked, this, &SvOHT::on_bnEditData_clicked);
   connect(ui->bnSendReset, &QPushButton::clicked, this, &SvOHT::on_bnSendReset_clicked);
+  connect(ui->bnOHTPortParams, &QPushButton::clicked, this, &SvOHT::on_bnOHTPortParams_clicked);
   
 }
 
@@ -225,7 +222,7 @@ void SvOHT::setState(RunState state)
         w->setEnabled(true);
       
       ui->editPortParams->setEnabled(false);
-      ui->bnPortParams->setEnabled(false);
+      ui->bnOHTPortParams->setEnabled(false);
       
       p_state.state = RunState::RUNNING;
       
@@ -344,7 +341,7 @@ void SvOHT::setData()
   if(p_edit_mutex.tryLock(3000)) {
 
     // type 0x13
-    p_data.data_0x13 = QByteArray::fromHex(DefByteArray_0x13.toUtf8());
+    p_data.data_0x13 = QByteArray::fromHex(OHT_DefByteArray_0x13.toUtf8());
     
     for(int i = 0; i < DirectionsCodes.count(); ++i) {
       
@@ -495,6 +492,7 @@ void SvOHTThread::run()
        
        if(p_data->send_reset) {
          
+         p_data->data_reset = QByteArray::fromHex(QString(OHT_DefByteArray_reset).toUtf8());
 //         quint16 crc_0x77 = CRC::MODBUS_CRC16((uchar*)p_data->data_reset.data(), p_data->data_reset.length());
 //         p_data->data_reset[p_data->data_reset.length() - 2] = crc_0x77 & 0xFF;
 //         p_data->data_reset[p_data->data_reset.length() - 1] = crc_0x77 >> 8;
@@ -504,16 +502,18 @@ void SvOHTThread::run()
          p_port.write(p_data->data_reset);
          
          p_data->send_reset = false;
-         
        }
        else {
        
-         // 0x00 duty
+         /** 0x00 duty **/
+         p_data->data_duty = QByteArray::fromHex(QString(OHT_DefByteArray_duty).toUtf8());
          emit logthr(QString(p_data->data_duty.toHex().toUpper()));
          p_port.write(p_data->data_duty);
          QThread::msleep(p_delay);     // небольшая задержка между пакетами  
          
-         // 0x05 counter
+         /** 0x05 counter **/
+         p_data->data_counter = QByteArray::fromHex(QString(OHT_DefByteArray_counter).toUtf8());
+         
          p_data->data_counter[7] = p_data->count & 0xFF;
          p_data->data_counter[8] = p_data->count >> 8;
          
@@ -528,17 +528,17 @@ void SvOHTThread::run()
          QThread::msleep(p_delay);   // небольшая задержка между пакетами  
          
          
-         // 0x14
+         /** 0x14 **/
          emit logthr(QString(p_data->data_0x14.toHex().toUpper()));
          p_port.write(p_data->data_0x14);
          QThread::msleep(p_delay);   // небольшая задержка между пакетами     
          
-         // 0x19
+         /** 0x19 **/
          emit logthr(QString(p_data->data_0x19.toHex().toUpper()));
          p_port.write(p_data->data_0x19);
          QThread::msleep(p_delay);   // небольшая задержка между пакетами  
          
-         // 0x13
+         /** 0x13 **/
          emit logthr(QString(p_data->data_0x13.toHex().toUpper()));
          p_port.write(p_data->data_0x13);
        
@@ -559,3 +559,11 @@ void SvOHTThread::run()
    
 }
 
+
+void SvOHT::on_bnOHTPortParams_clicked()
+{
+  if(SvSerialEditor::showDialog(ui->editPortParams->text(), this->name(), this->p_main_widget) == QDialog::Accepted)
+    ui->editPortParams->setText(SvSerialEditor::stringParams());
+  
+  SvSerialEditor::deleteDialog();
+}

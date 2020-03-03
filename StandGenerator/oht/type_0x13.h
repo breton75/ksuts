@@ -100,7 +100,7 @@ const QMap<bool, quint8> OtklVentCodes = {{false, 0x00},
                                           {true,  0x01}};
 
 
-const QString DefByteArray_0x13 = "01100AA00022441342"
+const QString OHT_DefByteArray_0x13 = "01100AA00022441342"
                                   "010000000000"
                                   "020000000000"
                                   "030000000000"

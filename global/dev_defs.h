@@ -155,7 +155,7 @@ struct SerialPortParams {
 class SerialParamsParser
 {
 public:
-  SerialParamsParser(QString params_string) {
+  SerialParamsParser(const QString params_string) {
     
     _params_string = params_string;
   }

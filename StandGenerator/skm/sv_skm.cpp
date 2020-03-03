@@ -2,8 +2,8 @@
 
 //svlog::SvLog p_log;
 
-SvSKM::SvSKM(QTextEdit *textLog):
-  SvAbstractSystem(),
+SvSKM::SvSKM(QTextEdit *textLog, const QString& name): 
+  SvAbstractSystem(name),
   p_main_widget(new QWidget), 
   ui(new Ui::SKM_MainWidget)  
 {
@@ -27,6 +27,7 @@ SvSKM::SvSKM(QTextEdit *textLog):
   
   connect(ui->bnStartStop, &QPushButton::pressed, this, &SvSKM::on_bnStartStop_clicked);
   connect(ui->bnEditData, &QPushButton::clicked, this, &SvSKM::on_bnEditData_clicked);
+  connect(ui->bnSKMPortParams, &QPushButton::clicked, this, &SvSKM::on_bnSKMPortParams_clicked);
   
 }
 
@@ -191,7 +192,7 @@ void SvSKM::setState(RunState state)
         w->setEnabled(true);
       
       ui->editPortParams->setEnabled(false);
-      ui->bnPortParams->setEnabled(false);
+      ui->bnSKMPortParams->setEnabled(false);
       
       p_state.state = RunState::RUNNING;
       
@@ -458,3 +459,11 @@ void SvSKMThread::run()
    
 }
 
+
+void SvSKM::on_bnSKMPortParams_clicked()
+{
+  if(SvSerialEditor::showDialog(ui->editPortParams->text(), this->name(), p_main_widget) == QDialog::Accepted)
+    ui->editPortParams->setText(SvSerialEditor::stringParams());
+  
+  SvSerialEditor::deleteDialog();
+}

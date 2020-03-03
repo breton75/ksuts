@@ -3,8 +3,8 @@
 extern AlertLevelDialog* ALERT_LEVEL_DLG;
 //svlog::SvLog ohtlog;
 
-SvOPA::SvOPA(QTextEdit *textLog, const QString &device_params):
-  SvAbstractSystem(),
+SvOPA::SvOPA(QTextEdit *textLog, const QString &device_params, const QString& name):
+  SvAbstractSystem(name),
   p_main_widget(new QWidget), 
   ui(new Ui::OPA_MainWidget)  
 {
@@ -26,9 +26,9 @@ SvOPA::SvOPA(QTextEdit *textLog, const QString &device_params):
 //  load0x19();
 //  load0x04();
   
-  p_data.data_counter = QByteArray::fromHex(QString(OPA_DefByteArray_counter).toUtf8());
-  p_data.data_duty = QByteArray::fromHex(QString(OPA_DefByteArray_duty).toUtf8());
-  p_data.data_reset = QByteArray::fromHex(QString(OPA_DefByteArray_reset).toUtf8());
+//  p_data.data_counter = QByteArray::fromHex(QString(OPA_DefByteArray_counter).toUtf8());
+//  p_data.data_duty = QByteArray::fromHex(QString(OPA_DefByteArray_duty).toUtf8());
+//  p_data.data_reset = QByteArray::fromHex(QString(OPA_DefByteArray_reset).toUtf8());
   
 //  setData();
   setState(RunState::FINISHED);
@@ -38,6 +38,7 @@ SvOPA::SvOPA(QTextEdit *textLog, const QString &device_params):
   connect(ui->bnStartStop, &QPushButton::pressed, this, &SvOPA::on_bnStartStop_clicked);
   connect(ui->bnEditData, &QPushButton::clicked, this, &SvOPA::on_bnEditData_clicked);
   connect(ui->bnSendReset, &QPushButton::clicked, this, &SvOPA::on_bnSendReset_clicked);
+  connect(ui->bnOPAPortParams, &QPushButton::clicked, this, &SvOPA::on_bnOPAPortParams_clicked);
   
 }
 
@@ -75,14 +76,12 @@ void SvOPA::table0x03ItemChanged(QTableWidgetItem* item)
       p_0x03_items.value(signal_index)->item_alert_level->setText(
             QString("0x%1").arg(QString::number(ALERT_LEVEL_DLG->selected_alert_level, 16).toUpper())
             );
-      
     }
     else {
       
       item->setCheckState(Qt::Unchecked);
       
     }
-    
     delete ALERT_LEVEL_DLG;
     
   }
@@ -175,7 +174,7 @@ void SvOPA::load0x03()
       
       // чтобы назначать уровень пож. опасности
       QTableWidgetItem* chbx = new QTableWidgetItem("");
-//      chbx->setData(Qt::UserRole, q.value("signal_index").toUInt());
+      chbx->setData(Qt::UserRole, q.value("signal_index").toUInt());
       
       // для корректной сортировки в таблице
       QTableWidgetItem* sindx = new QTableWidgetItem("");
@@ -381,7 +380,7 @@ void SvOPA::setState(RunState state)
         w->setEnabled(true);
       
       ui->editPortParams->setEnabled(false);
-      ui->bnPortParams->setEnabled(false);
+      ui->bnOPAPortParams->setEnabled(false);
       
       p_state.state = RunState::RUNNING;
       
@@ -859,7 +858,7 @@ void SvOPAThread::run()
            b0x03[8] = data_len;
            
            foreach (quint16 signal_index, p_data->data_0x03.keys()) {
-             qDebug() << signal_index;
+
              quint16 room_num = p_data->data_0x03.value(signal_index).first;
              quint8  alert_lvl  = p_data->data_0x03.value(signal_index).second;
              
@@ -911,3 +910,11 @@ void SvOPAThread::run()
 }
 
 
+
+void SvOPA::on_bnOPAPortParams_clicked()
+{
+  if(SvSerialEditor::showDialog(ui->editPortParams->text(), this->name(), p_main_widget) == QDialog::Accepted)
+    ui->editPortParams->setText(SvSerialEditor::stringParams());
+  
+  SvSerialEditor::deleteDialog();
+}

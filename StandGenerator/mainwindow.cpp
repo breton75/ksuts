@@ -117,7 +117,7 @@ bool MainWindow::readDevice(int index)
       dock->setWidget(text_log);
 //      text_log->setVisible(true);
       
-      SvOHT* oht = new SvOHT(text_log);
+      SvOHT* oht = new SvOHT(text_log, q.value("device_name").toString());
       ui->tabWidget->addTab(oht->widget(), q.value("device_name").toString());
       oht->widget()->show();
       
@@ -144,7 +144,7 @@ bool MainWindow::readDevice(int index)
       dock->setWidget(text_log);
 //      text_log->setVisible(true);
       
-      SvOPA* opa = new SvOPA(text_log, q.value("device_params").toString());
+      SvOPA* opa = new SvOPA(text_log, q.value("device_params").toString(), q.value("device_name").toString());
       ui->tabWidget->addTab(opa->widget(), q.value("device_name").toString());
       opa->widget()->show();
       
@@ -158,7 +158,7 @@ bool MainWindow::readDevice(int index)
       
     }
     else if(code == SYSTEM_SKM) {
-      continue;
+//      continue;
       QDockWidget* dock = new QDockWidget(q.value("device_name").toString(), this);
       dock->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable);
       
@@ -171,7 +171,7 @@ bool MainWindow::readDevice(int index)
       dock->setWidget(text_log);
 //      text_log->setVisible(true);
       
-      SvSKM* skm = new SvSKM(text_log);
+      SvSKM* skm = new SvSKM(text_log, q.value("device_name").toString());
       ui->tabWidget->addTab(skm->widget(), q.value("device_name").toString());
       skm->widget()->show();
       
@@ -225,3 +225,4 @@ void MainWindow::on_actionAddDevice_triggered()
     delete SELECT_DEVICE_DLG;    
     
 }
+

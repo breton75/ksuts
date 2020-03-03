@@ -43,8 +43,9 @@ class SvAbstractSystem: public QObject
   Q_OBJECT
   
 public:
-  SvAbstractSystem():
+  SvAbstractSystem(const QString& name):
     p_type(SystemType::UNDEFINED),
+    p_system_name(name),
     p_thread(nullptr)
   { }
   
@@ -61,9 +62,13 @@ public:
   
   virtual void setData() = 0;
   
+  const QString& name() const { return p_system_name; }  
+  
 protected:
   SystemType p_type;
   SvAbstractSystemThread* p_thread;
+  
+  QString p_system_name;
   
   SystemState p_state;
   

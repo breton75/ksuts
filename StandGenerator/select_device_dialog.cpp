@@ -46,3 +46,10 @@ void SelectDeviceDialog::on_SelectDeviceDialog_accepted()
   selectedDeviceIndex = indexes.at(ui->listWidget->currentRow());
   
 }
+
+void SelectDeviceDialog::on_listWidget_doubleClicked(const QModelIndex &index)
+{
+    selectedDeviceIndex = indexes.at(ui->listWidget->currentRow());
+    
+    accept();
+}

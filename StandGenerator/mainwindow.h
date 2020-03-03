@@ -58,6 +58,7 @@ private slots:
   void startStop(SvAbstractSystem* system);
   
   void on_actionAddDevice_triggered();
+
 };
 
 #endif // MAINWINDOW_H
