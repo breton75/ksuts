@@ -12,7 +12,9 @@ SvOHT::SvOHT(QTextEdit *textLog, const QString& name):
   ui->editPortParams->setText(AppParams::readParam(this, "OHT", "PortParams",
                                                    "-portname=COM1 -baudrate=19200 -databits=8 -parity=0 -stopbits=2 -flowcontrol=0").toString());
   
-  ui->spinInterval->setValue(AppParams::readParam(this, "OHT", "Interval", 1000).toUInt());
+  ui->spinSessionInterval->setValue(AppParams::readParam(this, "OHT", "SessionInterval", 1000).toUInt());
+  ui->spinPacketDelay->setValue(AppParams::readParam(this, "OHT", "PacketDelay", 50).toUInt());
+  ui->checkDisplayAnswer->setChecked(AppParams::readParam(this, "OHT", "DisplayAnswer", false).toBool());
 
   
   ohtlog.assignLog(textLog);
@@ -47,7 +49,7 @@ void SvOHT::load0x13()
     p_0x13_widgets.append(ui13);
     
     ui13->groupValues_0x13->setTitle(DirectionsCodes.at(i).first);
-    ui13->groupValues_0x13->setChecked(false);
+//    ui13->groupValues_0x13->setChecked(false);
     
     ui13->cbRegim_0x13->clear();
     ui13->cbState_0x13->clear();
@@ -109,7 +111,9 @@ SvOHT::~SvOHT()
     delete p_thread;
   
   AppParams::saveParam(this, "OHT", "PortParams", ui->editPortParams->text());
-  AppParams::saveParam(this, "OHT", "Interval", ui->spinInterval->value());
+  AppParams::saveParam(this, "OHT", "SessionInterval", ui->spinSessionInterval->value());
+  AppParams::saveParam(this, "OHT", "PacketDelay", ui->spinPacketDelay->value());
+  AppParams::saveParam(this, "OHT", "DisplayAnswer", ui->checkDisplayAnswer->isChecked());
   
   delete ui;
   delete p_main_widget;
@@ -151,16 +155,19 @@ void SvOHT::on_bnStartStop_clicked()
       
       setData();
       
-      p_thread = new SvOHTThread(&p_port_params, ui->spinInterval->value(), &p_edit_mutex, &p_data);
+      p_thread = new SvOHTThread(&p_port_params, ui->spinSessionInterval->value(), ui->spinPacketDelay->value(), ui->checkDisplayAnswer->isChecked(), &p_edit_mutex, &p_data);
 //      connect(p_thread, &SvOHTThread::finished, this, &SvOHT::threadFinished);
 //      connect(p_thread, &SvAbstractSystemThread::finished, p_thread, &SvAbstractSystemThread::deleteLater);
+      
       connect(p_thread, &SvAbstractSystemThread::logthr, this, &SvOHT::logthr);
       
+      if(ui->checkDisplayAnswer->isChecked())
+        connect(p_thread, &SvAbstractSystemThread::logthrin, this, &SvOHT::logthrin);
+      
       try {
-        
+
         p_thread->open();
         p_thread->start();
-        
         
       } catch(SvException& e) {
         
@@ -223,6 +230,9 @@ void SvOHT::setState(RunState state)
       
       ui->editPortParams->setEnabled(false);
       ui->bnOHTPortParams->setEnabled(false);
+      ui->spinPacketDelay->setEnabled(false);
+      ui->spinSessionInterval->setEnabled(false);
+      ui->checkDisplayAnswer->setEnabled(false);
       
       p_state.state = RunState::RUNNING;
       
@@ -360,24 +370,7 @@ void SvOHT::setData()
     quint16 crc_0x13 = CRC::MODBUS_CRC16((uchar*)p_data.data_0x13.data(), p_data.data_0x13.length());
     p_data.data_0x13.append(crc_0x13 & 0xFF);
     p_data.data_0x13.append(crc_0x13 >> 8);
-    
-//    for(int i = 0; i < p_data.data_0x13.count(); ++i) {
-      
-//      if(p_0x13_widgets.at(i)->groupValues_0x13->isChecked()) {
-        
-//        p_data.data_0x13[i].byte1.set(StatesCodes.at(p_0x13_widgets.at(i)->cbState_0x13->currentIndex()).second,
-//                                      RegimCodes.at(p_0x13_widgets.at(i)->cbRegim_0x13->currentIndex()).second);
-        
-//        p_data.data_0x13[i].byte2.set(URSStatesCodes.at(p_0x13_widgets.at(i)->cbURSState_0x13->currentIndex()).second,
-//                                      OtklVentCodes.value(p_0x13_widgets.at(i)->checkOtklVent_0x13->isChecked()));
-        
-//      } else {
-      
-//        p_data.data_0x13[i].byte1.set(0, 0);
-//        p_data.data_0x13[i].byte2.set(0, 0);
-      
-//      }
-//    }
+
     
     // type 0x19
     p_data.data_0x19 = QByteArray::fromHex(QString(DefByteArray_0x19).toUtf8());
@@ -428,6 +421,10 @@ void SvOHT::logthr(const QString& str)
   ohtlog << svlog::Data << svlog::TimeZZZ << svlog::out << str << svlog::endl;
 }
 
+void SvOHT::logthrin(const QString& str)
+{
+  ohtlog << svlog::Attention << svlog::TimeZZZ << svlog::in << str << svlog::endl;
+}
 
 void SvOHT::on_bnSendReset_clicked()
 {
@@ -436,10 +433,12 @@ void SvOHT::on_bnSendReset_clicked()
 
 
 /**         SvOHTThread         **/
-SvOHTThread::SvOHTThread(SerialPortParams *params, quint64 timeout, QMutex *mutex, OHTData *data):
+SvOHTThread::SvOHTThread(SerialPortParams *params, quint64 sessionTimeout, quint64 packetDelay, bool DisplayRequest, QMutex *mutex, OHTData *data):
   p_port_params(params),
-  p_timeout(timeout),
-  is_active(false)
+  p_session_timeout(sessionTimeout),
+  p_packet_delay(packetDelay),
+  is_active(false),
+  p_display_request(DisplayRequest)
 {
   p_mutex = mutex;
   p_data = data;
@@ -467,11 +466,12 @@ void SvOHTThread::open() throw(SvException&)
     
   if(!p_port.open(QIODevice::ReadWrite))
     throw exception.assign(p_port.errorString());
-  
+
   // именно после open!
   p_port.moveToThread(this);
   
-  connect(&p_port, &QSerialPort::readyRead, this, &SvOHTThread::readyRead);
+  if(p_display_request)
+    connect(&p_port, &QSerialPort::readyRead, this, &SvOHTThread::readyRead);
   
 }
 
@@ -479,7 +479,7 @@ void SvOHTThread::readyRead()
 {
   QByteArray b = p_port.readAll();
   
-  emit logthr(QString(b.toHex().toUpper()));
+  emit logthrin(QString(b.toHex().toUpper()));
 }
 
 void SvOHTThread::run() 
@@ -500,6 +500,7 @@ void SvOHTThread::run()
          emit logthr(QString(p_data->data_reset.toHex().toUpper()));
          
          p_port.write(p_data->data_reset);
+         p_port.waitForBytesWritten(1000);
          
          p_data->send_reset = false;
        }
@@ -508,8 +509,11 @@ void SvOHTThread::run()
          /** 0x00 duty **/
          p_data->data_duty = QByteArray::fromHex(QString(OHT_DefByteArray_duty).toUtf8());
          emit logthr(QString(p_data->data_duty.toHex().toUpper()));
+         
          p_port.write(p_data->data_duty);
-         QThread::msleep(p_delay);     // небольшая задержка между пакетами  
+         
+         if(p_port.waitForBytesWritten(1000))
+           QThread::msleep(p_packet_delay);     // небольшая задержка между пакетами  
          
          /** 0x05 counter **/
          p_data->data_counter = QByteArray::fromHex(QString(OHT_DefByteArray_counter).toUtf8());
@@ -525,22 +529,31 @@ void SvOHTThread::run()
          
          emit logthr(QString(p_data->data_counter.toHex().toUpper()));
          p_port.write(p_data->data_counter);
-         QThread::msleep(p_delay);   // небольшая задержка между пакетами  
+         if(p_port.waitForBytesWritten(1000))
+           QThread::msleep(p_packet_delay);     // небольшая задержка между пакетами  
          
          
          /** 0x14 **/
          emit logthr(QString(p_data->data_0x14.toHex().toUpper()));
          p_port.write(p_data->data_0x14);
-         QThread::msleep(p_delay);   // небольшая задержка между пакетами     
+         if(p_port.waitForBytesWritten(1000))
+           QThread::msleep(p_packet_delay);     // небольшая задержка между пакетами   
          
          /** 0x19 **/
          emit logthr(QString(p_data->data_0x19.toHex().toUpper()));
          p_port.write(p_data->data_0x19);
-         QThread::msleep(p_delay);   // небольшая задержка между пакетами  
+         if(p_port.waitForBytesWritten(1000))
+           QThread::msleep(p_packet_delay);     // небольшая задержка между пакетами  
          
          /** 0x13 **/
-         emit logthr(QString(p_data->data_0x13.toHex().toUpper()));
          p_port.write(p_data->data_0x13);
+         if(!p_port.waitForBytesWritten(1000)) {
+           p_port.write(QByteArray::fromHex("010203"));
+           emit logthr("010203"); 
+           
+         }
+         else
+          emit logthr(QString(p_data->data_0x13.toHex().toUpper()));
        
        }
        
@@ -551,7 +564,7 @@ void SvOHTThread::run()
      
      if(!is_active) break;
      
-     QThread::msleep(p_timeout);
+     QThread::msleep(p_session_timeout);
 
    }
    

@@ -19,7 +19,7 @@ MainWindow::MainWindow(QWidget *parent) :
 //  ui->tabLogs->addTab(text_log, "Основной");
   mainlog.assignLog(ui->textMainLog);
       
-  QSqlError err = SvPGDB::instance()->connectToDB("cms_db_modified", "172.16.4.11", 5432, "postgres", "postgres");
+  QSqlError err = SvPGDB::instance()->connectToDB("cms_db", "172.16.4.11", 5432, "postgres", "postgres");
   if(err.type() != QSqlError::NoError)
   {
      mainlog << svlog::Error << err.text() << svlog::endl;
@@ -83,10 +83,10 @@ bool MainWindow::readDevice(int index)
   QSqlQuery q = QSqlQuery(SvPGDB::instance()->db);
   
   serr = SvPGDB::instance()->execSQL(QString("SELECT device_index, device_name, connection_params, devices.description, timeout, "
-                     " devices.system_index system_index, systems.system_code system_code, systems.system_name system_name, "
-                     " systems.driver_lib driver_lib, devices.device_params as device_params "
+                     " devices.hardware_code hardware_code, hardware.hardware_name hardware_name, "
+                     " hardware.driver_lib driver_lib, devices.device_params as device_params "
                      "FROM devices "
-                     "left join systems on devices.system_index = systems.index "
+                     "left join hardware on devices.hardware_code = hardware.hardware_code "
                      "where device_index = %1").arg(index), &q);
   
   if(serr.type() != QSqlError::NoError) {
@@ -101,8 +101,8 @@ bool MainWindow::readDevice(int index)
     
     p_device_indexes.append(q.value("device_index").toInt());
     
-    QString code = q.value("system_code").toString();
-    
+    QString code = q.value("hardware_code").toString();
+
     if(code == SYSTEM_OXT) {
 //      continue;
       QDockWidget* dock = new QDockWidget(q.value("device_name").toString(), this);

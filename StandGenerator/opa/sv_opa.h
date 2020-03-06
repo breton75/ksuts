@@ -161,7 +161,7 @@ class SvOPAThread: public SvAbstractSystemThread
   Q_OBJECT
   
 public:
-  SvOPAThread(SerialPortParams *serial_params, OPA_DeviceParams* device_params, quint64 timeout, QMutex *mutex, OPAData *data);
+  SvOPAThread(SerialPortParams *serial_params, OPA_DeviceParams* device_params, quint64 sessionTimeout, quint64 packetDelay, bool DisplayRequest, QMutex *mutex, OPAData *data);
   ~SvOPAThread();
   
   void open() throw(SvException&) override;
@@ -173,8 +173,9 @@ private:
   SerialPortParams* p_port_params;
   OPA_DeviceParams* p_device_params;
   
-  quint64 p_timeout;
-  quint64 p_last_epoch;
+  quint64 p_session_timeout;
+  quint64 p_packet_delay;
+  
   bool is_active;
   
   QMutex* p_mutex;
@@ -182,7 +183,7 @@ private:
   
   SvException exception;
   
-  int p_delay = 20;
+  bool p_display_request;
   
   void run() override;
 

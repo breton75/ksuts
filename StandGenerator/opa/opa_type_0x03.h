@@ -15,7 +15,7 @@ const QString OPA_select_signals_0x03 = "SELECT signal_index, signal_name, senso
                                    "left join sensors on signals.sensor_number = sensors.sensor_number "
                                    "left join alert_types on signals.alert_type_index = alert_types.type_index "
                                    "left join placements on sensors.placement_index = placements.placement_index "
-                                   "where signals.device_index in (select device_index from devices where system_index = 1) "
+                                   "where signals.hardware_code = 'OPA' "
                                    "and signals.alert_type_index = 16 and signal_marker is not null "
                                    "order by sensor_number, alert_type_index";
 

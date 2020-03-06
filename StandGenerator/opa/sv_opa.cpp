@@ -15,8 +15,9 @@ SvOPA::SvOPA(QTextEdit *textLog, const QString &device_params, const QString& na
   
   ui->editDeviceParams->setText(device_params);
 
-  ui->spinInterval->setValue(AppParams::readParam(this, "OPA", "Interval", 1000).toUInt());
-
+  ui->spinSessionInterval->setValue(AppParams::readParam(this, "OPA", "Interval", 1000).toUInt());
+  ui->spinPacketDelay->setValue(AppParams::readParam(this, "OPA", "PacketDelay", 50).toUInt());
+  ui->checkDisplayAnswer->setChecked(AppParams::readParam(this, "OPA", "DisplayAnswer", false).toBool());
   
   
   opalog.assignLog(textLog);
@@ -145,7 +146,6 @@ void SvOPA::load0x02()
   }
   
   catch(SvException& e) {
-    
     opalog << svlog::Critical << e.error << svlog::endl;
     
     q.finish();
@@ -212,6 +212,7 @@ void SvOPA::load0x03()
   
   catch(SvException& e) {
     
+    
     opalog << svlog::Critical << e.error << svlog::endl;
     
     q.finish();
@@ -257,8 +258,10 @@ SvOPA::~SvOPA()
     delete p_thread;
   
   AppParams::saveParam(this, "OPA", "PortParams", ui->editPortParams->text());
-  AppParams::saveParam(this, "OPA", "Interval", ui->spinInterval->value());
-  
+  AppParams::saveParam(this, "OPA", "SessionInterval", ui->spinSessionInterval->value());
+  AppParams::saveParam(this, "OPA", "PacketDelay", ui->spinPacketDelay->value());
+  AppParams::saveParam(this, "OPA", "DisplayAnswer", ui->checkDisplayAnswer->isChecked());
+
   delete ui;
   delete p_main_widget;
   
@@ -309,7 +312,7 @@ void SvOPA::on_bnStartStop_clicked()
       
       setData();
       
-      p_thread = new SvOPAThread(&p_port_params, &p_device_params, ui->spinInterval->value(), &p_edit_mutex, &p_data);
+      p_thread = new SvOPAThread(&p_port_params, &p_device_params, ui->spinSessionInterval->value(), ui->spinPacketDelay->value(), ui->checkDisplayAnswer->isChecked(), &p_edit_mutex, &p_data);
 //      connect(p_thread, &SvOPAThread::finished, this, &SvOPA::threadFinished);
 //      connect(p_thread, &SvAbstractSystemThread::finished, p_thread, &SvAbstractSystemThread::deleteLater);
       connect(p_thread, &SvAbstractSystemThread::logthr, this, &SvOPA::logthr);
@@ -683,11 +686,13 @@ void SvOPA::on_table0x02_doubleClicked(const QModelIndex &index)
 
 
 /**         SvOPAThread         **/
-SvOPAThread::SvOPAThread(SerialPortParams *serial_params, OPA_DeviceParams *device_params, quint64 timeout, QMutex *mutex, OPAData *data):
+SvOPAThread::SvOPAThread(SerialPortParams *serial_params, OPA_DeviceParams *device_params, quint64 sessionTimeout, quint64 packetDelay, bool DisplayRequest, QMutex *mutex, OPAData *data):
   p_port_params(serial_params),
   p_device_params(device_params),
-  p_timeout(timeout),
-  is_active(false)
+  p_session_timeout(sessionTimeout),
+  p_packet_delay(packetDelay),
+  is_active(false),
+  p_display_request(DisplayRequest)
 {
   p_mutex = mutex;
   p_data = data;
@@ -720,7 +725,8 @@ void SvOPAThread::open() throw(SvException&)
   // именно после open!
   p_port.moveToThread(this);
   
-  connect(&p_port, &QSerialPort::readyRead, this, &SvOPAThread::readyRead);
+  if(p_display_request)
+    connect(&p_port, &QSerialPort::readyRead, this, &SvOPAThread::readyRead);
   
 }
 
@@ -753,6 +759,9 @@ void SvOPAThread::run()
          
          p_port.write(p_data->data_reset);
          
+         if(p_port.waitForBytesWritten(1000))
+           QThread::msleep(p_packet_delay);   // небольшая задержка между пакетами 
+         
          p_data->send_reset = false;
          
        }
@@ -771,7 +780,7 @@ void SvOPAThread::run()
            
            emit logthr(QString(p_data->data_duty.toHex().toUpper()));
            p_port.write(p_data->data_duty);
-           QThread::msleep(p_delay);     // небольшая задержка между пакетами  
+           QThread::msleep(p_packet_delay);     // небольшая задержка между пакетами  
          }
          
          /** 0x05 counter **/
@@ -792,7 +801,9 @@ void SvOPAThread::run()
            
            emit logthr(QString(p_data->data_counter.toHex().toUpper()));
            p_port.write(p_data->data_counter);
-           QThread::msleep(p_delay);   // небольшая задержка между пакетами 
+           
+           if(p_port.waitForBytesWritten(1000))
+             QThread::msleep(p_packet_delay);   // небольшая задержка между пакетами 
          } 
          
          /** 0x02 **/
@@ -830,6 +841,9 @@ void SvOPAThread::run()
            
            emit logthr(QString(b0x02.toHex().toUpper()));
            p_port.write(b0x02);
+           
+           if(p_port.waitForBytesWritten(1000))
+             QThread::msleep(p_packet_delay);   // небольшая задержка между пакетами 
            
            // после отправки, удаляем из списка элементы, для которых фактор = 0
            foreach (quint16 signal_index, p_data->data_0x02.keys()) {
@@ -876,6 +890,9 @@ void SvOPAThread::run()
            emit logthr(QString(b0x03.toHex().toUpper()));
            p_port.write(b0x03);
            
+           if(p_port.waitForBytesWritten(1000))
+             QThread::msleep(p_packet_delay);   // небольшая задержка между пакетами 
+           
          }
          
          // 0x04
@@ -901,7 +918,7 @@ void SvOPAThread::run()
      
      if(!is_active) break;
      
-     QThread::msleep(p_timeout);
+     QThread::msleep(p_session_timeout);
 
    }
    

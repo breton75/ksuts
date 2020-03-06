@@ -112,7 +112,7 @@
          </widget>
         </item>
         <item>
-         <widget class="QSpinBox" name="spinInterval">
+         <widget class="QSpinBox" name="spinSessionInterval">
           <property name="minimumSize">
            <size>
             <width>100</width>
@@ -133,6 +133,77 @@
           </property>
           <property name="value">
            <number>1000</number>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="label_4">
+          <property name="text">
+           <string>Задержка между пакетами</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <spacer name="horizontalSpacer_4">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeType">
+           <enum>QSizePolicy::Fixed</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item>
+         <widget class="QSpinBox" name="spinPacketDelay">
+          <property name="minimumSize">
+           <size>
+            <width>100</width>
+            <height>0</height>
+           </size>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>100</width>
+            <height>16777215</height>
+           </size>
+          </property>
+          <property name="suffix">
+           <string> msec.</string>
+          </property>
+          <property name="maximum">
+           <number>100000000</number>
+          </property>
+          <property name="value">
+           <number>50</number>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <spacer name="horizontalSpacer_2">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeType">
+           <enum>QSizePolicy::Fixed</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item>
+         <widget class="QCheckBox" name="checkDisplayAnswer">
+          <property name="text">
+           <string>Принимать ответ</string>
           </property>
          </widget>
         </item>
@@ -216,7 +287,7 @@
       <item>
        <widget class="QTabWidget" name="tabWidget_2">
         <property name="currentIndex">
-         <number>1</number>
+         <number>3</number>
         </property>
         <widget class="QWidget" name="tab0x19">
          <attribute name="title">

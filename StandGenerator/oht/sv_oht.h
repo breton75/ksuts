@@ -84,6 +84,9 @@ private:
   
   svlog::SvLog ohtlog;
   
+  QSerialPort p_port;
+  SvException exception;
+  
   void setState(RunState state);
   void setMode(EditMode mode);
   
@@ -94,7 +97,8 @@ private:
   void load0x14();
   
 public slots:
-  void logthr(const QString& str); //, svlog::MessageBuns mb, svlog::MessageTypes mt);
+  void logthr(const QString& str);
+  void logthrin(const QString& str);
   
 private slots:
   void threadFinished();
@@ -118,19 +122,22 @@ class SvOHTThread: public SvAbstractSystemThread
   Q_OBJECT
   
 public:
-  SvOHTThread(SerialPortParams *params, quint64 timeout, QMutex *mutex, OHTData *data);
+  SvOHTThread(SerialPortParams *params, quint64 sessionTimeout, quint64 packetDelay, bool DisplayRequest, QMutex *mutex, OHTData *data);
   ~SvOHTThread();
   
   void open() throw(SvException&) override;
   void stop() override;
+  
+//  void setPort(QSerialPort* port) { p_port = port; }
   
 private:
   QSerialPort p_port;
   
   SerialPortParams* p_port_params;
   
-  quint64 p_timeout;
-  quint64 p_last_epoch;
+  quint64 p_session_timeout;
+  quint64 p_packet_delay;
+
   bool is_active;
   
   QMutex* p_mutex;
@@ -138,7 +145,7 @@ private:
   
   SvException exception;
   
-  int p_delay = 1;
+  bool p_display_request;
   
   void run() override;
 

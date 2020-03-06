@@ -90,6 +90,7 @@ public:
 signals:
 //  void finished();
   void logthr(const QString& str); //, svlog::MessageBuns mb, svlog::MessageTypes mt);
+  void logthrin(const QString& str); //, svlog::MessageBuns mb, svlog::MessageTypes mt);
   
 };
 

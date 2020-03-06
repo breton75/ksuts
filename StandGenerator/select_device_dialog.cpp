@@ -13,13 +13,15 @@ SelectDeviceDialog::SelectDeviceDialog(QWidget *parent) :
   
   try {
     
-    if(SvPGDB::instance()->execSQL("Select device_index, device_name from devices", &q).type()
+    if(SvPGDB::instance()->execSQL("Select device_index, device_name, hardware_code "
+                                   "from devices", &q).type()
        != QSqlError::NoError) except.raise(SvPGDB::instance()->lastError().text());
   
     while(q.next()) {
       
-      ui->listWidget->addItem(QString("%1  [%2]").arg(q.value("device_name").toString())
-                              .arg(q.value("device_index").toString()));
+      ui->listWidget->addItem(QString("%1\t%2\t%3").arg(q.value("device_index").toString())
+                              .arg(q.value("hardware_code").toString())
+                              .arg(q.value("device_name").toString()));
       
       indexes.append(q.value("device_index").toInt());
       

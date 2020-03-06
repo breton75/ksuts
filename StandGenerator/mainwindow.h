@@ -30,7 +30,7 @@ class MainWindow : public QMainWindow
 {
   Q_OBJECT
   
-  const QString SYSTEM_OXT = "OXT";
+  const QString SYSTEM_OXT = "OHT";
   const QString SYSTEM_OPA = "OPA";
   const QString SYSTEM_KTV = "KTV";
   const QString SYSTEM_SKM = "SKM";
