@@ -780,7 +780,9 @@ void SvOPAThread::run()
            
            emit logthr(QString(p_data->data_duty.toHex().toUpper()));
            p_port.write(p_data->data_duty);
-           QThread::msleep(p_packet_delay);     // небольшая задержка между пакетами  
+           
+           if(p_port.waitForBytesWritten(1000))
+             QThread::msleep(p_packet_delay);   // небольшая задержка между пакетами 
          }
          
          /** 0x05 counter **/

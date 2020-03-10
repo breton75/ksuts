@@ -66,13 +66,14 @@ public:
   
 protected:
   SystemType p_type;
-  SvAbstractSystemThread* p_thread;
   
   QString p_system_name;
   
   SystemState p_state;
   
   QMutex p_edit_mutex;
+  
+  SvAbstractSystemThread* p_thread;
   
 };
 

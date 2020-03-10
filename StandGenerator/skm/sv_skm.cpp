@@ -12,7 +12,9 @@ SvSKM::SvSKM(QTextEdit *textLog, const QString& name):
   ui->editPortParams->setText(AppParams::readParam(this, "SKM", "PortParams",
                                                    "-portname=COM1 -baudrate=19200 -databits=8 -parity=0 -stopbits=2 -flowcontrol=0").toString());
   
-  ui->spinInterval->setValue(AppParams::readParam(this, "SKM", "Interval", 1000).toUInt());
+  ui->spinSessionInterval->setValue(AppParams::readParam(this, "SKM", "SessionInterval", 1000).toUInt());
+  ui->spinPacketDelay->setValue(AppParams::readParam(this, "SKM", "PacketDelay", 40).toUInt());
+  ui->checkDisplayAnswer->setChecked(AppParams::readParam(this, "SKM", "DisplayAnswer", false).toBool());
 
   
   p_log.assignLog(textLog);
@@ -79,7 +81,9 @@ SvSKM::~SvSKM()
     delete p_thread;
   
   AppParams::saveParam(this, "SKM", "PortParams", ui->editPortParams->text());
-  AppParams::saveParam(this, "SKM", "Interval", ui->spinInterval->value());
+  AppParams::saveParam(this, "SKM", "SessionInterval", ui->spinSessionInterval->value());
+  AppParams::saveParam(this, "SKM", "PacketDelay", ui->spinPacketDelay->value());
+  AppParams::saveParam(this, "SKM", "DisplayAnswer", ui->checkDisplayAnswer->isChecked());
   
   delete ui;
   delete p_main_widget;
@@ -121,7 +125,7 @@ void SvSKM::on_bnStartStop_clicked()
       
       setData();
       
-      p_thread = new SvSKMThread(&p_port_params, ui->spinInterval->value(), &p_edit_mutex, &p_data);
+      p_thread = new SvSKMThread(&p_port_params, ui->spinSessionInterval->value(), &p_edit_mutex, &p_data);
 //      connect(p_thread, &SvSKMThread::finished, this, &SvSKM::threadFinished);
 //      connect(p_thread, &SvAbstractSystemThread::finished, p_thread, &SvAbstractSystemThread::deleteLater);
       connect(p_thread, &SvAbstractSystemThread::logthr, this, &SvSKM::logthr);

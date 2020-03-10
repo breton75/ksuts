@@ -156,6 +156,24 @@ bool MainWindow::readDevice(int index)
     }
     else if(code == SYSTEM_KTV) {
       
+      QDockWidget* dock = new QDockWidget(q.value("device_name").toString(), this);
+      dock->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable);
+      
+      p_docks.append(dock);
+      
+      QMainWindow::addDockWidget(Qt::BottomDockWidgetArea, dock);
+      QMainWindow::tabifyDockWidget(ui->dockMainLog, dock);
+
+      QTextEdit* text_log = new QTextEdit(dock);
+      dock->setWidget(text_log);
+      
+      SvKTV* ktv = new SvKTV(text_log, q.value("device_name").toString());
+      ui->tabWidget->addTab(ktv->widget(), q.value("device_name").toString());
+      ktv->widget()->show();
+      
+      p_logs.append(text_log);
+      p_systems.append(ktv);
+      
     }
     else if(code == SYSTEM_SKM) {
 //      continue;
@@ -188,31 +206,6 @@ bool MainWindow::readDevice(int index)
   return true;
   
   
-}
-
-void MainWindow::startStop(SvAbstractSystem* system)
-{
-//  qDebug() << system->state();
-  
-//  switch (system->state()) {
-    
-//    case SystemState::STARTING:
-
-//      QThreadPool::globalInstance()->start(system->thread());
-//      system->setState(SystemState::RUNNING);
-      
-//      break;
-      
-//    case SystemState::STOPPING:
-      
-////      qDebug() << QThreadPool::globalInstance()->retryTake(system->thread());
-////      system->setState(SystemState::FINISHED);
-      
-//      break;
-
-//    default:
-//      break;
-//  }
 }
 
 void MainWindow::on_actionAddDevice_triggered()

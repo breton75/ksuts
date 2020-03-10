@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>SKM_MainWidget</class>
- <widget class="QWidget" name="SKM_MainWidget">
+ <class>KTV_MainWidget</class>
+ <widget class="QWidget" name="KTV_MainWidget">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -46,7 +46,7 @@
          </widget>
         </item>
         <item>
-         <widget class="QPushButton" name="bnSKMPortParams">
+         <widget class="QPushButton" name="bnKTVPortParams">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
             <horstretch>0</horstretch>
@@ -253,67 +253,78 @@
       <item>
        <widget class="QTabWidget" name="tabWidget_2">
         <property name="currentIndex">
-         <number>1</number>
+         <number>0</number>
         </property>
-        <widget class="QWidget" name="tab0x02">
+        <widget class="QWidget" name="tab0x33">
          <attribute name="title">
-          <string>Задраивание (Тип 0x02)</string>
-         </attribute>
-         <layout class="QVBoxLayout" name="verticalLayout_4">
-          <property name="leftMargin">
-           <number>4</number>
-          </property>
-          <property name="topMargin">
-           <number>4</number>
-          </property>
-          <property name="rightMargin">
-           <number>4</number>
-          </property>
-          <property name="bottomMargin">
-           <number>4</number>
-          </property>
-          <item>
-           <widget class="QListWidget" name="listType0x02"/>
-          </item>
-         </layout>
-        </widget>
-        <widget class="QWidget" name="tab0x01">
-         <attribute name="title">
-          <string>Факторы сработки (Тип 0x01)</string>
+          <string>Температура и влажность (Тип 0x33)</string>
          </attribute>
          <layout class="QVBoxLayout" name="verticalLayout_5">
           <item>
-           <widget class="QScrollArea" name="scrollArea">
-            <property name="widgetResizable">
+           <widget class="QTableWidget" name="table0x33">
+            <property name="inputMethodHints">
+             <set>Qt::ImhDigitsOnly</set>
+            </property>
+            <property name="selectionMode">
+             <enum>QAbstractItemView::SingleSelection</enum>
+            </property>
+            <property name="selectionBehavior">
+             <enum>QAbstractItemView::SelectRows</enum>
+            </property>
+            <property name="sortingEnabled">
              <bool>true</bool>
             </property>
-            <widget class="QWidget" name="scrollAreaWidgetContents">
-             <property name="geometry">
-              <rect>
-               <x>0</x>
-               <y>0</y>
-               <width>863</width>
-               <height>355</height>
-              </rect>
+            <attribute name="horizontalHeaderMinimumSectionSize">
+             <number>50</number>
+            </attribute>
+            <attribute name="verticalHeaderVisible">
+             <bool>false</bool>
+            </attribute>
+            <row>
+             <property name="text">
+              <string>Новая строка</string>
              </property>
-             <layout class="QVBoxLayout" name="verticalLayout_8">
-              <property name="leftMargin">
-               <number>2</number>
-              </property>
-              <property name="topMargin">
-               <number>2</number>
-              </property>
-              <property name="rightMargin">
-               <number>2</number>
-              </property>
-              <property name="bottomMargin">
-               <number>2</number>
-              </property>
-              <item>
-               <layout class="QVBoxLayout" name="vlayCameras"/>
-              </item>
-             </layout>
-            </widget>
+            </row>
+            <row>
+             <property name="text">
+              <string>Новая строка</string>
+             </property>
+            </row>
+            <row>
+             <property name="text">
+              <string>Новая строка</string>
+             </property>
+            </row>
+            <column>
+             <property name="text">
+              <string>№ датчика</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>Активен</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>Наименование помещения</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>Температура</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>Влажность</string>
+             </property>
+            </column>
+            <item row="0" column="2">
+             <property name="text">
+              <string>fsdfsdf</string>
+             </property>
+            </item>
            </widget>
           </item>
          </layout>

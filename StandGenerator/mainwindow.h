@@ -18,6 +18,7 @@
 #include "oht/sv_oht.h"
 #include "skm/sv_skm.h"
 #include "opa/sv_opa.h"
+#include "ktv/sv_ktv.h"
 
 #include "select_device_dialog.h"
 
@@ -43,7 +44,6 @@ public:
   
 private:
   Ui::MainWindow *ui;
-//  QMap<QString, AbstractSystemThread*> p_threads;
   
   QVector<QTextEdit*> p_logs;
   QVector<SvAbstractSystem*> p_systems;
@@ -55,8 +55,6 @@ private:
   
   
 private slots:
-  void startStop(SvAbstractSystem* system);
-  
   void on_actionAddDevice_triggered();
 
 };
