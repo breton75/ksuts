@@ -7,7 +7,7 @@
 #include <QSerialPort>
 #include <QVector>
 
-#include "sv_abstractsystem.h"
+#include "sv_abstract_device.h"
 #include "ktv_type_0x01.h"
 #include "ktv_type_0x33.h"
 
@@ -39,7 +39,7 @@ struct KTVData {
   
 };
 
-class SvKTV : public SvAbstractSystem //, public QObject
+class SvKTV : public SvAbstractDevice //, public QObject
 {
   Q_OBJECT
   
@@ -84,7 +84,7 @@ private slots:
   void on_bnKTVPortParams_clicked();
 };
 
-class SvKTVThread: public SvAbstractSystemThread
+class SvKTVThread: public SvAbstractDeviceThread
 {
   Q_OBJECT
   

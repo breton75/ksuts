@@ -14,7 +14,7 @@
 #include "../../svlib/sv_pgdb.h"
 #include "../../svlib/sv_settings.h"
 
-#include "sv_abstractsystem.h"
+#include "sv_abstract_device.h"
 #include "oht/sv_oht.h"
 #include "skm/sv_skm.h"
 #include "opa/sv_opa.h"
@@ -46,7 +46,7 @@ private:
   Ui::MainWindow *ui;
   
   QVector<QTextEdit*> p_logs;
-  QVector<SvAbstractSystem*> p_systems;
+  QVector<SvAbstractDevice*> p_systems;
   QVector<QDockWidget*> p_docks;
   
   QList<int> p_device_indexes;

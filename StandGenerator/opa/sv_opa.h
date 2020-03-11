@@ -10,7 +10,7 @@
 #include <QTableWidgetItem>
 #include <QCommandLineParser>
 
-#include "sv_abstractsystem.h"
+#include "sv_abstract_device.h"
 #include "opa_type_0x03.h"
 #include "opa_type_0x19.h"
 #include "opa_type_0x04.h"
@@ -88,7 +88,7 @@ struct OPA_DeviceParams
   
 };
 
-class SvOPA : public SvAbstractSystem //, public QObject
+class SvOPA : public SvAbstractDevice //, public QObject
 {
   Q_OBJECT
   
@@ -108,7 +108,7 @@ private:
   QMap<quint16, OPA_Type_0x02*> p_0x02_items;
   QMap<quint16, OPA_Type_0x03*> p_0x03_items;
   QMap<QListWidgetItem*, OPA_Type_0x19_value> p_0x19_items;
-  QMap<quint16, OPA_Type_0x04_value> p_0x04_items;
+  QMap<QListWidgetItem*, OPA_Type_0x04_value> p_0x04_items;
   
   SerialPortParams p_port_params;
   OPA_DeviceParams p_device_params;
@@ -151,12 +151,12 @@ private slots:
   void on_bnOPAPortParams_clicked();
   
 signals:
-  void start_stop(SvAbstractSystem*);
+  void start_stop(SvAbstractDevice*);
   
   
 };
 
-class SvOPAThread: public SvAbstractSystemThread
+class SvOPAThread: public SvAbstractDeviceThread
 {
   Q_OBJECT
   

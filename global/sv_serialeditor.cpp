@@ -1,7 +1,10 @@
 #include "sv_serialeditor.h"
 #include "ui_sv_serialeditor.h"
 
-SvSerialEditor* SERIALEDITOR_UI;
+using namespace sv;
+
+SvSerialEditor* SERIALEDITOR_UI = nullptr;
+SvSerialEditor* SvSerialEditor::_instance = nullptr;
 
 SvSerialEditor::SvSerialEditor(SerialPortParams params, const QString& label, QWidget *parent) :
   QDialog(parent),
@@ -11,8 +14,6 @@ SvSerialEditor::SvSerialEditor(SerialPortParams params, const QString& label, QW
   _params = params;
   
   init(label);
-  
-  ui->lblCaption->setText(label);
   
 }
 
@@ -102,3 +103,44 @@ void SvSerialEditor::accept()
     
 }
 
+int SvSerialEditor::showDialog(SerialPortParams params, const QString& label, QWidget *parent)
+{
+  _instance = new SvSerialEditor(params, label, parent);
+  return  _instance->exec();
+}
+
+int SvSerialEditor::showDialog(QString params, const QString &label, QWidget *parent)
+{
+  _instance = new SvSerialEditor(params, label, parent);
+  return  _instance->exec();
+}
+
+void SvSerialEditor::deleteDialog()
+{
+  if(_instance)
+    delete _instance;
+  
+  _instance = nullptr;
+  
+}
+
+SerialPortParams SvSerialEditor::params()
+{
+  SerialPortParams p;
+  
+  if(_instance)
+    p = _instance->_params;
+  
+  return p;
+}
+
+QString SvSerialEditor::stringParams()
+{
+  SerialPortParams p;
+  
+  if(_instance)
+    p = _instance->_params;
+  
+  return SerialParamsParser::getSring(p);
+  
+}

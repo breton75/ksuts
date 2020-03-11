@@ -44,7 +44,6 @@ HEADERS += \
     ../../svlib/sv_config.h \
     ../../svlib/sv_log.h \
     ../../svlib/sv_pgdb.h \
-    sv_abstractsystem.h \
     oht/sv_oht.h \
     ../global/dev_defs.h \
     ../../svlib/sv_exception.h \
@@ -67,7 +66,8 @@ HEADERS += \
     ktv/ktv_type_0x01.h \
     ktv/sv_ktv.h \
     ktv/spin_delegate.h \
-    ktv/ktv_type_0x33.h
+    ktv/ktv_type_0x33.h \
+    sv_abstract_device.h
 
 FORMS += \
         mainwindow.ui \

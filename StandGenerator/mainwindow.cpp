@@ -58,7 +58,7 @@ MainWindow::~MainWindow()
   foreach (QTextEdit* te, p_logs)
     delete te;
   
-  foreach (SvAbstractSystem* sy, p_systems)
+  foreach (SvAbstractDevice* sy, p_systems)
     delete sy;  
   
   foreach (QDockWidget* dock, p_docks)

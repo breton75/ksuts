@@ -7,7 +7,7 @@
 #include <QSerialPort>
 #include <QVector>
 
-#include "sv_abstractsystem.h"
+#include "sv_abstract_device.h"
 #include "type_0x13.h"
 #include "type_0x19.h"
 #include "type_0x14.h"
@@ -59,7 +59,7 @@ struct OHTData {
   
 };
 
-class SvOHT : public SvAbstractSystem //, public QObject
+class SvOHT : public SvAbstractDevice //, public QObject
 {
   Q_OBJECT
   
@@ -112,12 +112,12 @@ private slots:
   void on_bnOHTPortParams_clicked();
   
 signals:
-  void start_stop(SvAbstractSystem*);
+  void start_stop(SvAbstractDevice*);
   
   
 };
 
-class SvOHTThread: public SvAbstractSystemThread
+class SvOHTThread: public SvAbstractDeviceThread
 {
   Q_OBJECT
   

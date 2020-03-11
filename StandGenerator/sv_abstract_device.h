@@ -10,7 +10,7 @@
 #include "../../svlib/sv_exception.h"
 #include "../../svlib/sv_log.h"
 
-enum SystemType {
+enum HardwareType {
   UNDEFINED,
   OHT,
   POMP,
@@ -36,27 +36,26 @@ struct SystemState {
   EditMode mode: 2;   // аналогично state
 };
 
-class SvAbstractSystemThread;
+class SvAbstractDeviceThread;
     
-class SvAbstractSystem: public QObject
+class SvAbstractDevice: public QObject
 {
   Q_OBJECT
   
 public:
-  SvAbstractSystem(const QString& name):
-    p_type(SystemType::UNDEFINED),
+  SvAbstractDevice(const QString& name):
+    p_type(HardwareType::UNDEFINED),
     p_system_name(name),
     p_thread(nullptr)
   { }
   
-//  virtual ~SvAbstractSystem() { }
+//  virtual ~SvAbstractDevice() { }
   
-  virtual SystemType type() const { return p_type; }
+  virtual HardwareType type() const { return p_type; }
   
-  SvAbstractSystemThread* thread() const { return p_thread; }
+  SvAbstractDeviceThread* thread() const { return p_thread; }
   
   virtual void setState(RunState p_state) = 0; //{ }
-//  virtual SystemState state() const = 0;
   
   virtual void setMode(EditMode mode) = 0;
   
@@ -65,7 +64,7 @@ public:
   const QString& name() const { return p_system_name; }  
   
 protected:
-  SystemType p_type;
+  HardwareType p_type;
   
   QString p_system_name;
   
@@ -73,17 +72,17 @@ protected:
   
   QMutex p_edit_mutex;
   
-  SvAbstractSystemThread* p_thread;
+  SvAbstractDeviceThread* p_thread;
   
 };
 
-class SvAbstractSystemThread: public QThread
+class SvAbstractDeviceThread: public QThread
 {
   Q_OBJECT
   
 public:
-  SvAbstractSystemThread() {}
-//  ~SvAbstractSystemThread() = 0;
+  SvAbstractDeviceThread() {}
+//  ~SvAbstractDeviceThread() = 0;
 
   virtual void open() throw(SvException&) = 0;
   virtual void stop() = 0;

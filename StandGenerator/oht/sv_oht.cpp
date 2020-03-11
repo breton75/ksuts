@@ -3,7 +3,7 @@
 //svlog::SvLog ohtlog;
 
 SvOHT::SvOHT(QTextEdit *textLog, const QString& name):
-  SvAbstractSystem(name),
+  SvAbstractDevice(name),
   p_main_widget(new QWidget), 
   ui(new Ui::MainWidget)  
 {
@@ -157,12 +157,12 @@ void SvOHT::on_bnStartStop_clicked()
       
       p_thread = new SvOHTThread(&p_port_params, ui->spinSessionInterval->value(), ui->spinPacketDelay->value(), ui->checkDisplayAnswer->isChecked(), &p_edit_mutex, &p_data);
 //      connect(p_thread, &SvOHTThread::finished, this, &SvOHT::threadFinished);
-//      connect(p_thread, &SvAbstractSystemThread::finished, p_thread, &SvAbstractSystemThread::deleteLater);
+//      connect(p_thread, &SvAbstractDeviceThread::finished, p_thread, &SvAbstractDeviceThread::deleteLater);
       
-      connect(p_thread, &SvAbstractSystemThread::logthr, this, &SvOHT::logthr);
+      connect(p_thread, &SvAbstractDeviceThread::logthr, this, &SvOHT::logthr);
       
       if(ui->checkDisplayAnswer->isChecked())
-        connect(p_thread, &SvAbstractSystemThread::logthrin, this, &SvOHT::logthrin);
+        connect(p_thread, &SvAbstractDeviceThread::logthrin, this, &SvOHT::logthrin);
       
       try {
 
@@ -431,6 +431,13 @@ void SvOHT::on_bnSendReset_clicked()
     p_data.send_reset = true;
 }
 
+void SvOHT::on_bnOHTPortParams_clicked()
+{
+  if(sv::SvSerialEditor::showDialog(ui->editPortParams->text(), this->name(), this->p_main_widget) == QDialog::Accepted)
+    ui->editPortParams->setText(sv::SvSerialEditor::stringParams());
+  
+  sv::SvSerialEditor::deleteDialog();
+}
 
 /**         SvOHTThread         **/
 SvOHTThread::SvOHTThread(SerialPortParams *params, quint64 sessionTimeout, quint64 packetDelay, bool DisplayRequest, QMutex *mutex, OHTData *data):
@@ -573,10 +580,3 @@ void SvOHTThread::run()
 }
 
 
-void SvOHT::on_bnOHTPortParams_clicked()
-{
-  if(SvSerialEditor::showDialog(ui->editPortParams->text(), this->name(), this->p_main_widget) == QDialog::Accepted)
-    ui->editPortParams->setText(SvSerialEditor::stringParams());
-  
-  SvSerialEditor::deleteDialog();
-}

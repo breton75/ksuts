@@ -7,7 +7,7 @@
 #include <QSerialPort>
 #include <QVector>
 
-#include "sv_abstractsystem.h"
+#include "sv_abstract_device.h"
 #include "type_0x01.h"
 #include "type_0x02.h"
 
@@ -40,7 +40,7 @@ struct SKMData {
   
 };
 
-class SvSKM : public SvAbstractSystem //, public QObject
+class SvSKM : public SvAbstractDevice //, public QObject
 {
   Q_OBJECT
   
@@ -85,12 +85,12 @@ private slots:
   void on_bnSKMPortParams_clicked();
 };
 
-class SvSKMThread: public SvAbstractSystemThread
+class SvSKMThread: public SvAbstractDeviceThread
 {
   Q_OBJECT
   
 public:
-  SvSKMThread(SerialPortParams *params, quint64 timeout, QMutex *mutex, SKMData *data);
+  SvSKMThread(SerialPortParams *params, quint64 sessionTimeout, quint64 packetDelay, bool DisplayRequest, QMutex *mutex, SKMData *data);
   ~SvSKMThread();
   
   void open() throw(SvException&) override;
@@ -101,15 +101,17 @@ private:
   
   SerialPortParams* p_port_params;
   
-  quint64 p_timeout;
-  bool is_running;
+  quint64 p_session_timeout;
+  quint64 p_packet_delay;
+  
+  bool is_active;
   
   QMutex* p_mutex;
   SKMData* p_data;
   
   SvException exception;
   
-  int p_delay = 200;
+  bool p_display_request;
   
   void run() override;
 

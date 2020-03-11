@@ -3,7 +3,7 @@
 //svlog::SvLog p_log;
 
 SvSKM::SvSKM(QTextEdit *textLog, const QString& name): 
-  SvAbstractSystem(name),
+  SvAbstractDevice(name),
   p_main_widget(new QWidget), 
   ui(new Ui::SKM_MainWidget)  
 {
@@ -125,10 +125,10 @@ void SvSKM::on_bnStartStop_clicked()
       
       setData();
       
-      p_thread = new SvSKMThread(&p_port_params, ui->spinSessionInterval->value(), &p_edit_mutex, &p_data);
+      p_thread = new SvSKMThread(&p_port_params, ui->spinSessionInterval->value(), ui->spinPacketDelay->value(), ui->checkDisplayAnswer->isChecked(), &p_edit_mutex, &p_data);
 //      connect(p_thread, &SvSKMThread::finished, this, &SvSKM::threadFinished);
-//      connect(p_thread, &SvAbstractSystemThread::finished, p_thread, &SvAbstractSystemThread::deleteLater);
-      connect(p_thread, &SvAbstractSystemThread::logthr, this, &SvSKM::logthr);
+//      connect(p_thread, &SvAbstractDeviceThread::finished, p_thread, &SvAbstractDeviceThread::deleteLater);
+      connect(p_thread, &SvAbstractDeviceThread::logthr, this, &SvSKM::logthr);
       
       try {
         
@@ -381,12 +381,22 @@ void SvSKM::logthr(const QString& str)
   p_log << svlog::Data << svlog::TimeZZZ << svlog::out << str << svlog::endl;
 }
 
+void SvSKM::on_bnSKMPortParams_clicked()
+{
+  if(sv::SvSerialEditor::showDialog(ui->editPortParams->text(), this->name(), p_main_widget) == QDialog::Accepted)
+    ui->editPortParams->setText(sv::SvSerialEditor::stringParams());
+  
+  sv::SvSerialEditor::deleteDialog();
+}
+
 
 /**         SvSKMThread         **/
-SvSKMThread::SvSKMThread(SerialPortParams *params, quint64 timeout, QMutex *mutex, SKMData *data):
+SvSKMThread::SvSKMThread(SerialPortParams *params, quint64 sessionTimeout, quint64 packetDelay, bool DisplayRequest, QMutex *mutex, SKMData *data):
   p_port_params(params),
-  p_timeout(timeout),
-  is_running(false)
+  p_session_timeout(sessionTimeout),
+  p_packet_delay(packetDelay),
+  is_active(false),
+  p_display_request(DisplayRequest) 
 {
   p_mutex = mutex;
   p_data = data;
@@ -399,7 +409,7 @@ SvSKMThread::~SvSKMThread()
 
 void SvSKMThread::stop()
 {
-  is_running = false;
+  is_active = false;
   while(this->isRunning()) qApp->processEvents();
 }
 
@@ -418,7 +428,8 @@ void SvSKMThread::open() throw(SvException&)
   // именно после open!
   p_port.moveToThread(this);
   
-  connect(&p_port, &QSerialPort::readyRead, this, &SvSKMThread::readyRead);
+  if(p_display_request)
+    connect(&p_port, &QSerialPort::readyRead, this, &SvSKMThread::readyRead);
   
 }
 
@@ -431,9 +442,9 @@ void SvSKMThread::readyRead()
 
 void SvSKMThread::run() 
 {
-   is_running = true;
+   is_active = true;
    
-   while(is_running) {
+   while(is_active) {
      
      if(p_mutex->tryLock(3000)) {
    
@@ -442,20 +453,23 @@ void SvSKMThread::run()
          emit logthr(QString(p_data->data_0x02.toHex().toUpper()));
          p_port.write(p_data->data_0x02);
          
-         QThread::msleep(p_delay);   // небольшая задержка между пакетами     
+         if(p_port.waitForBytesWritten(1000))
+           QThread::msleep(p_packet_delay);   // небольшая задержка между пакетами     
          
          // 0x01
          emit logthr(QString(p_data->data_0x01.toHex().toUpper()));
          p_port.write(p_data->data_0x01);
+         
+         p_port.waitForBytesWritten(1000);
 
        
        p_mutex->unlock();
        
      }
      
-     if(!is_running) break;
+     if(!is_active) break;
      
-     QThread::msleep(p_timeout);
+     QThread::msleep(p_session_timeout);
 
    }
    
@@ -463,11 +477,3 @@ void SvSKMThread::run()
    
 }
 
-
-void SvSKM::on_bnSKMPortParams_clicked()
-{
-  if(SvSerialEditor::showDialog(ui->editPortParams->text(), this->name(), p_main_widget) == QDialog::Accepted)
-    ui->editPortParams->setText(SvSerialEditor::stringParams());
-  
-  SvSerialEditor::deleteDialog();
-}

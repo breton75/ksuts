@@ -3,7 +3,7 @@
 //svlog::SvLog p_log;
 
 SvKTV::SvKTV(QTextEdit *textLog, const QString& name): 
-  SvAbstractSystem(name),
+  SvAbstractDevice(name),
   p_main_widget(new QWidget), 
   ui(new Ui::KTV_MainWidget)  
 {
@@ -128,8 +128,8 @@ void SvKTV::on_bnStartStop_clicked()
       
       p_thread = new SvKTVThread(&p_port_params, ui->spinSessionInterval->value(), ui->spinPacketDelay->value(), ui->checkDisplayAnswer->isChecked(), &p_edit_mutex, &p_data);
 //      connect(p_thread, &SvKTVThread::finished, this, &SvKTV::threadFinished);
-//      connect(p_thread, &SvAbstractSystemThread::finished, p_thread, &SvAbstractSystemThread::deleteLater);
-      connect(p_thread, &SvAbstractSystemThread::logthr, this, &SvKTV::logthr);
+//      connect(p_thread, &SvAbstractDeviceThread::finished, p_thread, &SvAbstractDeviceThread::deleteLater);
+      connect(p_thread, &SvAbstractDeviceThread::logthr, this, &SvKTV::logthr);
       
       try {
         
@@ -243,9 +243,14 @@ void SvKTV::setMode(EditMode mode)
       ui->bnEditData->setText("Принять");
       
       // 0x33
-      foreach(KTV_Type_0x33* item_0x33, p_0x33_items.values())
+      foreach(KTV_Type_0x33* item_0x33, p_0x33_items.values()) {
         foreach (QTableWidgetItem* item, item_0x33->items)
-          item->setFlags(item->flags() | Qt::ItemIsEnabled );
+          item->setFlags(item->flags() | Qt::ItemIsEnabled);
+        
+        item_0x33->item_temperature->setFlags(item_0x33->item_temperature->flags() | Qt::ItemIsEditable);
+        item_0x33->item_vlagnost->setFlags(item_0x33->item_vlagnost->flags() | Qt::ItemIsEditable);
+          
+      }
    
       break;
     
@@ -254,10 +259,18 @@ void SvKTV::setMode(EditMode mode)
       ui->bnEditData->setText("Изменить");
       
       // 0x01
-      foreach(KTV_Type_0x33* item_0x33, p_0x33_items.values()) 
+      foreach(KTV_Type_0x33* item_0x33, p_0x33_items.values()) {
         foreach (QTableWidgetItem* item, item_0x33->items)
           item->setFlags(p_state.state == RunState::FINISHED ? item->flags() | Qt::ItemIsEnabled :
-                                                               item->flags() & (Qt::ItemIsUserCheckable | Qt::ItemIsSelectable));       
+                                                               item->flags() & (Qt::ItemIsUserCheckable | Qt::ItemIsSelectable));
+        
+        if(p_state.state == RunState::FINISHED) {
+          
+          item_0x33->item_temperature->setFlags(item_0x33->item_temperature->flags() | Qt::ItemIsEditable);
+          item_0x33->item_vlagnost->setFlags(item_0x33->item_vlagnost->flags() | Qt::ItemIsEditable);
+          
+        }
+      }
       
       break;      
       
@@ -302,11 +315,10 @@ void SvKTV::setData()
 
     // type 0x33
     p_data.data_0x33 = QByteArray::fromHex(QString(KTV_DefByteArray_0x33).toUtf8());
-    qDebug() << p_0x33_items.count();
+    
     foreach (quint8 sensorNum, p_0x33_items.keys()) {
      
       KTV_Type_0x33* cur_0x33 = p_0x33_items.value(sensorNum);
-      qDebug() << cur_0x33->item_temperature; //->data(Qt::DisplayRole).toUInt();
       
       quint8 snum = 0xF0;
       quint8 snh  = 0xF0;
@@ -319,8 +331,8 @@ void SvKTV::setData()
         snum = sensorNum;
         snh  = 0x00;
         snl  = 0x01;
-        temp = cur_0x33->item_temperature->data(Qt::UserRole).toUInt();
-        vlag = cur_0x33->item_vlagnost->data(Qt::UserRole).toUInt();
+        temp = cur_0x33->item_temperature->data(Qt::DisplayRole).toUInt();
+        vlag = cur_0x33->item_vlagnost->data(Qt::DisplayRole).toUInt();
       }
       
       checkAndAppend(snum);
@@ -360,6 +372,14 @@ void SvKTV::logthr(const QString& str)
   p_log << svlog::Data << svlog::TimeZZZ << svlog::out << str << svlog::endl;
 }
 
+void SvKTV::on_bnKTVPortParams_clicked()
+{
+  if(sv::SvSerialEditor::showDialog(ui->editPortParams->text(), this->name(), this->p_main_widget) == QDialog::Accepted)   
+    ui->editPortParams->setText(sv::SvSerialEditor::stringParams());
+
+  sv::SvSerialEditor::deleteDialog();
+
+}
 
 /**         SvKTVThread         **/
 SvKTVThread::SvKTVThread(SerialPortParams *params, quint64 sessionTimeout, quint64 packetDelay, bool DisplayRequest, QMutex *mutex, KTVData *data):
@@ -399,7 +419,8 @@ void SvKTVThread::open() throw(SvException&)
   // именно после open!
   p_port.moveToThread(this);
   
-  connect(&p_port, &QSerialPort::readyRead, this, &SvKTVThread::readyRead);
+  if(p_display_request)
+    connect(&p_port, &QSerialPort::readyRead, this, &SvKTVThread::readyRead);
   
 }
 
@@ -442,11 +463,3 @@ void SvKTVThread::run()
    
 }
 
-
-void SvKTV::on_bnKTVPortParams_clicked()
-{
-  if(SvSerialEditor::showDialog(ui->editPortParams->text(), this->name(), p_main_widget) == QDialog::Accepted)
-    ui->editPortParams->setText(SvSerialEditor::stringParams());
-  
-  SvSerialEditor::deleteDialog();
-}
