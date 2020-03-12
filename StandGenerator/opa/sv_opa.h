@@ -9,6 +9,7 @@
 #include <QTableWidget>
 #include <QTableWidgetItem>
 #include <QCommandLineParser>
+#include <QFileDialog>
 
 #include "sv_abstract_device.h"
 #include "opa_type_0x03.h"
@@ -92,6 +93,12 @@ class SvOPA : public SvAbstractDevice //, public QObject
 {
   Q_OBJECT
   
+  enum DataRegims {
+    Manual,
+    Random,
+    Log
+  };
+  
 public:
   SvOPA(QTextEdit *textLog, const QString& device_params, const QString &name);
   ~SvOPA();
@@ -119,10 +126,18 @@ private:
   
   SvException p_except;
   
+  DataRegims p_data_regim;
+  
+  QTimer timer_0x02;
+  QTimer timer_0x03;
+  QTimer timer_0x04;
+  QTimer timer_0x19;
+  
   void setState(RunState state);
   void setMode(EditMode mode);
   
   void setData();
+ 
   
   void load0x02();
   void load0x03();
@@ -131,12 +146,23 @@ private:
   
   bool parseDeviceParams(const QString &params);
   
+  int getRndTimeout();
   
 public slots:
   void logthr(const QString& str); //, svlog::MessageBuns mb, svlog::MessageTypes mt);
   
 private slots:
   void threadFinished();
+  
+  void random0x02();
+  void random0x03();
+  void random0x04();
+  void random0x19();
+  
+  void setData_0x02();
+  void setData_0x03();
+  void setData_0x04();
+  void setData_0x19(); 
   
   void on_bnEditData_clicked();
   
@@ -149,6 +175,10 @@ private slots:
   void on_table0x02_doubleClicked(const QModelIndex &index);
   
   void on_bnOPAPortParams_clicked();
+  
+  void on_comboRegim_currentIndexChanged(int index);
+  
+  void on_bnSelectLogPath_clicked();
   
 signals:
   void start_stop(SvAbstractDevice*);
