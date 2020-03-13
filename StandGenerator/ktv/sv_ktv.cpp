@@ -28,7 +28,13 @@ SvKTV::SvKTV(QTextEdit *textLog, const QString& name):
   
   connect(ui->bnStartStop, &QPushButton::pressed, this, &SvKTV::on_bnStartStop_clicked);
   connect(ui->bnEditData, &QPushButton::clicked, this, &SvKTV::on_bnEditData_clicked);
-  connect(ui->bnKTVPortParams, &QPushButton::clicked, this, &SvKTV::on_bnKTVPortParams_clicked);
+  connect(ui->bnPortParams, &QPushButton::clicked, [=](){  
+                                if(sv::SvSerialEditor::showDialog(ui->editPortParams->text(), this->name(), p_main_widget) == QDialog::Accepted)
+                                  ui->editPortParams->setText(sv::SvSerialEditor::stringParams());
+                                sv::SvSerialEditor::deleteDialog();
+                              });
+  
+  connect(ui->comboRegim, SIGNAL(currentIndexChanged(int)), this, SLOT(on_comboRegim_currentIndexChanged(int)));
   
 }
 
@@ -41,8 +47,6 @@ void SvKTV::load0x33()
   ui->table0x33->setColumnCount(5);
   
   for(int i = 0; i < SensorNumbersByRooms.count(); ++i) {
-    
-    
         
         // для корректной сортировки в таблице
         QTableWidgetItem* snumItem = new QTableWidgetItem("");
@@ -54,7 +58,8 @@ void SvKTV::load0x33()
         QTableWidgetItem* vlagItem = new QTableWidgetItem("");
         vlagItem->setData(Qt::DisplayRole, 30);
         
-        KTV_Type_0x33* t0x33 = new KTV_Type_0x33(snumItem,
+        KTV_Type_0x33* t0x33 = new KTV_Type_0x33(SensorNumbersByRooms.at(i).first,
+                                                 snumItem,
                                                  new QTableWidgetItem(""),
                                                  new QTableWidgetItem(SensorNumbersByRooms.at(i).second),
                                                  tempItem,
@@ -67,8 +72,6 @@ void SvKTV::load0x33()
           ui->table0x33->setItem(row - 1, col, t0x33->items.at(col));
           
         }
-        
-        t0x33->sensor_number = SensorNumbersByRooms.at(i).first;
         
         p_0x33_items.insert(t0x33->sensor_number, t0x33);
         
@@ -105,6 +108,13 @@ void SvKTV::on_bnStartStop_clicked()
       
       threadFinished();
       
+      if(p_data_regim == DataRegims::Random) {
+        
+        disconnect(&timer_0x33, &QTimer::timeout, this, &SvKTV::setData_0x33);
+        timer_0x33.stop();
+        
+      }
+      
       break;
       
     case RunState::FINISHED:
@@ -136,6 +146,14 @@ void SvKTV::on_bnStartStop_clicked()
         p_thread->open();
         p_thread->start();
         
+        /** если стоит режим 'случайный', то запускаем таймеры генерации **/
+        if(p_data_regim == DataRegims::Random) { 
+          
+          connect(&timer_0x33, &QTimer::timeout, this, &SvKTV::setData_0x33);
+
+          timer_0x33.start(getRndTimeout(ui->spinRandomInterval->value()));
+          
+        }
         
       } catch(SvException& e) {
         
@@ -197,10 +215,11 @@ void SvKTV::setState(RunState state)
         w->setEnabled(true);
       
       ui->editPortParams->setEnabled(false);
-      ui->bnKTVPortParams->setEnabled(false); 
+      ui->bnPortParams->setEnabled(false); 
       ui->spinPacketDelay->setEnabled(false);
       ui->spinSessionInterval->setEnabled(false);
       ui->checkDisplayAnswer->setEnabled(false);
+      ui->comboRegim->setEnabled(false);
       
       p_state.state = RunState::RUNNING;
       
@@ -311,28 +330,59 @@ void SvKTV::on_bnEditData_clicked()
 
 void SvKTV::setData()
 {
+  setData_0x33();
+}
+
+void SvKTV::setData_0x33()
+{
+  auto rnd{ [](int max) -> quint8 {
+    
+      qsrand(QDateTime::currentMSecsSinceEpoch());
+      return static_cast<quint8>(qrand() % max);
+
+  } };
+  
+  /** type 0x33 **/
   if(p_edit_mutex.tryLock(3000)) {
 
-    // type 0x33
+    // для режима 'случайный' определяем номер датчиков, которые будут включены (остальные будут выключены)
+    QList<quint8> random_sensors;
+    if(p_data_regim == DataRegims::Random)
+      random_sensors.append(p_0x33_items.keys().at(rnd(p_0x33_items.keys().count())));
+
     p_data.data_0x33 = QByteArray::fromHex(QString(KTV_DefByteArray_0x33).toUtf8());
     
     foreach (quint8 sensorNum, p_0x33_items.keys()) {
      
       KTV_Type_0x33* cur_0x33 = p_0x33_items.value(sensorNum);
       
-      quint8 snum = 0xF0;
-      quint8 snh  = 0xF0;
-      quint8 snl  = 0xF0;
-      quint8 temp = 0xF0;
-      quint8 vlag = 0xF0;
+      static quint8 snum = 0xF0;
+      static quint8 snh  = 0xF0;
+      static quint8 snl  = 0xF0;
+      static quint8 temp = 0xF0;
+      static quint8 vlag = 0xF0;
       
-      if(cur_0x33->item_is_active->checkState() == Qt::Checked) {
+      if(p_data_regim == DataRegims::Random) {
         
         snum = sensorNum;
         snh  = 0x00;
         snl  = 0x01;
-        temp = cur_0x33->item_temperature->data(Qt::DisplayRole).toUInt();
-        vlag = cur_0x33->item_vlagnost->data(Qt::DisplayRole).toUInt();
+        
+        if(random_sensors.contains(cur_0x33->sensor_number)) {
+          temp = rnd(100);
+          vlag = rnd(100);
+        }
+            
+      }
+      else {
+        
+        bool b = cur_0x33->item_is_active->checkState() == Qt::Checked;
+        
+        snum = !b ? 0xF0 : sensorNum;
+        snh  = !b ? 0xF0 : 0x00;
+        snl  = !b ? 0xF0 : 0x01;
+        temp = !b ? 0xF0 : cur_0x33->item_temperature->data(Qt::DisplayRole).toUInt();
+        vlag = !b ? 0xF0 : cur_0x33->item_vlagnost->data(Qt::DisplayRole).toUInt();
       }
       
       checkAndAppend(snum);
@@ -354,7 +404,10 @@ void SvKTV::setData()
     p_edit_mutex.unlock();
     
   }
- 
+  
+  if(p_data_regim == DataRegims::Random)
+    timer_0x33.start(getRndTimeout(ui->spinRandomInterval->value()));
+
 }
 
 void SvKTV::checkAndAppend(quint8 val)
@@ -372,13 +425,30 @@ void SvKTV::logthr(const QString& str)
   p_log << svlog::Data << svlog::TimeZZZ << svlog::out << str << svlog::endl;
 }
 
-void SvKTV::on_bnKTVPortParams_clicked()
+void SvKTV::on_comboRegim_currentIndexChanged(int index)
 {
-  if(sv::SvSerialEditor::showDialog(ui->editPortParams->text(), this->name(), this->p_main_widget) == QDialog::Accepted)   
-    ui->editPortParams->setText(sv::SvSerialEditor::stringParams());
-
-  sv::SvSerialEditor::deleteDialog();
-
+  ui->frameManual->setVisible(false);
+  ui->frameRandom->setVisible(false);
+  ui->frameLogs->setVisible(false);
+  
+  switch (index) {
+    
+    case 0:
+      ui->frameManual->setVisible(true);
+      p_data_regim = DataRegims::Manual;
+      break;
+      
+    case 1:
+      ui->frameRandom->setVisible(true);
+      p_data_regim = DataRegims::Random;
+      break;
+      
+    case 2:
+      ui->frameLogs->setVisible(true);
+      p_data_regim = DataRegims::Log;
+      break;
+      
+  }
 }
 
 /**         SvKTVThread         **/

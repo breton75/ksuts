@@ -62,10 +62,15 @@ private:
   
   svlog::SvLog p_log;
   
+  DataRegims p_data_regim; 
+  
+  QTimer timer_0x33;
+  
   void setState(RunState state);
   void setMode(EditMode mode);
   
   void setData();
+  void setData_0x33();
   
   void load0x33();
   
@@ -81,7 +86,8 @@ private slots:
   
   void on_bnStartStop_clicked();
   
-  void on_bnKTVPortParams_clicked();
+  void on_comboRegim_currentIndexChanged(int index);
+  
 };
 
 class SvKTVThread: public SvAbstractDeviceThread

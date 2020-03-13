@@ -20,6 +20,11 @@ struct Type_0x19_value {
     this->bit = bit;
   }
   
+  bool operator ==(const Type_0x19_value& other)
+  { 
+    return (this->byte == other.byte) && (this->bit == other.bit);
+  }
+  
 };
 
 const QString DefByteArray_0x19 = "01100a06000810190e"

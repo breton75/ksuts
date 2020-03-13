@@ -36,12 +36,15 @@ struct KTV_Type_0x33 {
   
   KTV_Type_0x33() { }
   
-  KTV_Type_0x33(QTableWidgetItem* item_sensor_number,
+  KTV_Type_0x33(quint8 sensor_number,
+                QTableWidgetItem* item_sensor_number,
                 QTableWidgetItem* item_is_active,
                 QTableWidgetItem* item_room_name,
                 QTableWidgetItem* item_temperature,
                 QTableWidgetItem* item_vlagnost)
   {
+    this->sensor_number = sensor_number;
+    
     items.clear();
     
     this->item_sensor_number  = item_sensor_number;   items.append(item_sensor_number);  
@@ -67,6 +70,7 @@ struct KTV_Type_0x33 {
     this->item_vlagnost->setTextAlignment(Qt::AlignCenter | Qt::AlignVCenter);    
     
   }
+  
 };
 
 

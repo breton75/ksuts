@@ -36,6 +36,12 @@ struct SystemState {
   EditMode mode: 2;   // аналогично state
 };
 
+enum DataRegims {
+  Manual,
+  Random,
+  Log
+};
+
 class SvAbstractDeviceThread;
     
 class SvAbstractDevice: public QObject
@@ -62,6 +68,14 @@ public:
   virtual void setData() = 0;
   
   const QString& name() const { return p_system_name; }  
+  
+  static int getRndTimeout(const int maxSeconds)
+  {
+    qsrand(QDateTime::currentMSecsSinceEpoch());
+    int r = qrand() % maxSeconds + 1; 
+
+    return r * 1000;
+  }
   
 protected:
   HardwareType p_type;

@@ -20,6 +20,11 @@ struct Type_0x14_value {
     this->bit = bit;
   }
   
+  bool operator ==(const Type_0x14_value& other)
+  { 
+    return (this->byte == other.byte) && (this->bit == other.bit);
+  }
+  
 };
 
 const QString DefByteArray_0x14 = "01100AFA0003061404"

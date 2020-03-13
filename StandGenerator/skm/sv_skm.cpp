@@ -29,7 +29,13 @@ SvSKM::SvSKM(QTextEdit *textLog, const QString& name):
   
   connect(ui->bnStartStop, &QPushButton::pressed, this, &SvSKM::on_bnStartStop_clicked);
   connect(ui->bnEditData, &QPushButton::clicked, this, &SvSKM::on_bnEditData_clicked);
-  connect(ui->bnSKMPortParams, &QPushButton::clicked, this, &SvSKM::on_bnSKMPortParams_clicked);
+  connect(ui->bnPortParams, &QPushButton::clicked, [=](){  
+                                if(sv::SvSerialEditor::showDialog(ui->editPortParams->text(), this->name(), p_main_widget) == QDialog::Accepted)
+                                  ui->editPortParams->setText(sv::SvSerialEditor::stringParams());
+                                sv::SvSerialEditor::deleteDialog();
+                              });
+  
+  connect(ui->comboRegim, SIGNAL(currentIndexChanged(int)), this, SLOT(on_comboRegim_currentIndexChanged(int)));
   
 }
 
@@ -63,7 +69,7 @@ void SvSKM::load0x02()
 {
   ui->listType0x02->clear();
   
-  foreach (Type_0x02_value v02, type_0x02_values) {
+  foreach (SKM_Type_0x02_value v02, type_0x02_values) {
     
     QListWidgetItem* lwi = new QListWidgetItem(QString("%1 [%2:%3]").arg(v02.name)
                                                .arg(v02.byte).arg(v02.bit), ui->listType0x02);
@@ -104,6 +110,15 @@ void SvSKM::on_bnStartStop_clicked()
       
       threadFinished();
       
+      if(p_data_regim == DataRegims::Random) {
+        
+        disconnect(&timer_0x01, &QTimer::timeout, this, &SvSKM::setData_0x01);
+        timer_0x01.stop();
+        
+        disconnect(&timer_0x02, &QTimer::timeout, this, &SvSKM::setData_0x02);
+        timer_0x02.stop();
+      }
+      
       break;
       
     case RunState::FINISHED:
@@ -134,6 +149,17 @@ void SvSKM::on_bnStartStop_clicked()
         
         p_thread->open();
         p_thread->start();
+        
+        /** если стоит режим 'случайный', то запускаем таймеры генерации **/
+        if(p_data_regim == DataRegims::Random) { 
+          
+          connect(&timer_0x01, &QTimer::timeout, this, &SvSKM::setData_0x01);
+          connect(&timer_0x02, &QTimer::timeout, this, &SvSKM::setData_0x02);
+
+          timer_0x01.start(getRndTimeout(ui->spinRandomInterval->value()));
+          timer_0x02.start(getRndTimeout(ui->spinRandomInterval->value()));
+          
+        }
         
         
       } catch(SvException& e) {
@@ -196,7 +222,7 @@ void SvSKM::setState(RunState state)
         w->setEnabled(true);
       
       ui->editPortParams->setEnabled(false);
-      ui->bnSKMPortParams->setEnabled(false);
+      ui->bnPortParams->setEnabled(false);
       
       p_state.state = RunState::RUNNING;
       
@@ -301,79 +327,153 @@ void SvSKM::on_bnEditData_clicked()
 
 void SvSKM::setData()
 {
-  if(p_edit_mutex.tryLock(3000)) {
+  setData_0x01();
+  setData_0x02(); 
+}
 
-    // type 0x01
+void SvSKM::setData_0x01()
+{
+  auto rnd{ [](int max) -> quint8 {
+    
+      qsrand(QDateTime::currentMSecsSinceEpoch());
+      return static_cast<quint8>(qrand() % max);
+
+  } };
+  
+  if(p_edit_mutex.tryLock(3000)) {
+    
+    // для режима 'случайный' определяем номер камер, которые будут включены (остальные будут выключены)
+    QList<quint8> random_cameras;
+    if(p_data_regim == DataRegims::Random)
+      random_cameras.append(VinCameraCodes.at(rnd(VinCameraCodes.count())).second);
+
+    /** type 0x01 **/
     QByteArray new_data = QByteArray();
     
     for(int i = 0; i < VinCameraCodes.count(); ++i) {
       
       T0x01Widget* curw = p_0x01_widgets.at(i);
       
-      if(!curw->groupData_0x01->isChecked())
+      if(p_data_regim == DataRegims::Random) {
+        
+        if(!random_cameras.contains(VinCameraCodes.at(i).second))
+          continue;
+        
+      }
+      else if(!curw->groupData_0x01->isChecked())
         continue;
       
-      new_data.append(VinCameraCodes.at(i).second);
+      checkAndAppend(new_data, VinCameraCodes.at(i).second);
       
       quint8 fcount = 0;
       QByteArray faktors = QByteArray();
-      for(int j = 0; j < FaktorCodes.count(); ++j) {
+      
+      if(p_data_regim == DataRegims::Random) {
         
-        if(curw->listFaktors->item(j)->checkState() != Qt::Checked)
-          continue;
-        
-        fcount++;
-        faktors.append(FaktorCodes.at(i).second);
+        fcount = 1;
+        checkAndAppend(faktors, FaktorCodes.at(rnd(FaktorCodes.count())).second);
         
       }
+      else {
+        for(int j = 0; j < FaktorCodes.count(); ++j) {
+          
+          if(curw->listFaktors->item(j)->checkState() != Qt::Checked)
+            continue;
+          
+          fcount++;
+          
+          checkAndAppend(faktors, FaktorCodes.at(i).second);
+          
+        }
+      }
       
-      new_data.append(fcount).append(faktors);
+      checkAndAppend(new_data, fcount);
+      new_data.append(faktors);
       
     }
     
     quint16 crc_0x01 = CRC::MODBUS_CRC16((uchar*)p_data.data_0x01.data(), p_data.data_0x01.length());
-    new_data.append(crc_0x01 & 0xFF).append(crc_0x01 >> 8);
     
-    int i = 0;
-    while (i < new_data.length()) {
-      
-      if((new_data.at(i) == 0x1F) || (new_data.at(i) == 0x2F)) {
+    checkAndAppend(new_data, crc_0x01 & 0xFF);
+    checkAndAppend(new_data, crc_0x01 >> 8);
         
-        new_data.insert(i, new_data.at(i) == 0x1F ? 0x1F : 0x2F);
-        i++;
-        
-      }
-      
-      i++;
-        
-    }
-    
     p_data.data_0x01 = QByteArray::fromHex(DefByteArray_0x01.toUtf8());
     p_data.data_0x01.append(new_data);
     p_data.data_0x01.append(0x2F).append(0x55);
     
+    p_edit_mutex.unlock();
     
-    // type 0x02
-    p_data.data_0x02 = QByteArray::fromHex(QString(DefByteArray_0x02).toUtf8());
+  }
+  
+  if(p_data_regim == DataRegims::Random)
+    timer_0x01.start(getRndTimeout(ui->spinRandomInterval->value()));
+
+}
+
+void SvSKM::setData_0x02()
+{
+  auto rnd{ [](int max) -> quint8 {
+    
+      qsrand(QDateTime::currentMSecsSinceEpoch());
+      return static_cast<quint8>(qrand() % max);
+
+  } };
+  
+  /** type 0x02 **/
+  if(p_edit_mutex.tryLock(3000)) {
+    
+    // для режима 'случайный' определяем номер дверей, которые будут включены (остальные будут выключены)
+    QList<SKM_Type_0x02_value> random_doors;
+    if(p_data_regim == DataRegims::Random)
+      random_doors.append(type_0x02_values.at(rnd(type_0x02_values.count())));
+    
+    QByteArray new_data = QByteArray::fromHex(QString(SKM_DefByteArray_0x02).toUtf8());
     
     foreach (QListWidgetItem* wi, p_0x02_items.keys()) {
      
-      if(wi->checkState() == Qt::Checked) {
+      SKM_Type_0x02_value cur_0x02 = p_0x02_items.value(wi);
+      
+      if(p_data_regim == DataRegims::Random) {
         
-        Type_0x02_value cur_0x02 = p_0x02_items.value(wi);
-        p_data.data_0x02[5 + cur_0x02.byte] = p_data.data_0x02.at(5 + cur_0x02.byte) | quint8(1 << cur_0x02.bit);
+        if(random_doors.contains(cur_0x02))
+          new_data[5 + cur_0x02.byte] = new_data.at(5 + cur_0x02.byte) | quint8(1 << cur_0x02.bit);
+        
+      }
+      else if(wi->checkState() == Qt::Checked) {
+        
+        new_data[5 + cur_0x02.byte] = new_data.at(5 + cur_0x02.byte) | quint8(1 << cur_0x02.bit);
         
       }
     }
     
+    p_data.data_0x02.clear();
+    for(quint8 b: new_data)
+      checkAndAppend(p_data.data_0x02, b);
+    
     quint16 crc_0x02 = CRC::MODBUS_CRC16((uchar*)p_data.data_0x02.data(), p_data.data_0x02.length());
-    p_data.data_0x02.append(crc_0x02 & 0xFF).append(crc_0x02 >> 8);
+    checkAndAppend(p_data.data_0x02, crc_0x02 & 0xFF);
+    checkAndAppend(p_data.data_0x02, crc_0x02 >> 8);
+    
+    p_data.data_0x02.append(0x2F);
+    p_data.data_0x02.append(0x55);
     
     
     p_edit_mutex.unlock();
     
   }
- 
+  
+  if(p_data_regim == DataRegims::Random)
+    timer_0x02.start(getRndTimeout(ui->spinRandomInterval->value()));
+}
+
+void SvSKM::checkAndAppend(QByteArray& array, quint8 val)
+{
+  array.append(val);
+  
+  QList<quint8> l = {0x1F, 0x2F, 0x55};
+  if(l.contains(val))
+    array.append(val);
+  
 }
 
 void SvSKM::logthr(const QString& str)
@@ -381,14 +481,31 @@ void SvSKM::logthr(const QString& str)
   p_log << svlog::Data << svlog::TimeZZZ << svlog::out << str << svlog::endl;
 }
 
-void SvSKM::on_bnSKMPortParams_clicked()
+void SvSKM::on_comboRegim_currentIndexChanged(int index)
 {
-  if(sv::SvSerialEditor::showDialog(ui->editPortParams->text(), this->name(), p_main_widget) == QDialog::Accepted)
-    ui->editPortParams->setText(sv::SvSerialEditor::stringParams());
+  ui->frameManual->setVisible(false);
+  ui->frameRandom->setVisible(false);
+  ui->frameLogs->setVisible(false);
   
-  sv::SvSerialEditor::deleteDialog();
+  switch (index) {
+    
+    case 0:
+      ui->frameManual->setVisible(true);
+      p_data_regim = DataRegims::Manual;
+      break;
+      
+    case 1:
+      ui->frameRandom->setVisible(true);
+      p_data_regim = DataRegims::Random;
+      break;
+      
+    case 2:
+      ui->frameLogs->setVisible(true);
+      p_data_regim = DataRegims::Log;
+      break;
+      
+  }
 }
-
 
 /**         SvSKMThread         **/
 SvSKMThread::SvSKMThread(SerialPortParams *params, quint64 sessionTimeout, quint64 packetDelay, bool DisplayRequest, QMutex *mutex, SKMData *data):

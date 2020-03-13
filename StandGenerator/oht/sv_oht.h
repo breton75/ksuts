@@ -86,6 +86,12 @@ private:
   
   QSerialPort p_port;
   SvException exception;
+    
+  DataRegims p_data_regim; 
+  
+  QTimer timer_0x13;
+  QTimer timer_0x14;
+  QTimer timer_0x19;
   
   void setState(RunState state);
   void setMode(EditMode mode);
@@ -103,13 +109,15 @@ public slots:
 private slots:
   void threadFinished();
   
+  void setData_0x13();
+  void setData_0x14();
+  void setData_0x19();
+  
   void on_bnEditData_clicked();
   
   void on_bnStartStop_clicked();
   
-  void on_bnSendReset_clicked();
-  
-  void on_bnOHTPortParams_clicked();
+  void on_comboRegim_currentIndexChanged(int index);
   
 signals:
   void start_stop(SvAbstractDevice*);

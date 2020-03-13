@@ -93,12 +93,6 @@ class SvOPA : public SvAbstractDevice //, public QObject
 {
   Q_OBJECT
   
-  enum DataRegims {
-    Manual,
-    Random,
-    Log
-  };
-  
 public:
   SvOPA(QTextEdit *textLog, const QString& device_params, const QString &name);
   ~SvOPA();
@@ -145,19 +139,13 @@ private:
   void load0x04();
   
   bool parseDeviceParams(const QString &params);
-  
-  int getRndTimeout();
+
   
 public slots:
   void logthr(const QString& str); //, svlog::MessageBuns mb, svlog::MessageTypes mt);
   
 private slots:
   void threadFinished();
-  
-  void random0x02();
-  void random0x03();
-  void random0x04();
-  void random0x19();
   
   void setData_0x02();
   void setData_0x03();
@@ -167,14 +155,11 @@ private slots:
   void on_bnEditData_clicked();
   
   void on_bnStartStop_clicked();
-  
-  void on_bnSendReset_clicked();
+
   void table0x02ItemChanged(QTableWidgetItem*item);
   void table0x03ItemChanged(QTableWidgetItem*item);
   
   void on_table0x02_doubleClicked(const QModelIndex &index);
-  
-  void on_bnOPAPortParams_clicked();
   
   void on_comboRegim_currentIndexChanged(int index);
   

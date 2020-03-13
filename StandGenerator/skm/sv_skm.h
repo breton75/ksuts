@@ -56,13 +56,18 @@ private:
   Ui::SKM_MainWidget* ui;
   
   QVector<T0x01Widget*> p_0x01_widgets;
-  QMap<QListWidgetItem*, Type_0x02_value> p_0x02_items;
+  QMap<QListWidgetItem*, SKM_Type_0x02_value> p_0x02_items;
   
   SerialPortParams p_port_params;
   
   SKMData p_data;
   
   svlog::SvLog p_log;
+  
+  DataRegims p_data_regim;
+  
+  QTimer timer_0x01;
+  QTimer timer_0x02;
   
   void setState(RunState state);
   void setMode(EditMode mode);
@@ -72,17 +77,23 @@ private:
   void load0x01();
   void load0x02();
   
+  void checkAndAppend(QByteArray& array, quint8 val);
+  
 public slots:
   void logthr(const QString& str); //, svlog::MessageBuns mb, svlog::MessageTypes mt);
   
 private slots:
   void threadFinished();
   
+  void setData_0x01();
+  void setData_0x02();
+  
   void on_bnEditData_clicked();
   
   void on_bnStartStop_clicked();
   
-  void on_bnSKMPortParams_clicked();
+  void on_comboRegim_currentIndexChanged(int index);
+  
 };
 
 class SvSKMThread: public SvAbstractDeviceThread

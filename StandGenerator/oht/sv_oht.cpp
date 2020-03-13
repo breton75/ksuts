@@ -30,8 +30,15 @@ SvOHT::SvOHT(QTextEdit *textLog, const QString& name):
   
   connect(ui->bnStartStop, &QPushButton::pressed, this, &SvOHT::on_bnStartStop_clicked);
   connect(ui->bnEditData, &QPushButton::clicked, this, &SvOHT::on_bnEditData_clicked);
-  connect(ui->bnSendReset, &QPushButton::clicked, this, &SvOHT::on_bnSendReset_clicked);
-  connect(ui->bnOHTPortParams, &QPushButton::clicked, this, &SvOHT::on_bnOHTPortParams_clicked);
+  connect(ui->bnSendReset, &QPushButton::clicked, [=]() { p_data.send_reset = true; });
+  
+  connect(ui->bnPortParams, &QPushButton::clicked, [=](){  
+                                if(sv::SvSerialEditor::showDialog(ui->editPortParams->text(), this->name(), p_main_widget) == QDialog::Accepted)
+                                  ui->editPortParams->setText(sv::SvSerialEditor::stringParams());
+                                sv::SvSerialEditor::deleteDialog();
+                              });
+  
+  connect(ui->comboRegim, SIGNAL(currentIndexChanged(int)), this, SLOT(on_comboRegim_currentIndexChanged(int)));
   
 }
 
@@ -134,6 +141,15 @@ void SvOHT::on_bnStartStop_clicked()
       
       threadFinished();
       
+      if(p_data_regim == DataRegims::Random) {
+        
+        disconnect(&timer_0x13, &QTimer::timeout, this, &SvOHT::setData_0x13);
+        timer_0x13.stop();
+        
+        disconnect(&timer_0x14, &QTimer::timeout, this, &SvOHT::setData_0x14);
+        timer_0x14.stop();
+      }
+      
       break;
       
     case RunState::FINISHED:
@@ -168,6 +184,19 @@ void SvOHT::on_bnStartStop_clicked()
 
         p_thread->open();
         p_thread->start();
+        
+        /** если стоит режим 'случайный', то запускаем таймеры генерации **/
+        if(p_data_regim == DataRegims::Random) { 
+          
+          connect(&timer_0x13, &QTimer::timeout, this, &SvOHT::setData_0x13);
+          connect(&timer_0x14, &QTimer::timeout, this, &SvOHT::setData_0x14);
+          connect(&timer_0x19, &QTimer::timeout, this, &SvOHT::setData_0x19);
+
+          timer_0x13.start(getRndTimeout(ui->spinRandomInterval->value()));
+          timer_0x14.start(getRndTimeout(ui->spinRandomInterval->value()));
+          timer_0x19.start(getRndTimeout(ui->spinRandomInterval->value()));
+          
+        }
         
       } catch(SvException& e) {
         
@@ -229,10 +258,11 @@ void SvOHT::setState(RunState state)
         w->setEnabled(true);
       
       ui->editPortParams->setEnabled(false);
-      ui->bnOHTPortParams->setEnabled(false);
+      ui->bnPortParams->setEnabled(false);
       ui->spinPacketDelay->setEnabled(false);
       ui->spinSessionInterval->setEnabled(false);
       ui->checkDisplayAnswer->setEnabled(false);
+      ui->comboRegim->setEnabled(false);
       
       p_state.state = RunState::RUNNING;
       
@@ -348,18 +378,69 @@ void SvOHT::on_bnEditData_clicked()
 
 void SvOHT::setData()
 {
+//  if(p_edit_mutex.tryLock(3000)) {
+
+    /** type 0x13 **/
+    setData_0x13();
+    
+    /** type 0x19 **/
+    setData_0x19();
+    
+    /** type 0x14 **/
+    setData_0x14();    
+    
+    // send reset
+    p_data.send_reset = false;
+    
+    
+//    p_edit_mutex.unlock();
+    
+//  }
+ 
+}
+
+void SvOHT::setData_0x13()
+{
+  auto rnd{ [](int max) -> quint8 {
+    
+      qsrand(QDateTime::currentMSecsSinceEpoch());
+      return static_cast<quint8>(qrand() % max);
+
+  } };
+  
+  /** type 0x13 **/
   if(p_edit_mutex.tryLock(3000)) {
 
-    // type 0x13
+    // для режима 'случайный' определяем номер направлений, которые будут включены (остальные будут выключены)
+    QList<quint8> random_directions;
+    if(p_data_regim == DataRegims::Random)
+      random_directions.append(DirectionsCodes.at(rnd(DirectionsCodes.count())).second);
+    
     p_data.data_0x13 = QByteArray::fromHex(OHT_DefByteArray_0x13.toUtf8());
     
     for(int i = 0; i < DirectionsCodes.count(); ++i) {
       
-      Type_0x13 cur_0x13 = Type_0x13(DirectionsCodes.at(i).second,
-                               StatesCodes.at(p_0x13_widgets.at(i)->cbState_0x13->currentIndex()).second,
-                               RegimCodes.at(p_0x13_widgets.at(i)->cbRegim_0x13->currentIndex()).second,
-                               URSStatesCodes.at(p_0x13_widgets.at(i)->cbURSState_0x13->currentIndex()).second,
-                               quint8(OtklVentCodes.value(p_0x13_widgets.at(i)->checkOtklVent_0x13->isChecked() ? 1 : 0)));
+      Type_0x13 cur_0x13;
+      
+      if(p_data_regim == DataRegims::Random) {
+        
+        bool c = random_directions.contains(DirectionsCodes.at(i).second);
+
+        cur_0x13 = Type_0x13(DirectionsCodes.at(i).second,
+                             !c ? 0 : StatesCodes.at(rnd(StatesCodes.count())).second,
+                             !c ? 0 : RegimCodes.at(rnd(RegimCodes.count())).second,
+                             !c ? 0 : URSStatesCodes.at(rnd(URSStatesCodes.count())).second,
+                             !c ? 0 : quint8(rnd(2)));
+        
+      }
+      else {
+        
+        cur_0x13 = Type_0x13(DirectionsCodes.at(i).second,
+                                 StatesCodes.at(p_0x13_widgets.at(i)->cbState_0x13->currentIndex()).second,
+                                 RegimCodes.at(p_0x13_widgets.at(i)->cbRegim_0x13->currentIndex()).second,
+                                 URSStatesCodes.at(p_0x13_widgets.at(i)->cbURSState_0x13->currentIndex()).second,
+                                 quint8(OtklVentCodes.value(p_0x13_widgets.at(i)->checkOtklVent_0x13->isChecked() ? 1 : 0)));
+      }
       
       p_data.data_0x13[9 + i * 6 + 0] = cur_0x13.byte0.toUint8();
       p_data.data_0x13[9 + i * 6 + 1] = cur_0x13.byte1.toUint8();
@@ -370,15 +451,95 @@ void SvOHT::setData()
     quint16 crc_0x13 = CRC::MODBUS_CRC16((uchar*)p_data.data_0x13.data(), p_data.data_0x13.length());
     p_data.data_0x13.append(crc_0x13 & 0xFF);
     p_data.data_0x13.append(crc_0x13 >> 8);
-
     
-    // type 0x19
+    p_edit_mutex.unlock();
+    
+  }
+  
+  if(p_data_regim == DataRegims::Random)
+    timer_0x13.start(getRndTimeout(ui->spinRandomInterval->value()));
+  
+}
+
+void SvOHT::setData_0x14()
+{
+  auto rnd{ [](int max) -> quint8 {
+    
+      qsrand(QDateTime::currentMSecsSinceEpoch());
+      return static_cast<quint8>(qrand() % max);
+
+  } };
+  
+  /** type 0x14 **/
+  if(p_edit_mutex.tryLock(3000)) {
+    
+    // для режима 'случайный' определяем номер СДГ, которые будут включены (остальные будут выключены)
+    QList<Type_0x14_value> random_sdgs;
+    if(p_data_regim == DataRegims::Random)
+      random_sdgs.append(type_0x14_values.at(rnd(type_0x14_values.count())));
+        
+    p_data.data_0x14 = QByteArray::fromHex(QString(DefByteArray_0x14).toUtf8());
+    
+    foreach (QListWidgetItem* wi, p_0x14_items.keys()) {
+     
+      Type_0x14_value cur_0x14 = p_0x14_items.value(wi);
+      
+      if(p_data_regim == DataRegims::Random) {
+        
+        if(random_sdgs.contains(cur_0x14))
+          p_data.data_0x14[9 + cur_0x14.byte] = p_data.data_0x14.at(9 + cur_0x14.byte) | quint8(1 << cur_0x14.bit);
+        
+      }
+      else if(wi->checkState() == Qt::Checked) {
+        
+        p_data.data_0x14[9 + cur_0x14.byte] = p_data.data_0x14.at(9 + cur_0x14.byte) | quint8(1 << cur_0x14.bit);
+        
+      }
+    }
+    
+    quint16 crc_0x14 = CRC::MODBUS_CRC16((uchar*)p_data.data_0x14.data(), p_data.data_0x14.length());
+    p_data.data_0x14.append(crc_0x14 & 0xFF);
+    p_data.data_0x14.append(crc_0x14 >> 8);
+  
+    p_edit_mutex.unlock();
+    
+  }
+  
+  if(p_data_regim == DataRegims::Random)
+    timer_0x14.start(getRndTimeout(ui->spinRandomInterval->value()));
+  
+}
+
+void SvOHT::setData_0x19()
+{
+  auto rnd{ [](int max) -> quint8 {
+    
+      qsrand(QDateTime::currentMSecsSinceEpoch());
+      return static_cast<quint8>(qrand() % max);
+
+  } };
+  
+  /** type 0x19 **/
+  if(p_edit_mutex.tryLock(3000)) {
+
+    // для режима 'случайный' определяем номер неисправностей, которые будут включены (остальные будут выключены)
+    QList<Type_0x19_value> random_neisp;
+    if(p_data_regim == DataRegims::Random)
+      random_neisp.append(type_0x19_values.at(rnd(type_0x19_values.count())));
+    
     p_data.data_0x19 = QByteArray::fromHex(QString(DefByteArray_0x19).toUtf8());
     foreach (QListWidgetItem* wi, p_0x19_items.keys()) {
-     
-      if(wi->checkState() == Qt::Checked) {
+      
+      Type_0x19_value cur_0x19 = p_0x19_items.value(wi);
+      
+      if(p_data_regim == DataRegims::Random) {
         
-        Type_0x19_value cur_0x19 = p_0x19_items.value(wi);
+        if(random_neisp.contains(cur_0x19))
+          p_data.data_0x19[9 + cur_0x19.byte] = p_data.data_0x19.at(9 + cur_0x19.byte) | quint8(1 << cur_0x19.bit);
+        
+      }
+      else if(wi->checkState() == Qt::Checked) {
+        
         p_data.data_0x19[9 + cur_0x19.byte] = p_data.data_0x19.at(9 + cur_0x19.byte) | quint8(1 << cur_0x19.bit);
         
       }
@@ -388,32 +549,13 @@ void SvOHT::setData()
     p_data.data_0x19.append(crc_0x19 & 0xFF);
     p_data.data_0x19.append(crc_0x19 >> 8);
     
-    
-    // type 0x14
-    p_data.data_0x14 = QByteArray::fromHex(QString(DefByteArray_0x14).toUtf8());
-    foreach (QListWidgetItem* wi, p_0x14_items.keys()) {
-     
-      if(wi->checkState() == Qt::Checked) {
-        
-        Type_0x14_value cur_0x14 = p_0x14_items.value(wi);
-        p_data.data_0x14[9 + cur_0x14.byte] = p_data.data_0x14.at(9 + cur_0x14.byte) | quint8(1 << cur_0x14.bit);
-        
-      }
-    }
-    
-    quint16 crc_0x14 = CRC::MODBUS_CRC16((uchar*)p_data.data_0x14.data(), p_data.data_0x14.length());
-    p_data.data_0x14.append(crc_0x14 & 0xFF);
-    p_data.data_0x14.append(crc_0x14 >> 8);
-    
-    
-    // send reset
-    p_data.send_reset = false;
-    
-    
     p_edit_mutex.unlock();
     
   }
- 
+  
+  if(p_data_regim == DataRegims::Random)
+    timer_0x19.start(getRndTimeout(ui->spinRandomInterval->value()));
+  
 }
 
 void SvOHT::logthr(const QString& str)
@@ -426,17 +568,30 @@ void SvOHT::logthrin(const QString& str)
   ohtlog << svlog::Attention << svlog::TimeZZZ << svlog::in << str << svlog::endl;
 }
 
-void SvOHT::on_bnSendReset_clicked()
+void SvOHT::on_comboRegim_currentIndexChanged(int index)
 {
-    p_data.send_reset = true;
-}
-
-void SvOHT::on_bnOHTPortParams_clicked()
-{
-  if(sv::SvSerialEditor::showDialog(ui->editPortParams->text(), this->name(), this->p_main_widget) == QDialog::Accepted)
-    ui->editPortParams->setText(sv::SvSerialEditor::stringParams());
+  ui->frameManual->setVisible(false);
+  ui->frameRandom->setVisible(false);
+  ui->frameLogs->setVisible(false);
   
-  sv::SvSerialEditor::deleteDialog();
+  switch (index) {
+    
+    case 0:
+      ui->frameManual->setVisible(true);
+      p_data_regim = DataRegims::Manual;
+      break;
+      
+    case 1:
+      ui->frameRandom->setVisible(true);
+      p_data_regim = DataRegims::Random;
+      break;
+      
+    case 2:
+      ui->frameLogs->setVisible(true);
+      p_data_regim = DataRegims::Log;
+      break;
+      
+  }
 }
 
 /**         SvOHTThread         **/
@@ -529,8 +684,7 @@ void SvOHTThread::run()
          p_data->data_counter[8] = p_data->count >> 8;
          
          quint16 crc_0x05 = CRC::MODBUS_CRC16((uchar*)p_data->data_counter.data(), p_data->data_counter.length());
-         p_data->data_counter.append(crc_0x05 & 0xFF);
-         p_data->data_counter.append(crc_0x05 >> 8);
+         p_data->data_counter.append(crc_0x05 & 0xFF).append(crc_0x05 >> 8);
          
          p_data->count++;
          

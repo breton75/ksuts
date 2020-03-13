@@ -8,12 +8,14 @@
 
 struct Byte0
 {
+  Byte0(): direction(0) {}
   quint8 direction;
   
   quint8 toUint8() const { return direction; }
 };
 
 struct Byte1 {
+  Byte1(): state(0), regim(0) {}
   quint8 state: 4;
   quint8 regim: 4;
   
@@ -24,6 +26,7 @@ struct Byte1 {
 
 struct Byte2
 {
+  Byte2(): urs_state(0), otkl_vent(0) {}
   quint8 :4;
   quint8 urs_state: 2;
   quint8 :1;

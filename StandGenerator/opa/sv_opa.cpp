@@ -40,11 +40,18 @@ SvOPA::SvOPA(QTextEdit *textLog, const QString &device_params, const QString& na
   
   connect(ui->bnStartStop, &QPushButton::pressed, this, &SvOPA::on_bnStartStop_clicked);
   connect(ui->bnEditData, &QPushButton::clicked, this, &SvOPA::on_bnEditData_clicked);
-  connect(ui->bnSendReset, &QPushButton::clicked, this, &SvOPA::on_bnSendReset_clicked);
-  connect(ui->bnOPAPortParams, &QPushButton::clicked, this, &SvOPA::on_bnOPAPortParams_clicked);
+  connect(ui->bnSendReset, &QPushButton::clicked, [=]() { p_data.send_reset = true; });
+  
+  connect(ui->bnPortParams, &QPushButton::clicked, [=](){  
+                                if(sv::SvSerialEditor::showDialog(ui->editPortParams->text(), this->name(), p_main_widget) == QDialog::Accepted)
+                                  ui->editPortParams->setText(sv::SvSerialEditor::stringParams());
+                                sv::SvSerialEditor::deleteDialog();
+                              });
+  
   connect(ui->comboRegim, SIGNAL(currentIndexChanged(int)), this, SLOT(on_comboRegim_currentIndexChanged(int)));
   
   on_comboRegim_currentIndexChanged(0);
+
   
 }
 
@@ -298,6 +305,12 @@ void SvOPA::on_bnStartStop_clicked()
       
       threadFinished();
       
+      if(p_data_regim == DataRegims::Random) {
+        
+        disconnect(&timer_0x02, &QTimer::timeout, this, &SvOPA::setData_0x02);
+        timer_0x02.stop();
+      }
+      
       break;
       
     case RunState::FINISHED:
@@ -342,12 +355,12 @@ void SvOPA::on_bnStartStop_clicked()
         /** если стоит режим 'случайный', то запускаем таймеры генерации **/
         if(p_data_regim == DataRegims::Random) { 
           
-          connect(&timer_0x02, &QTimer::timeout, this, &SvOPA::random0x02);
+          connect(&timer_0x02, &QTimer::timeout, this, &SvOPA::setData_0x02);
 //          connect(&timer_0x03, &QTimer::timeout, this, &SvOPA::random0x03);
 //          connect(&timer_0x04, &QTimer::timeout, this, &SvOPA::random0x04);
 //          connect(&timer_0x19, &QTimer::timeout, this, &SvOPA::random0x19);
-          qDebug() << 1;
-          timer_0x02.start(getRndTimeout());
+
+          timer_0x02.start(getRndTimeout(ui->spinRandomInterval->value()));
 //          timer_0x03.start(getRndTimeout());
 //          timer_0x04.start(getRndTimeout());
 //          timer_0x19.start(getRndTimeout());
@@ -415,8 +428,11 @@ void SvOPA::setState(RunState state)
         w->setEnabled(true);
       
       ui->editPortParams->setEnabled(false);
-      ui->bnOPAPortParams->setEnabled(false);
+      ui->bnPortParams->setEnabled(false);
       ui->editDeviceParams->setEnabled(false);
+      ui->spinPacketDelay->setEnabled(false);
+      ui->spinSessionInterval->setEnabled(false);
+      ui->checkDisplayAnswer->setEnabled(false);
       ui->comboRegim->setEnabled(false);
       
       p_state.state = RunState::RUNNING;
@@ -613,9 +629,7 @@ void SvOPA::setData()
     }
     
     // send reset
-//    p_data.send_reset = false;
-    
-    
+    p_data.send_reset = false;
     
     
   }
@@ -625,60 +639,64 @@ void SvOPA::setData()
 void SvOPA::setData_0x02()
 {
   //    p_data.data_0x02_map.clear();  здесь не очищаем!!
-  
-  // для режима 'случайный' определяем номер сигналов, которые будут включены (остальные будут выключены)
-  QList<quint16> random_signals;
-  
-  if(p_data_regim == DataRegims::Random) {
-    
-    qsrand(QDateTime::currentMSecsSinceEpoch());
-    random_signals.append(p_0x02_items.keys().at(qrand() % p_0x02_items.count()));
-    
-  }
     
   if(p_edit_mutex.tryLock(1000)) {
   
-  foreach (quint16 signal_index, p_0x02_items.keys()) {
-    
-    /** Определяем состояние галочки на сигнале
-     * у нас два режима: ручной и случайный **/
-    
-    Qt::CheckState state;
+    // для режима 'случайный' определяем номер сигналов, которые будут включены (остальные будут выключены)
+    QList<quint16> random_signals;
     if(p_data_regim == DataRegims::Random) {
-
-      if(random_signals.contains(signal_index)) { state = Qt::Checked; qDebug() << signal_index; }
-      else state = Qt::Unchecked;                  
+      
+      qsrand(QDateTime::currentMSecsSinceEpoch());
+      random_signals.append(p_0x02_items.keys().at(qrand() % p_0x02_items.keys().count()));
       
     }
-    else
-      state = p_0x02_items.value(signal_index)->item_check_box->checkState();
     
-    
-    /** рассматриваем два варианта: 1ый вариант: поставили галочку, а в списке на отправку сигнала нет
+    foreach (quint16 signal_index, p_0x02_items.keys()) {
+      
+      /** Определяем состояние галочки на сигнале
+     * у нас два режима: ручной и случайный **/
+      
+      Qt::CheckState state;
+      if(p_data_regim == DataRegims::Random) {
+        
+        if(random_signals.contains(signal_index)) { state = Qt::Checked; }
+        else state = Qt::Unchecked;                  
+        
+      }
+      else
+        state = p_0x02_items.value(signal_index)->item_check_box->checkState();
+      
+      
+      /** рассматриваем два варианта: 1ый вариант: поставили галочку, а в списке на отправку сигнала нет
      *                              2ой вариант: галочка снята, а в списке на отправку сигнал есть **/    
-    // 1ый вариант: поставили галочку, а в списке на отправку сигнала нет
-    if((state == Qt::Checked) && !p_data.data_0x02.contains(signal_index))
-    {
-      p_data.data_0x02.insert(signal_index,
-                              qMakePair<quint16, quint8>(
-                                p_0x02_items.value(signal_index)->sensor_number,
-                                p_0x02_items.value(signal_index)->signal_marker));
+      // 1ый вариант: поставили галочку, а в списке на отправку сигнала нет
+      if((state == Qt::Checked) && !p_data.data_0x02.contains(signal_index))
+      {
+        p_data.data_0x02.insert(signal_index,
+                                qMakePair<quint16, quint8>(
+                                  p_0x02_items.value(signal_index)->sensor_number,
+                                  p_0x02_items.value(signal_index)->signal_marker));
+        
+      }
+      
+      // 2ой вариант: галочка снята, а в списке на отправку сигнал есть
+      else if((state == Qt::Unchecked) && p_data.data_0x02.contains(signal_index))
+      {
+        // отправляем по этому сигналу сброс
+        p_data.data_0x02[signal_index].second = 0x00;
+      }
+      
+      // в прочих случаях ничего не делаем
       
     }
-    
-    // 2ой вариант: галочка снята, а в списке на отправку сигнал есть
-    else if((state == Qt::Unchecked) && p_data.data_0x02.contains(signal_index))
-    {
-      // отправляем по этому сигналу сброс
-      p_data.data_0x02[signal_index].second = 0x00;
-    }
-    
-    // в прочих случаях ничего не делаем
+  
+    p_edit_mutex.unlock();
     
   }
   
-  p_edit_mutex.unlock();
-  }
+  if(p_data_regim == DataRegims::Random)
+    timer_0x02.start(getRndTimeout(ui->spinRandomInterval->value()));
+  
 }
 
 void SvOPA::setData_0x03()
@@ -761,12 +779,6 @@ void SvOPA::logthr(const QString& str)
   opalog << svlog::Data << svlog::TimeZZZ << svlog::out << str << svlog::endl;
 }
 
-
-void SvOPA::on_bnSendReset_clicked()
-{
-    p_data.send_reset = true;
-}
-
 bool SvOPA::parseDeviceParams(const QString& params)
 {
   //! обязателен первый аргумент!! парсер считает, что там находится путь к программе
@@ -813,14 +825,6 @@ void SvOPA::on_table0x02_doubleClicked(const QModelIndex &index)
   }
 }
 
-void SvOPA::on_bnOPAPortParams_clicked()
-{
-  if(sv::SvSerialEditor::showDialog(ui->editPortParams->text(), this->name(), p_main_widget) == QDialog::Accepted)
-    ui->editPortParams->setText(sv::SvSerialEditor::stringParams());
-  
-  sv::SvSerialEditor::deleteDialog();
-}
-
 void SvOPA::on_comboRegim_currentIndexChanged(int index)
 {
   ui->frameManual->setVisible(false);
@@ -859,34 +863,6 @@ void SvOPA::on_bnSelectLogPath_clicked()
   
   
   ui->editLogPath->setText(file_name);
-}
-
-int SvOPA::getRndTimeout()
-{
-  qsrand(QDateTime::currentMSecsSinceEpoch());
-  int r = qrand() % ui->spinRandomInterval->value() + 1000; 
-  qDebug() << r;
-  return r;
-}
-
-void SvOPA::random0x02()
-{
-
-}
-
-void SvOPA::random0x03()
-{
-  
-}
-
-void SvOPA::random0x04()
-{
-  
-}
-
-void SvOPA::random0x19()
-{
-  
 }
 
 /**         SvOPAThread         **/
