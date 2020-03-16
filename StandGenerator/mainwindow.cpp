@@ -219,3 +219,16 @@ void MainWindow::on_actionAddDevice_triggered()
     
 }
 
+
+void MainWindow::on_tabWidget_currentChanged(int index)
+{
+//  for(QDockWidget* dock : p_docks) {
+    
+//    qDebug() << dock->windowTitle() <<  ui->tabWidget->tabText(index);
+//    if(dock->windowTitle() == ui->tabWidget->tabText(index)) {
+//      dock->setWindowFlag(Qt::WindowType);
+//      qDebug() << 1; 
+//    }
+////    QMainWindow::set
+  }
+}

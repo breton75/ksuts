@@ -4,6 +4,8 @@
 #include <QDialog>
 #include <QDebug>
 
+#include "./opa/opa_type_0x03.h"
+
 namespace Ui {
 class AlertLevelDialog;
 }

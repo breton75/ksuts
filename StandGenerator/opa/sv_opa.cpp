@@ -569,7 +569,7 @@ void SvOPA::on_bnEditData_clicked()
 
 void SvOPA::setData()
 {
-  if(p_edit_mutex.tryLock(3000)) {
+//  if(p_edit_mutex.tryLock(3000)) {
 
     /** 0x77 **/
     {
@@ -632,7 +632,7 @@ void SvOPA::setData()
     p_data.send_reset = false;
     
     
-  }
+//  }
  
 }
 
@@ -701,33 +701,65 @@ void SvOPA::setData_0x02()
 
 void SvOPA::setData_0x03()
 {
-  foreach (quint16 signal_index, p_0x03_items.keys()) {
+  auto rnd{ [](int max) -> quint8 {
+    
+      qsrand(QDateTime::currentMSecsSinceEpoch());
+      return static_cast<quint8>(qrand() % max);
 
-    // 1ый вариант: поставили галочку, а в списке на отправку сигнала нет
-    Qt::CheckState state = p_0x03_items.value(signal_index)->item_check_box->checkState();
+  } };
+  
+  if(p_edit_mutex.tryLock(1000)) {
     
-    if((state == Qt::Checked) && 
-       !p_data.data_0x03.contains(signal_index))
-    {
-      p_data.data_0x03.insert(signal_index,
-                              qMakePair<quint16, quint8>(
-                                p_0x03_items.value(signal_index)->room_number,
-                                p_0x03_items.value(signal_index)->alert_level));
+    // для режима 'случайный' определяем номер сигналов, которые будут включены (остальные будут выключены)
+    QList<quint16> random_signals;
+    if(p_data_regim == DataRegims::Random) {
+      
+      qsrand(QDateTime::currentMSecsSinceEpoch());
+      random_signals.append(p_0x03_items.keys().at(qrand() % p_0x03_items.keys().count()));
       
     }
     
-    // 2ой вариант: галочка снята, а в списке на отправку сигнал есть
-    else if((state == Qt::Unchecked) && 
-            p_data.data_0x03.contains(signal_index))
-    {
-      // удаляем сигнал из списка на отправку
-      p_data.data_0x03.remove(signal_index);
+    foreach (quint16 signal_index, p_0x03_items.keys()) {
+  
       
-      // отправляем по этому сигналу сброс
-      //p_data.data_0x02[signal_index].second = 0x00;
+      /** Определяем состояние галочки на сигнале
+     * у нас два режима: ручной и случайный **/
+      
+      Qt::CheckState state;
+      if(p_data_regim == DataRegims::Random) {
+        
+        if(random_signals.contains(signal_index)) { state = Qt::Checked; }
+        else state = Qt::Unchecked;                  
+        
+      }
+      else
+        state = p_0x02_items.value(signal_index)->item_check_box->checkState();
+      
+      /** рассматриваем два варианта: 1ый вариант: поставили галочку, а в списке на отправку сигнала нет
+     *                              2ой вариант: галочка снята, а в списке на отправку сигнал есть **/    
+      
+      // 1ый вариант: поставили галочку, а в списке на отправку сигнала нет
+//      Qt::CheckState state = p_0x03_items.value(signal_index)->item_check_box->checkState();
+      
+      if((state == Qt::Checked) && !p_data.data_0x03.contains(signal_index))
+      {
+        p_data.data_0x03.insert(signal_index,
+                                qMakePair<quint16, quint8>(
+                                  p_data_regim == p_0x03_items.value(signal_index)->room_number,
+                                  p_data_regim == DataRegims::Random ? OPA_AertTypes.at(rnd(OPA_AertTypes.count())).second : p_0x03_items.value(signal_index)->alert_level));
+        
+      }
+      
+      // 2ой вариант: галочка снята, а в списке на отправку сигнал есть
+      else if((state == Qt::Unchecked) && p_data.data_0x03.contains(signal_index))
+      {
+        // удаляем сигнал из списка на отправку
+        p_data.data_0x03.remove(signal_index);
+        
+      }
+      
+      // в прочих случаях ничего не делаем
     }
-    
-    // в прочих случаях ничего не делаем
   }
 }
 
@@ -755,23 +787,52 @@ void SvOPA::setData_0x04()
 
 void SvOPA::setData_0x19()
 {
-  p_data.data_0x19 = QByteArray::fromHex(QString(OPA_DefByteArray_0x19).toUtf8());
-  
-  p_data.data_0x19[2] = (p_device_params.RegisterAddress + 0x0006) >> 8;
-  p_data.data_0x19[3] = (p_device_params.RegisterAddress + 0x0006) & 0xFF;
-  
-  foreach (QListWidgetItem* wi, p_0x19_items.keys()) {
+  auto rnd{ [](int max) -> quint8 {
     
-    if(wi->checkState() == Qt::Checked) {
+      qsrand(QDateTime::currentMSecsSinceEpoch());
+      return static_cast<quint8>(qrand() % max);
+
+  } };
+  
+  /** type 0x19 **/
+  if(p_edit_mutex.tryLock(3000)) {
+
+    // для режима 'случайный' определяем номер неисправностей, которые будут включены (остальные будут выключены)
+    QList<OPA_Type_0x19_value> random_neisp;
+    if(p_data_regim == DataRegims::Random)
+      random_neisp.append(OPA_type_0x19_values.at(rnd(OPA_type_0x19_values.count())));
+  
+    p_data.data_0x19 = QByteArray::fromHex(QString(OPA_DefByteArray_0x19).toUtf8());
+    
+    p_data.data_0x19[2] = (p_device_params.RegisterAddress + 0x0006) >> 8;
+    p_data.data_0x19[3] = (p_device_params.RegisterAddress + 0x0006) & 0xFF;
+    
+    foreach (QListWidgetItem* wi, p_0x19_items.keys()) {
       
       OPA_Type_0x19_value cur_0x19 = p_0x19_items.value(wi);
-      p_data.data_0x19[9 + cur_0x19.byte] = p_data.data_0x19.at(9 + cur_0x19.byte) | quint8(1 << cur_0x19.bit);
       
+      
+      if(p_data_regim == DataRegims::Random) {
+        
+        if(random_neisp.contains(cur_0x19))
+          p_data.data_0x19[9 + cur_0x19.byte] = p_data.data_0x19.at(9 + cur_0x19.byte) | quint8(1 << cur_0x19.bit);
+        
+      }
+      else if(wi->checkState() == Qt::Checked) {
+        
+        p_data.data_0x19[9 + cur_0x19.byte] = p_data.data_0x19.at(9 + cur_0x19.byte) | quint8(1 << cur_0x19.bit);
+        
+      }
     }
+    
+    quint16 crc_0x19 = CRC::MODBUS_CRC16((uchar*)p_data.data_0x19.data(), p_data.data_0x19.length());
+    p_data.data_0x19.append(crc_0x19 & 0xFF).append(crc_0x19 >> 8);
+  
   }
   
-  quint16 crc_0x19 = CRC::MODBUS_CRC16((uchar*)p_data.data_0x19.data(), p_data.data_0x19.length());
-  p_data.data_0x19.append(crc_0x19 & 0xFF).append(crc_0x19 >> 8);
+  if(p_data_regim == DataRegims::Random)
+    timer_0x19.start(getRndTimeout(ui->spinRandomInterval->value()));
+  
 } 
 
 void SvOPA::logthr(const QString& str)

@@ -20,6 +20,11 @@ struct OPA_Type_0x19_value {
     this->bit = bit;
   }
   
+  bool operator ==(const OPA_Type_0x19_value& other)
+  { 
+    return (this->byte == other.byte) && (this->bit == other.bit);
+  }
+  
 };
 
 const QString OPA_DefByteArray_0x19 = "0110"            // получатель и отправитель

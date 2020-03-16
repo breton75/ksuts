@@ -350,40 +350,55 @@ void SvKTV::setData_0x33()
     if(p_data_regim == DataRegims::Random)
       random_sensors.append(p_0x33_items.keys().at(rnd(p_0x33_items.keys().count())));
 
+    
+    if(p_data_regim == DataRegims::Random) {
+      
+      foreach (quint8 sensorNum, p_0x33_items.keys()) {
+       
+        KTV_Type_0x33* cur_0x33 = p_0x33_items.value(sensorNum);
+      
+        if(random_sensors.contains(cur_0x33->sensor_number)) {
+          
+          cur_0x33->item_temperature->setData(Qt::DisplayRole, rnd(100));
+          cur_0x33->item_vlagnost->setData(Qt::DisplayRole, rnd(100));
+        }
+      }
+    }
+    
     p_data.data_0x33 = QByteArray::fromHex(QString(KTV_DefByteArray_0x33).toUtf8());
+    
+    quint8 snum = 0xF0;
+    quint8 snh  = 0xF0;
+    quint8 snl  = 0xF0;
+    quint8 temp = 0xF0;
+    quint8 vlag = 0xF0;
     
     foreach (quint8 sensorNum, p_0x33_items.keys()) {
      
       KTV_Type_0x33* cur_0x33 = p_0x33_items.value(sensorNum);
       
-      static quint8 snum = 0xF0;
-      static quint8 snh  = 0xF0;
-      static quint8 snl  = 0xF0;
-      static quint8 temp = 0xF0;
-      static quint8 vlag = 0xF0;
+//      static quint8 snum = 0xF0;
+//      static quint8 snh  = 0xF0;
+//      static quint8 snl  = 0xF0;
+//      static quint8 temp = 0xF0;
+//      static quint8 vlag = 0xF0;
       
-      if(p_data_regim == DataRegims::Random) {
+//      if(p_data_regim == DataRegims::Random) {
         
-        snum = sensorNum;
-        snh  = 0x00;
-        snl  = 0x01;
+//        snum = sensorNum;
+//        snh  = 0x00;
+//        snl  = 0x01;
+//        temp = random_sensors.contains(cur_0x33->sensor_number) ? rnd(100) : temp;
+//        vlag = random_sensors.contains(cur_0x33->sensor_number) ? rnd(100) : vlag;
+//      }
+//      else {
         
-        if(random_sensors.contains(cur_0x33->sensor_number)) {
-          temp = rnd(100);
-          vlag = rnd(100);
-        }
-            
-      }
-      else {
-        
-        bool b = cur_0x33->item_is_active->checkState() == Qt::Checked;
-        
-        snum = !b ? 0xF0 : sensorNum;
-        snh  = !b ? 0xF0 : 0x00;
-        snl  = !b ? 0xF0 : 0x01;
-        temp = !b ? 0xF0 : cur_0x33->item_temperature->data(Qt::DisplayRole).toUInt();
-        vlag = !b ? 0xF0 : cur_0x33->item_vlagnost->data(Qt::DisplayRole).toUInt();
-      }
+        snum = cur_0x33->item_is_active->checkState() != Qt::Checked ? 0xF0 : sensorNum;
+        snh  = cur_0x33->item_is_active->checkState() != Qt::Checked ? 0xF0 : 0x00;
+        snl  = cur_0x33->item_is_active->checkState() != Qt::Checked ? 0xF0 : 0x01;
+        temp = cur_0x33->item_is_active->checkState() != Qt::Checked ? 0xF0 : cur_0x33->item_temperature->data(Qt::DisplayRole).toUInt();
+        vlag = cur_0x33->item_is_active->checkState() != Qt::Checked ? 0xF0 : cur_0x33->item_vlagnost->data(Qt::DisplayRole).toUInt();
+//      }
       
       checkAndAppend(snum);
       checkAndAppend(snh);

@@ -19,6 +19,18 @@ const QString OPA_select_signals_0x03 = "SELECT signal_index, signal_name, senso
                                    "and signals.alert_type_index = 16 and signal_marker is not null "
                                    "order by sensor_number, alert_type_index";
 
+const QVector<QPair<QString, quint8>> OPA_AertTypes = {
+            QPair<QString, quint8>("[0x06] Внимание. Предупреждение температурно-тревожной сигнализации на понижение", 0x06),
+            QPair<QString, quint8>("[0x86] Тревога. Предупреждение температурно-тревожной сигнализации на понижение", 0x86),
+            QPair<QString, quint8>("[0x07] Внимание. Предупреждение температурно-тревожной сигнализации на повышение", 0x07),
+            QPair<QString, quint8>("[0x87] Тревога. Предупреждение температурно-тревожной сигнализации на повышение", 0x87),
+            QPair<QString, quint8>("[0x0С] Внимание. Контроль влажности", 0x0C),
+            QPair<QString, quint8>("[0x8С] Тревога. Контроль влажности", 0x8C),
+            QPair<QString, quint8>("[0x0D] ГОТВ УДАЛЕНО. Состояние контроля ГОТВ", 0x0D),
+            QPair<QString, quint8>("[0x8D] ГОТВ В ПОМЕЩЕНИИ. Состояние контроля ГОТВ", 0x8D),
+            QPair<QString, quint8>("[0x13] Внимание", 0x13),
+            QPair<QString, quint8>("[0x16] Пожар", 0x16)
+};
 
 struct OPA_Type_0x03 {
   

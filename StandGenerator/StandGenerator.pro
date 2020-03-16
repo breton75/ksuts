@@ -40,7 +40,8 @@ SOURCES += \
     alert_level_dialog.cpp \
     ../global/sv_serialeditor.cpp \
     ktv/sv_ktv.cpp \
-    ktv/spin_delegate.cpp
+    ktv/spin_delegate.cpp \
+    ../../svlib/sv_userlogon.cpp
 
 HEADERS += \
         mainwindow.h \
@@ -70,7 +71,9 @@ HEADERS += \
     ktv/sv_ktv.h \
     ktv/spin_delegate.h \
     ktv/ktv_type_0x33.h \
-    sv_abstract_device.h
+    sv_abstract_device.h \
+    ../../svlib/ui_userlogon.h \
+    ../../svlib/sv_userlogon.h
 
 FORMS += \
         mainwindow.ui \
