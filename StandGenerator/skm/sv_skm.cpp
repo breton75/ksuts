@@ -119,6 +119,8 @@ void SvSKM::on_bnStartStop_clicked()
         timer_0x02.stop();
       }
       
+      emit stopped(this);
+      
       break;
       
     case RunState::FINISHED:
@@ -161,6 +163,7 @@ void SvSKM::on_bnStartStop_clicked()
           
         }
         
+        emit started(this);
         
       } catch(SvException& e) {
         

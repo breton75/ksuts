@@ -88,6 +88,10 @@ protected:
   
   SvAbstractDeviceThread* p_thread;
   
+signals:
+  void started(SvAbstractDevice*);
+  void stopped(SvAbstractDevice*);
+  
 };
 
 class SvAbstractDeviceThread: public QThread

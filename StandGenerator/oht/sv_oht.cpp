@@ -150,6 +150,8 @@ void SvOHT::on_bnStartStop_clicked()
         timer_0x14.stop();
       }
       
+      emit stopped(this);
+      
       break;
       
     case RunState::FINISHED:
@@ -197,6 +199,8 @@ void SvOHT::on_bnStartStop_clicked()
           timer_0x19.start(getRndTimeout(ui->spinRandomInterval->value()));
           
         }
+        
+        emit started(this);
         
       } catch(SvException& e) {
         

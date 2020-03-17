@@ -115,6 +115,8 @@ void SvKTV::on_bnStartStop_clicked()
         
       }
       
+      emit stopped(this);
+      
       break;
       
     case RunState::FINISHED:
@@ -154,6 +156,8 @@ void SvKTV::on_bnStartStop_clicked()
           timer_0x33.start(getRndTimeout(ui->spinRandomInterval->value()));
           
         }
+        
+        emit started(this);
         
       } catch(SvException& e) {
         

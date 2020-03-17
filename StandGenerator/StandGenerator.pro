@@ -14,6 +14,9 @@ TEMPLATE = app
 CONFIG += c++17
 QMAKE_CXXFLAGS += -std=c++17
 
+VERSION = 1.0.0    # major.minor.patch
+DEFINES += APP_VERSION=\\\"$$VERSION\\\"
+
 # The following define makes your compiler emit warnings if you use
 # any feature of Qt which has been marked as deprecated (the exact warnings
 # depend on your compiler). Please consult the documentation of the
@@ -72,7 +75,6 @@ HEADERS += \
     ktv/spin_delegate.h \
     ktv/ktv_type_0x33.h \
     sv_abstract_device.h \
-    ../../svlib/ui_userlogon.h \
     ../../svlib/sv_userlogon.h
 
 FORMS += \

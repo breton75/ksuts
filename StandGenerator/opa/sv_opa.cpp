@@ -309,7 +309,15 @@ void SvOPA::on_bnStartStop_clicked()
         
         disconnect(&timer_0x02, &QTimer::timeout, this, &SvOPA::setData_0x02);
         timer_0x02.stop();
+        
+        disconnect(&timer_0x03, &QTimer::timeout, this, &SvOPA::setData_0x03);
+        timer_0x03.stop();
+        
+        disconnect(&timer_0x19, &QTimer::timeout, this, &SvOPA::setData_0x19);
+        timer_0x19.stop();
       }
+      
+      emit stopped(this);
       
       break;
       
@@ -356,17 +364,18 @@ void SvOPA::on_bnStartStop_clicked()
         if(p_data_regim == DataRegims::Random) { 
           
           connect(&timer_0x02, &QTimer::timeout, this, &SvOPA::setData_0x02);
-//          connect(&timer_0x03, &QTimer::timeout, this, &SvOPA::random0x03);
+          connect(&timer_0x03, &QTimer::timeout, this, &SvOPA::setData_0x03);
 //          connect(&timer_0x04, &QTimer::timeout, this, &SvOPA::random0x04);
-//          connect(&timer_0x19, &QTimer::timeout, this, &SvOPA::random0x19);
+          connect(&timer_0x19, &QTimer::timeout, this, &SvOPA::setData_0x19);
 
           timer_0x02.start(getRndTimeout(ui->spinRandomInterval->value()));
-//          timer_0x03.start(getRndTimeout());
-//          timer_0x04.start(getRndTimeout());
-//          timer_0x19.start(getRndTimeout());
+          timer_0x03.start(getRndTimeout(ui->spinRandomInterval->value()));
+//          timer_0x04.start(getRndTimeout(ui->spinRandomInterval->value()));
+          timer_0x19.start(getRndTimeout(ui->spinRandomInterval->value()));
           
         }
         
+        emit started(this);
         
       } catch(SvException& e) {
         
@@ -569,7 +578,7 @@ void SvOPA::on_bnEditData_clicked()
 
 void SvOPA::setData()
 {
-//  if(p_edit_mutex.tryLock(3000)) {
+  if(p_edit_mutex.tryLock(3000)) {
 
     /** 0x77 **/
     {
@@ -607,17 +616,19 @@ void SvOPA::setData()
     }
     
     p_edit_mutex.unlock();
+  }
+    
     
     /** type 0x02 **/
     {
       setData_0x02();
     }
-    
+
     /** type 0x03  **/
     {
       setData_0x03();
     }
-    
+   
     /** type 0x19  **/
     {
       setData_0x19();      
@@ -718,7 +729,7 @@ void SvOPA::setData_0x03()
       random_signals.append(p_0x03_items.keys().at(qrand() % p_0x03_items.keys().count()));
       
     }
-    
+    qDebug() <<  p_0x03_items.keys().count();
     foreach (quint16 signal_index, p_0x03_items.keys()) {
   
       
@@ -733,7 +744,8 @@ void SvOPA::setData_0x03()
         
       }
       else
-        state = p_0x02_items.value(signal_index)->item_check_box->checkState();
+        state = p_0x03_items.value(signal_index)->item_check_box->checkState();
+
       
       /** рассматриваем два варианта: 1ый вариант: поставили галочку, а в списке на отправку сигнала нет
      *                              2ой вариант: галочка снята, а в списке на отправку сигнал есть **/    
@@ -760,29 +772,43 @@ void SvOPA::setData_0x03()
       
       // в прочих случаях ничего не делаем
     }
+    
+    
+    p_edit_mutex.unlock();
+    
   }
+  
+  if(p_data_regim == DataRegims::Random)
+    timer_0x03.start(getRndTimeout(ui->spinRandomInterval->value()));
 }
 
 void SvOPA::setData_0x04()
 {
-  p_data.data_0x04 = QByteArray::fromHex(QString(OPA_DefByteArray_0x04).toUtf8());
-  
-  p_data.data_0x04[2] = (p_device_params.RegisterAddress + 0x0090) >> 8;
-  p_data.data_0x04[3] = (p_device_params.RegisterAddress + 0x0090) & 0xFF;
-  
-  foreach (QListWidgetItem* wi, p_0x04_items.keys()) {
+  /** type 0x19 **/
+  if(p_edit_mutex.tryLock(3000)) {
     
-    if(wi->checkState() == Qt::Checked) {
+    p_data.data_0x04 = QByteArray::fromHex(QString(OPA_DefByteArray_0x04).toUtf8());
+    
+    p_data.data_0x04[2] = (p_device_params.RegisterAddress + 0x0090) >> 8;
+    p_data.data_0x04[3] = (p_device_params.RegisterAddress + 0x0090) & 0xFF;
+    
+    foreach (QListWidgetItem* wi, p_0x04_items.keys()) {
       
-      OPA_Type_0x04_value cur_0x14 = p_0x04_items.value(wi);
-      p_data.data_0x04[9 + cur_0x14.byte] = p_data.data_0x04.at(9 + cur_0x14.byte) | quint8(1 << cur_0x14.bit);
-      
+      if(wi->checkState() == Qt::Checked) {
+        
+        OPA_Type_0x04_value cur_0x14 = p_0x04_items.value(wi);
+        p_data.data_0x04[9 + cur_0x14.byte] = p_data.data_0x04.at(9 + cur_0x14.byte) | quint8(1 << cur_0x14.bit);
+        
+      }
     }
-  }
+    
+    quint16 crc_0x04 = CRC::MODBUS_CRC16((uchar*)p_data.data_0x04.data(), p_data.data_0x04.length());
+    p_data.data_0x04.append(crc_0x04 & 0xFF).append(crc_0x04 >> 8);
+    
+    
+    p_edit_mutex.unlock();
   
-  quint16 crc_0x04 = CRC::MODBUS_CRC16((uchar*)p_data.data_0x04.data(), p_data.data_0x04.length());
-  p_data.data_0x04.append(crc_0x04 & 0xFF).append(crc_0x04 >> 8);
-  
+  }  
 }
 
 void SvOPA::setData_0x19()
@@ -827,7 +853,9 @@ void SvOPA::setData_0x19()
     
     quint16 crc_0x19 = CRC::MODBUS_CRC16((uchar*)p_data.data_0x19.data(), p_data.data_0x19.length());
     p_data.data_0x19.append(crc_0x19 & 0xFF).append(crc_0x19 >> 8);
-  
+    
+    p_edit_mutex.unlock();
+    
   }
   
   if(p_data_regim == DataRegims::Random)

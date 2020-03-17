@@ -10,6 +10,8 @@ MainWindow::MainWindow(QWidget *parent) :
 {
   ui->setupUi(this);
   
+  setWindowTitle(QString("Имитатор КСУТС проекта 12700 v.%1").arg(APP_VERSION));
+  
   AppParams::loadLayout(this);
   
   p_logs.clear();
@@ -19,18 +21,14 @@ MainWindow::MainWindow(QWidget *parent) :
 //  ui->tabLogs->addTab(text_log, "Основной");
   mainlog.assignLog(ui->textMainLog);
       
-  QSqlError err = SvPGDB::instance()->connectToDB("cms_db", "172.16.4.11", 5432, "postgres", "postgres");
-  if(err.type() != QSqlError::NoError)
+  if(!SvPGDB::instance()->connected) // connectToDB("cms_db", "172.16.4.11", 5432, "postgres", "postgres");
   {
-     mainlog << svlog::Error << err.text() << svlog::endl;
+     mainlog << svlog::Error << "Нет подключения к базе данных cms_db" << svlog::endl;
+     return;
   }
   else
   {
-    mainlog << svlog::Success << "connected to db" << svlog::endl;
-    
-//    readDevices();
-    
-//    constructUI();
+    mainlog << svlog::Success << "connected to cms_db" << svlog::endl;
     
   }
 
@@ -44,22 +42,17 @@ MainWindow::MainWindow(QWidget *parent) :
       readDevice(index);
   }
   
-  
-  
-  
-  
-  
-  
+  connect(ui->tabWidget, &QTabWidget::tabCloseRequested, this, &MainWindow::close_tab);
   
 }
 
 MainWindow::~MainWindow()
 {
-  foreach (QTextEdit* te, p_logs)
-    delete te;
+  foreach (QTextEdit* l, p_logs)
+    delete l;
   
-  foreach (SvAbstractDevice* sy, p_systems)
-    delete sy;  
+  foreach (SvAbstractDevice* d, p_systems)
+    delete d;  
   
   foreach (QDockWidget* dock, p_docks)
     delete dock;
@@ -103,7 +96,7 @@ bool MainWindow::readDevice(int index)
     
     QString code = q.value("hardware_code").toString();
 
-    if(code == SYSTEM_OXT) {
+    if(code == SYSTEM_OHT) {
 //      continue;
       QDockWidget* dock = new QDockWidget(q.value("device_name").toString(), this);
       dock->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable);
@@ -124,8 +117,9 @@ bool MainWindow::readDevice(int index)
       p_logs.append(text_log);
       p_systems.append(oht);
       
-//      connect(oht, &SvOHT::start_stop, this, &MainWindow::startStop);
-          
+      connect(oht, &SvAbstractDevice::started, [=](){ ui->tabWidget->setTabIcon(ui->tabWidget->currentIndex(), QIcon(":/my_icons/icons/019-fire.png")); });
+      connect(oht, &SvAbstractDevice::stopped, [=](){ ui->tabWidget->setTabIcon(ui->tabWidget->currentIndex(), QIcon()); });          
+      
     }
     else if(code == SYSTEM_OPA) {
       
@@ -153,6 +147,9 @@ bool MainWindow::readDevice(int index)
       
       opacnt++;
       
+      connect(opa, &SvAbstractDevice::started, [=](){ ui->tabWidget->setTabIcon(ui->tabWidget->currentIndex(), QIcon(":/my_icons/icons/019-fire.png")); });
+      connect(opa, &SvAbstractDevice::stopped, [=](){ ui->tabWidget->setTabIcon(ui->tabWidget->currentIndex(), QIcon()); });   
+      
     }
     else if(code == SYSTEM_KTV) {
       
@@ -173,6 +170,9 @@ bool MainWindow::readDevice(int index)
       
       p_logs.append(text_log);
       p_systems.append(ktv);
+      
+      connect(ktv, &SvAbstractDevice::started, [=](){ ui->tabWidget->setTabIcon(ui->tabWidget->currentIndex(), QIcon(":/my_icons/icons/019-fire.png")); });
+      connect(ktv, &SvAbstractDevice::stopped, [=](){ ui->tabWidget->setTabIcon(ui->tabWidget->currentIndex(), QIcon()); });  
       
     }
     else if(code == SYSTEM_SKM) {
@@ -196,11 +196,12 @@ bool MainWindow::readDevice(int index)
       p_logs.append(text_log);
       p_systems.append(skm);
       
+      connect(skm, &SvAbstractDevice::started, [=](){ ui->tabWidget->setTabIcon(ui->tabWidget->currentIndex(), QIcon(":/my_icons/icons/019-fire.png")); });
+      connect(skm, &SvAbstractDevice::stopped, [=](){ ui->tabWidget->setTabIcon(ui->tabWidget->currentIndex(), QIcon()); });  
+      
     }
-    
-
-    
   }
+
   q.finish();
   
   return true;
@@ -224,11 +225,15 @@ void MainWindow::on_tabWidget_currentChanged(int index)
 {
 //  for(QDockWidget* dock : p_docks) {
     
-//    qDebug() << dock->windowTitle() <<  ui->tabWidget->tabText(index);
-//    if(dock->windowTitle() == ui->tabWidget->tabText(index)) {
-//      dock->setWindowFlag(Qt::WindowType);
-//      qDebug() << 1; 
-//    }
-////    QMainWindow::set
-  }
+//    if(ui->tabWidget->tabText(index) == dock->windowTitle())
+//      dock->setFocus();
+//  }
+}
+
+void MainWindow::close_tab(int index)
+{
+  delete p_systems.takeAt(index);
+  delete p_logs.takeAt(index);
+  delete p_docks.takeAt(index);
+  p_device_indexes.removeAt(index);
 }

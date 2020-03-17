@@ -119,10 +119,6 @@ private slots:
   
   void on_comboRegim_currentIndexChanged(int index);
   
-signals:
-  void start_stop(SvAbstractDevice*);
-  
-  
 };
 
 class SvOHTThread: public SvAbstractDeviceThread

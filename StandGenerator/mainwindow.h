@@ -31,7 +31,7 @@ class MainWindow : public QMainWindow
 {
   Q_OBJECT
   
-  const QString SYSTEM_OXT = "OHT";
+  const QString SYSTEM_OHT = "OHT";
   const QString SYSTEM_OPA = "OPA";
   const QString SYSTEM_KTV = "KTV";
   const QString SYSTEM_SKM = "SKM";
@@ -58,6 +58,8 @@ private slots:
   void on_actionAddDevice_triggered();
 
   void on_tabWidget_currentChanged(int index);
+  
+  void close_tab(int index);
 };
 
 #endif // MAINWINDOW_H
