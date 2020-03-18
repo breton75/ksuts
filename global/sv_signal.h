@@ -28,7 +28,7 @@ struct SignalParams
   int timeout_value = -3;
   int timeout_signal_index = -1;
   SignalDataTypes data_type = dtInt;
-  bool is_configured = false;
+  bool is_involved = false;
   bool storage0_linked = false;
   bool storage1_linked = false;
   bool storage2_linked = false;

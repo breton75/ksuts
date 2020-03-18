@@ -1,4 +1,4 @@
-#ifndef SKTV_H
+﻿#ifndef SKTV_H
 #define SKTV_H
 
 #include <QtCore/QCommandLineParser>
@@ -41,9 +41,6 @@ public:
   SvSKTV(clog::SvCLog& log);
   ~SvSKTV();
   
-  
-  idev::DeviceTypes type() const { return idev::sdtSKTV; }
-  
   bool readyRead() { return _ready_read; }
   
   bool open();
@@ -52,18 +49,15 @@ public:
   void write(const QByteArray* data);
   void read();
   
-  SerialPortParams* serialParams() { return &_serial_params; }
   bool setParams(const QString& params);
-  
-  void setSerialPortParams(const SerialPortParams& params);
   
 private:
   QSerialPort _serial;
   
-  SerialPortParams _serial_params;
   bool _ready_read = false;
   
   SKTVHeader _header;
+
   quint8 _data_type;
   quint8 _data_length;
   quint16 _crc;

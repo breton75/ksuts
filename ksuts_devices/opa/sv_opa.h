@@ -41,7 +41,7 @@ public:
   SvOPA(clog::SvCLog& log);
   ~SvOPA();
   
-  virtual idev::DeviceTypes type() { return deviceType(); }
+//  virtual idev::DeviceTypes type() { return deviceType(); }
   
   bool readyRead() { return _ready_read; }
   
@@ -51,25 +51,23 @@ public:
   void write(const QByteArray* data);
   void read();
   
-  SerialPortParams* serialParams() { return &_serial_params; }
+//  DeviceParams* serialParams() const { return &_device_params; }
   bool setParams(const QString& params);
-  
-  void setSerialPortParams(const SerialPortParams& params);
   
 private:
   QSerialPort _serial;
   
-  SerialPortParams _serial_params;
   bool _ready_read = false;
   
   OPAHeader _header;
+
   quint8 _data_type;
   quint8 _data_length;
   quint16 _crc;
   quint8 _crc1;
   quint8 _crc2;
   quint8 _data[512];
-  
+
   SvException* _exception;  
   
   size_t _hSize = sizeof(OPAHeader);

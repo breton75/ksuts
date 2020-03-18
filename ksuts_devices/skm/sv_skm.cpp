@@ -5,7 +5,8 @@
 
 SvSKM::SvSKM(clog::SvCLog& log):
   idev::SvIDevice(),
-  _log(log)
+  _log(log),
+  p_hardware_type(idev::sdtSKM)
 {
 
 }
@@ -20,41 +21,31 @@ SvSKM::~SvSKM()
 
 bool SvSKM::setParams(const QString& params)
 {
-//  idev::SvIDevice::setParams(params);
-  _params = params;
-
   try {
     
-    SerialParamsParser p(params);
-    if(!p.parse()) _exception->raise(p.lastError());
+    DeviceParamsParser p(params);
+
+    if(!p.parse())
+      _exception->raise(p.lastError());
     
-    _serial_params = p.serialParams();
+    p_device_params = p.serialParams();
     
-    _serial.setPortName(_serial_params.portname);
-    _serial.setBaudRate(_serial_params.baudrate);
-    _serial.setDataBits(_serial_params.databits);
-    _serial.setFlowControl(_serial_params.flowcontrol);
-    _serial.setParity(_serial_params.parity);
-    _serial.setStopBits(_serial_params.stopbits);
+    _serial.setPortName(   p_device_params.portname);
+    _serial.setBaudRate(   p_device_params.baudrate);
+    _serial.setDataBits(   p_device_params.databits);
+    _serial.setFlowControl(p_device_params.flowcontrol);
+    _serial.setParity(     p_device_params.parity);
+    _serial.setStopBits(   p_device_params.stopbits);
 
     return true;
       
   }
   
   catch(SvException& e) {
+
     setLastError(e.error);
     return false;
   }
-}
-
-void SvSKM::setSerialPortParams(const SerialPortParams& params)
-{
-  _serial.setPortName(params.portname);
-  _serial.setBaudRate(params.baudrate);
-  _serial.setDataBits(params.databits);
-  _serial.setFlowControl(params.flowcontrol);
-  _serial.setParity(params.parity);
-  _serial.setStopBits(params.stopbits);
 }
 
 bool SvSKM::open()
@@ -67,7 +58,7 @@ bool SvSKM::open()
     return false;
   }
   
-  _isOpened = _serial.isOpen();
+  p_isOpened = _serial.isOpen();
   
   connect(&_serial, &QSerialPort::readyRead, this, &SvSKM::read);
 
@@ -80,7 +71,7 @@ bool SvSKM::open()
 //  connect(&_ttt1, &QTimer::timeout, this, &SvSKM::read);
 //  _ttt1.start();
 
-  return _isOpened;
+  return p_isOpened;
 
 }
 
@@ -88,7 +79,7 @@ void SvSKM::close()
 {
   _serial.close();
   disconnect(&_serial, &QSerialPort::readyRead, this, &SvSKM::read);
-  _isOpened = false;
+  p_isOpened = false;
 }
 
 void SvSKM::packetTimeout()
@@ -116,7 +107,7 @@ void SvSKM::read()
     _buf_offset += _serial.read((char*)(&_buf[0] + _buf_offset), 512 - _buf_offset);
 
     // для сбора реальных логов
-    if(_config.debug_mode)
+    if(p_config.debug_mode)
       _log << clog::llDebug2
            << clog::TimeZZZ << clog::in
            << QString(QByteArray((const char*)&_buf[cur_offset], _buf_offset - cur_offset).toHex()) << clog::endl;
@@ -138,7 +129,7 @@ void SvSKM::read()
       // ищем признак конца пакета
       if((_buf[_buf_offset - 1] == 0x55) && (_buf[_buf_offset - 2] == 0x2F)) {
 
-          if(_config.debug_mode)
+          if(p_config.debug_mode)
             _log << clog::llDebug
                  << clog::TimeZZZ << clog::in
                  << QString(QByteArray((const char*)&_buf[0], _buf_offset).toHex()) << clog::endl;
@@ -244,7 +235,7 @@ bool SvSKM::sendConfirmation()
 
     _serial.write((const char*)&_confirm[0], crc_offset + crc_length + 2);
 
-    if(_config.debug_mode)
+    if(p_config.debug_mode)
       _log << clog::llDebug
            << clog::TimeZZZ << clog::out
            << QString(QByteArray((const char*)&_confirm[0], crc_offset + crc_length + 2).toHex()) << clog::endl;

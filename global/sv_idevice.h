@@ -10,52 +10,60 @@
 #include <QDebug>
 
 #include "sv_signal.h"
+#include "dev_defs.h"
 
 namespace idev {
 
-  enum DeviceTypes {
+  enum HardwareTypes {
+
     sdtUndefined = -1,
-    sdtOHT_Gamma12700 = 40,
-    sdtOPA_SS1_119 = 20,
-    sdtOPA_SS1_122 = 21,
-    sdtOPA_12SS1_218 = 22,
-    sdtOPA_12SS1_8 = 23,
-    sdtOPA_12SS1_38 = 24,
-    sdtOPA_12SS1_67 = 25,
-    sdtOPA_12SS1_93 = 26,
-    sdtOPA_12SS1_123 = 27,
-    sdtOPA_12SS1_150 = 28,
+    sdtOHT = 40,
+    sdtOPA = 20,
+//    sdtOPA_SS1_119 = 20,
+//    sdtOPA_SS1_122 = 21,
+//    sdtOPA_12SS1_218 = 22,
+//    sdtOPA_12SS1_8 = 23,
+//    sdtOPA_12SS1_38 = 24,
+//    sdtOPA_12SS1_67 = 25,
+//    sdtOPA_12SS1_93 = 26,
+//    sdtOPA_12SS1_123 = 27,
+//    sdtOPA_12SS1_150 = 28,
     sdtSKM = 39,
-    sdtSKTV = 99
+    sdtKTV = 99
   };
 
-  const QMap<DeviceTypes, int> OPA_REGISTERS = {{sdtOPA_SS1_119,   0x0400},
-                                                {sdtOPA_SS1_122,   0x04A0},
-                                                {sdtOPA_12SS1_218, 0x0540},
-                                                {sdtOPA_12SS1_8,   0x05E0},
-                                                {sdtOPA_12SS1_38,  0x0680},
-                                                {sdtOPA_12SS1_67,  0x0720},
-                                                {sdtOPA_12SS1_93,  0x07C0},
-                                                {sdtOPA_12SS1_123, 0x0860},
-                                                {sdtOPA_12SS1_150, 0x0900}};
+  const QMap<QString, HardwareTypes> HARDWARE_CODES = {{"OHT", sdtOHT},
+                                                     {"OPA", sdtOPA},
+                                                     {"SKM", sdtSKM},
+                                                     {"KTV", sdtKTV}};
+
+//  const QMap<HardwareTypes, int> OPA_REGISTERS = {{sdtOPA_SS1_119,   0x0400},
+//                                                {sdtOPA_SS1_122,   0x04A0},
+//                                                {sdtOPA_12SS1_218, 0x0540},
+//                                                {sdtOPA_12SS1_8,   0x05E0},
+//                                                {sdtOPA_12SS1_38,  0x0680},
+//                                                {sdtOPA_12SS1_67,  0x0720},
+//                                                {sdtOPA_12SS1_93,  0x07C0},
+//                                                {sdtOPA_12SS1_123, 0x0860},
+//                                                {sdtOPA_12SS1_150, 0x0900}};
 
   struct DeviceConfig
   {
 //    int id = -1;
     int index = -1;
     QString name = "";
+    HardwareTypes hardware_type = HardwareTypes::sdtUndefined;
     int ifc_id = -1;
     QString ifc_name = "";
     int protocol_id = -1;
     QString protocol_name = "";
     QString driver_lib_name = "";
     QString description = "";
-    bool is_configured = false;
+    bool is_involved = false;
     bool debug_mode = false;
     bool debug2_mode = false;
-    int DEVICE_REGISTER = 0;
     quint64 timeout = 0;
-    bool single_device_mode = false;
+    QString device_params_string = "";
     
 //    DeviceConfig &operator= (DeviceConfig &other) {
       
@@ -88,54 +96,52 @@ public:
   
   virtual ~SvIDevice() { }
   
-  virtual idev::DeviceTypes type() const { return idev::sdtUndefined; }
+  virtual idev::HardwareTypes hardware_type() const { return p_hardware_type; }
   
 
-  void setLastError(const QString& lastError) { _last_error = lastError; }
-  QString lastError() { return _last_error; }
+  void setLastError(const QString& lastError) { p_last_error = lastError; }
+  QString lastError()                         { return p_last_error; }
   
-  void setDeviceType(idev::DeviceTypes type) { _type = type; }
-  idev::DeviceTypes deviceType() { return _type; }
+//  void setDeviceType(idev::DeviceTypes type) { p_type = type; }
+//  idev::DeviceTypes deviceType()             { return p_type; }
+
+  void setOpened(bool isOpened) { p_isOpened = isOpened; }
+  bool isOpened() const         { return p_isOpened; }
   
-  void setOpened(bool isOpened) { _isOpened = isOpened; }
-  bool isOpened() { return _isOpened; }
-  
-  void setActive(bool isActive) { _isActive = isActive; }
-  bool isActive() { return _isActive; }
+  void setActive(bool isActive) { p_isActive = isActive; }
+  bool isActive() const         { return p_isActive; }
   
 //  void setTimeout(quint32 timeout) { _timeout = timeout; }
   void setNewLostEpoch()
   {
-      _lost_epoch = QDateTime::currentMSecsSinceEpoch() + _config.timeout;
+      p_lost_epoch = QDateTime::currentMSecsSinceEpoch() + p_config.timeout;
 //        qDebug() << "timeout:" << _config.timeout << " device:" << _config.name << " lost_epoch:" << _lost_epoch;
-      foreach (SvSignal* s, _signals.values())
-        s->setDeviceLosEpoch(_lost_epoch);
+      foreach (SvSignal* s, p_signals.values())
+        s->setDeviceLosEpoch(p_lost_epoch);
   }
 
-  bool isAlive() { return _lost_epoch > quint64(QDateTime::currentMSecsSinceEpoch());  }
+  bool isAlive() { return p_lost_epoch > quint64(QDateTime::currentMSecsSinceEpoch());  }
 
-  bool isReadyRead() { return _is_ready_read; }
+  virtual idev::DeviceConfig* config() const { return &p_config; }
+  virtual void setConfig(const idev::DeviceConfig& config) { p_config = config; }
   
-  virtual idev::DeviceConfig* config() { return &_config; }
-  virtual bool setConfig(idev::DeviceConfig& config) { _config = config; return true; }
-  
-  virtual QString params() { return _params; }
+  virtual DeviceParams* params() const { return &p_device_params; }
   virtual bool setParams(const QString& params)  = 0; //{ _params = params; }
   
 //  virtual void write(const QByteArray* data) = 0;
 //  virtual void read() = 0;
   
-  void addSignal(SvSignal* signal) { _signals.insert(signal->params()->name, signal); }
-  void clearSignals() { _signals.clear(); }
-  QMap<QString, SvSignal*>* Signals() { return &_signals; }
-  int signalsCount() { return _signals.count(); }
+  void addSignal(SvSignal* signal) { p_signals.insert(signal->params()->name, signal); }
+  void clearSignals() { p_signals.clear(); }
+  QMap<QString, SvSignal*>* Signals() const { return &p_signals; }
+  int signalsCount() { return p_signals.count(); }
   
   void setSignalValue(const QString SIGNAL_NAME, qreal VALUE)
   {
-    if(_signals.contains(SIGNAL_NAME)) {
+    if(p_signals.contains(SIGNAL_NAME)) {
 
 //      qDebug() << QString("SIGNAL_NAME: %1   VALUE: %2").arg(SIGNAL_NAME).arg(VALUE);
-      _signals.value(SIGNAL_NAME)->setValue(VALUE);
+      p_signals.value(SIGNAL_NAME)->setValue(VALUE);
 
     }
 
@@ -157,24 +163,24 @@ public:
 //  }
     
 protected:
-  idev::DeviceConfig _config;
+  idev::DeviceConfig p_config;
+  DeviceParams       p_device_params;
   
-  QMap<QString, SvSignal*> _signals;
+  QMap<QString, SvSignal*> p_signals;
   
   int _pos = -1;
 
-  quint64 _lost_epoch = 0;
+  quint64 p_lost_epoch = 0;
 
   quint32 _id;
-  idev::DeviceTypes _type;
+  idev::HardwareTypes p_hardware_type;
   
-  QString _last_error;
+  QString p_last_error;
   
-  bool _isOpened = false;
-  bool _isActive = true;
-  bool _is_ready_read = false;
+  bool p_isOpened = false;
+  bool p_isActive = true;
+  bool p_is_ready_read = false;
   
-  QString _params;
 
 public:
   virtual bool open() = 0;

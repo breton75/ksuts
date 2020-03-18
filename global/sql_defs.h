@@ -9,7 +9,193 @@
 #define STORAGES_TREE_HEADERS "|Хранилище;|Сервер;|Порт;|Логин;|База данных;|Таблица"
 
 
-/** *********** SQLITE *************** **/
+/** *********** POSTGRES *************** **/
+
+/** определения для версии 2 **/
+#ifdef VERSION_2 // в файле проекта
+
+#define SQL_SELECT_FROM_DEVICES \
+  "SELECT " CR \
+  "   devices.device_index as device_index, " CR \
+  "   devices.device_name as device_name, " CR \
+  "   devices.ifc_id as device_ifc_id, " CR \
+  "   devices.protocol_id as device_protocol_id, " CR \
+  "   devices.connection_params as device_connection_params, " CR \
+  "   devices.description as device_description, " CR \
+  "   devices.driver_lib_name as device_driver_lib_name, " CR \
+  "   devices.is_involved as device_is_involved, " CR \
+  "   devices.debug as device_debug, " CR \
+  "   devices.timeout as device_timeout, " CR \
+  "   ifces.ifc_name as device_ifc_name, " CR \
+  "   protocols.protocol_name as device_protocol_name " CR \
+  "FROM devices " CR \
+  "LEFT JOIN ifces ON ifces.id = devices.ifc_id " CR \
+  "LEFT JOIN protocols  ON protocols.id = devices.protocol_id "
+
+#define SQL_SELECT_DEVICES_LIST (SQL_SELECT_FROM_DEVICES CR " ORDER BY device_ifc_name ASC")
+#define SQL_SELECT_INVOLVED_DEVICES (SQL_SELECT_FROM_DEVICES CR " WHERE devices.is_involved = true ORDER BY device_name ASC")
+#define SQL_SELECT_SINGLE_INVOLVED_DEVICE (SQL_SELECT_FROM_DEVICES CR " WHERE devices.is_involved = true AND device_index = %1")
+#define SQL_SELECT_NOT_INVOLVED_DEVICES (SQL_SELECT_FROM_DEVICES CR " WHERE devices.is_involved = false ORDER BY device_name ASC")
+#define SQL_SELECT_ONE_DEVICE (SQL_SELECT_FROM_DEVICES CR " WHERE device_index = %1")
+#define SQL_SELECT_DEVICES_WHERE_NOT_IN (SQL_SELECT_FROM_DEVICES CR " WHERE device_index NOT IN (%1) ORDER BY device_name ASC")
+
+
+#define SQL_SELECT_FROM_SIGNALS \
+  "SELECT " CR \
+  "   signals.signal_index as signal_index, " CR \
+  "   signals.device_index as signal_device_index, " CR \
+  "   signals.signal_name as signal_name, " CR \
+  "   signals.timeout as signal_timeout, " CR \
+  "   signals.timeout_value as signal_timeout_value, " CR \
+  "   signals.timeout_signal_index as signal_timeout_index, " CR \
+  "   signals.data_type as signal_data_type, " CR \
+  "   signals.data_offset as signal_data_offset, " CR \
+  "   signals.data_length as signal_data_length, " CR \
+  "   signals.description as signal_description, " CR \
+  "   signals.storage0_linked as signal_storage0_linked, " CR \
+  "   signals.storage1_linked as signal_storage1_linked, " CR \
+  "   signals.storage2_linked as signal_storage2_linked, " CR \
+  "FROM signals " CR
+/* исключено "   signals.is_configured as signal_is_configured*/
+
+#define SQL_SELECT_DEVICE_SIGNALS (SQL_SELECT_FROM_SIGNALS " WHERE signals.device_index = %1")
+
+#define SQL_SELECT_INVOLVED_SIGNALS (SQL_SELECT_FROM_SIGNALS " WHERE signals.device_index is not NULL ORDER BY signals.signal_index ASC")
+#define SQL_SELECT_INVOLVED_SIGNALS_DEVICE (SQL_SELECT_FROM_SIGNALS " WHERE signals.device_index = %1 ORDER BY signals.signal_index ASC")
+#define SQL_SELECT_NOT_INVOLVED_SIGNALS_HARDWARE (SQL_SELECT_FROM_SIGNALS " WHERE signals.hardware_index = %1 AND signals.device_index is NULL ORDER BY signals.signal_index ASC")
+
+#define SQL_SELECT_LINKED_SIGNALS_STORAGE_INDEX (SQL_SELECT_FROM_SIGNALS " WHERE signals.storage%1_linked = true AND signals.device_index is not NULL ORDER BY signals.signal_index ASC")
+#define SQL_SELECT_NOT_LINKED_SIGNALS_STORAGE_INDEX (SQL_SELECT_FROM_SIGNALS " WHERE signals.storage%1_linked = false AND signals.device_index is not NULL ORDER BY signals.signal_index ASC")
+
+
+#define SQL_SELECT_SIGNALS_LIST (SQL_SELECT_FROM_SIGNALS " ORDER BY signals.data_offset ASC")
+#define SQL_SELECT_ONE_SIGNAL (SQL_SELECT_FROM_SIGNALS " WHERE signals.signal_index = %1")
+#define SQL_SELECT_SIGNALS_IN_NOT (SQL_SELECT_FROM_SIGNALS " WHERE signals.device_index = %1 AND signals.%2 %3 (%4)")
+
+
+#define SQL_SELECT_FROM_STORAGES \
+  "SELECT storages.id as storage_id, " CR \
+  "   storages.storage_name as storage_name, " CR \
+  "   storages.storage_index as storage_index, " CR \
+  "   storages.host as storage_host, " CR \
+  "   storages.port as storage_port, " CR \
+  "   storages.login as storage_login, " CR \
+  "   storages.pass as storage_pass, " CR \
+  "   storages.dbname as storage_dbname, " CR \
+  "   storages.table_name as storage_table_name " CR \
+  "FROM storages "
+
+#define SQL_SELECT_STORAGES_LIST (SQL_SELECT_FROM_STORAGES " WHERE storages.storage_index in (0,1,2) ORDER BY storages.storage_index ASC")
+#define SQL_SELECT_ONE_STORAGE (SQL_SELECT_FROM_STORAGES " WHERE storages.storage_index = %1")
+
+
+#define SQL_NEW_DEVICE \
+  "INSERT INTO devices (device_name, device_index, ifc_id, protocol_id, connection_params, description)" CR \
+  "VALUES ('%1', %2, %3, %4, '%5', '%6');"
+
+#define SQL_CONFIGURE_DEVICE \
+  "UPDATE devices SET device_name = '%1', is_involved = true, ifc_id = %2, protocol_id = %3, "\
+  "connection_params = '%4', description = '%5', debug = %6 " CR \
+  "WHERE device_index = %7;"
+
+#define SQL_UPDATE_DEVICE \
+  "UPDATE devices SET device_name='%1', device_index=%2, ifc_id=%3, protocol_id=%4, connection_params='%5', description='%6' " CR \
+  "WHERE id = %5;"
+
+
+#define SQL_NEW_STORAGE \
+  "INSERT INTO storages ( " CR \
+  "     storage_name, host, port, login, pass, dbname, table_name, storage_index) " CR \
+  "VALUES ('%1', '%2', %3, '%4', '%5', '%6', '%7', %8);"
+
+#define SQL_UPDATE_STORAGE \
+  "UPDATE storages SET " CR \
+  "   storage_name='%1', host='%2', port=%3, login='%4', pass='%5', " \
+  "   dbname='%6', table_name='%7' " CR \
+  "WHERE storage_index = %8;"
+
+
+#define SQL_NEW_SIGNAL \
+  "INSERT INTO signals ( " CR \
+  "   signal_index, device_index, signal_name, timeout, timeout_value, timeout_signal_index, " \
+  "   data_type, data_offset, data_length, description, storage1, storage2, storage3 ) " CR \
+  "VALUES (%1, %2, '%3', %4, %5, %6, %7, %8, %9, '%10', %12, %13, %14);" CR // в конце ; и CR !!
+
+#define SQL_UPDATE_SIGNAL \
+  "UPDATE signals SET " CR \
+  "   device_index=%1, signal_name='%2', timeout=%3, data_type=%4, data_offset=%5, " \
+  "   data_length=%6, description='%7', storage1_index=%8, " \
+  "   storage2_index=%9, storage3_index=%10 " CR \
+  "WHERE signal_index = %11;"
+
+
+#define SQL_SET_DEVICES_NOT_INVOLVED "UPDATE devices SET is_involved = false "
+#define SQL_DELETE_ALL_DEVICES (SQL_SET_DEVICES_NOT_INVOLVED)
+#define SQL_DELETE_SELECTED_DEVICES (SQL_SET_DEVICES_NOT_INVOLVED "WHERE devices.device_index IN (%1)")
+
+#define SQL_SET_DEVICES_INVOLVED "UPDATE devices SET is_involved = true "
+#define SQL_ADD_ALL_DEVICES (SQL_SET_DEVICES_INVOLVED)
+#define SQL_ADD_SELECTED_DEVICES (SQL_SET_DEVICES_INVOLVED " WHERE devices.device_index IN (%1)")
+
+
+#define SQL_SET_SIGNALS_NOT_INVOLVED "UPDATE signals SET device_index = NULL "
+#define SQL_DELETE_ALL_SIGNALS (SQL_SET_SIGNALS_NOT_INVOLVED " WHERE device_index = %1")
+#define SQL_DELETE_SELECTED_SIGNALS (SQL_SET_SIGNALS_NOT_INVOLVED "WHERE signals.signal_index IN (%1)")
+#define SQL_DELETE_SIGNALS_WHERE_DEVICE_IN (SQL_SET_SIGNALS_NOT_INVOLVED "WHERE signals.device_index IN (%1)")
+//#define SQL_UPDATE_DEVICE_INDEX_OPA_AFTER_DELETE "UPDATE signals SET device_index = 2000 WHERE device_index IN (20,21,22,23,24,25,26,27,28) AND is_configured = false"
+
+#define SQL_SET_SIGNALS_INVOLVED "UPDATE signals SET device_index = %1"
+#define SQL_ADD_SELECTED_SIGNALS (SQL_SET_SIGNALS_INVOLVED " WHERE signals.signal_index IN (%2)")
+//#define SQL_ADD_SELECTED_SIGNALS_OPA (SQL_SET_SIGNALS_INVOLVED " WHERE signals.signal_index IN (%2)")
+
+#define SQL_SET_SIGNALS_NOT_LINKED "UPDATE signals SET storage%1_linked = false "
+#define SQL_UNLINK_ALL_SIGNALS (SQL_SET_SIGNALS_NOT_LINKED " WHERE device_index is not NULL")
+#define SQL_UNLINK_SELECTED_SIGNALS (SQL_SET_SIGNALS_NOT_LINKED "WHERE signals.signal_index IN (%2)")
+
+#define SQL_SET_SIGNALS_LINKED "UPDATE signals SET storage%1_linked = true "
+#define SQL_LINK_ALL_SIGNALS (SQL_SET_SIGNALS_LINKED " WHERE device_index is not NULL")
+#define SQL_LINK_SELECTED_SIGNALS (SQL_SET_SIGNALS_LINKED " WHERE signals.signal_index IN (%2)")
+
+
+#define SQL_SELECT_IFCES "SELECT id, ifc_name FROM ifces ORDER BY ifc_name"
+#define SQL_SELECT_PROTOCOLS "SELECT id, protocol_name FROM protocols ORDER BY protocol_name"
+
+
+#define SQL_SELECT_DEVICES_COUNT_STR \
+    "with " CR \
+    "   alldev as (select count(device_index) cnt from devices)," CR \
+    "   cfgdev as (select count(device_index) cnt from devices where is_involved = true) " CR \
+    "select ' [' || cfgdev.cnt || ' / ' || alldev.cnt || ']'" CR \
+    "from alldev,cfgdev;"
+
+//#define SQL_SELECT_SIGNALS_COUNT_STR \
+//    "with " CR \
+//    "   dev as (select %1 as idx), " CR \
+//    "   onedev as (select count(signal_index) cnt from signals where device_index = %1)," CR \
+//    "   opadev as (select count(signal_index) cnt from signals where device_index in (%1,2000))," CR \
+//    "   cfgdev as (select count(signal_index) cnt from signals where device_index = %1 and is_configured = true) " CR \
+//    "select ' [' || cfgdev.cnt || ' / ' || " CR \
+//    "               CASE WHEN (dev.idx in (20,21,22,23,24,25,26,27,28)) THEN opadev.cnt ELSE onedev.cnt END " CR \
+//    "           || ']'" CR \
+//    "from dev,onedev,opadev,cfgdev;"
+
+
+#define SQL_SELECT_DEVICES_BY_STORAGE \
+    "select device_index, device_name " \
+    "from devices " \
+    "where device_index in (select distinct device_index " \
+    "                       from signals where storage%1_linked = true) " \
+    "      and is_involved = true " \
+    "order by device_name ASC"
+
+
+#define SQL_SELECT_SIGNALS_BY_STORAGE_AND_DEVICE \
+    "select signal_index, signal_name, data_type " \
+    "from signals where device_index = %1 and storage%2_linked = true " \
+    "order by signal_name ASC"
+
+/** определения для версии 1 **/
+#else
 
 #define OPA_gamma119  20
 #define OPA_gamma122  21
@@ -69,26 +255,23 @@
   "   signals.data_offset as signal_data_offset, " CR \
   "   signals.data_length as signal_data_length, " CR \
   "   signals.description as signal_description, " CR \
+  "   signals.is_configured as signal_is_configured, " CR \
   "   signals.storage0_linked as signal_storage0_linked, " CR \
   "   signals.storage1_linked as signal_storage1_linked, " CR \
   "   signals.storage2_linked as signal_storage2_linked, " CR \
-  "   signals.is_configured as signal_is_configured " CR \
   "FROM signals " CR
 
 #define SQL_SELECT_DEVICE_SIGNALS (SQL_SELECT_FROM_SIGNALS " WHERE signals.device_index = %1")
 
-
 #define SQL_SELECT_CONFIGURED_SIGNALS (SQL_SELECT_FROM_SIGNALS " WHERE signals.is_configured = true ORDER BY signals.signal_index ASC")
 #define SQL_SELECT_CONFIGURED_SIGNALS_DEVICE (SQL_SELECT_FROM_SIGNALS " WHERE signals.device_index = %1 AND signals.is_configured = true ORDER BY signals.signal_index ASC")
-//#define SQL_SELECT_CONFIGURED_SIGNALS_DEVICE_OPA (SQL_SELECT_FROM_SIGNALS " WHERE signals.device_index = %1 AND signals.is_configured = true ORDER BY signals.signal_index ASC")
-
 #define SQL_SELECT_NOT_CONFIGURED_SIGNALS_DEVICE (SQL_SELECT_FROM_SIGNALS " WHERE signals.device_index = %1 AND signals.is_configured = false ORDER BY signals.signal_index ASC")
-//#define SQL_SELECT_NOT_CONFIGURED_SIGNALS_DEVICE_OPA (SQL_SELECT_FROM_SIGNALS " WHERE signals.device_index in (20,21,22,23,24,25,26,27,28) AND signals.is_configured = false ORDER BY signals.signal_index ASC")
-#define SQL_SELECT_NOT_CONFIGURED_SIGNALS_DEVICE_OPA (SQL_SELECT_FROM_SIGNALS " WHERE signals.device_index = 2000 AND signals.signal_index in (%1) AND signals.is_configured = false ORDER BY signals.signal_index ASC")
-
 
 #define SQL_SELECT_LINKED_SIGNALS_STORAGE_INDEX (SQL_SELECT_FROM_SIGNALS " WHERE signals.storage%1_linked = true AND signals.is_configured = true ORDER BY signals.signal_index ASC")
 #define SQL_SELECT_NOT_LINKED_SIGNALS_STORAGE_INDEX (SQL_SELECT_FROM_SIGNALS " WHERE signals.storage%1_linked = false AND signals.is_configured = true ORDER BY signals.signal_index ASC")
+
+//#define SQL_SELECT_NOT_CONFIGURED_SIGNALS_DEVICE_OPA (SQL_SELECT_FROM_SIGNALS " WHERE signals.device_index in (20,21,22,23,24,25,26,27,28) AND signals.is_configured = false ORDER BY signals.signal_index ASC")
+#define SQL_SELECT_NOT_CONFIGURED_SIGNALS_DEVICE_OPA (SQL_SELECT_FROM_SIGNALS " WHERE signals.device_index = 2000 AND signals.signal_index in (%1) AND signals.is_configured = false ORDER BY signals.signal_index ASC")
 
 
 #define SQL_SELECT_SIGNALS_LIST (SQL_SELECT_FROM_SIGNALS " ORDER BY signals.data_offset ASC")
@@ -161,7 +344,6 @@
 #define SQL_ADD_ALL_DEVICES (SQL_SET_DEVICES_CONFIGURED)
 #define SQL_ADD_SELECTED_DEVICES (SQL_SET_DEVICES_CONFIGURED " WHERE devices.device_index IN (%1)")
 
-
 #define SQL_SET_SIGNALS_NOT_CONFIGURED "UPDATE signals SET is_configured = false "
 #define SQL_DELETE_ALL_SIGNALS (SQL_SET_SIGNALS_NOT_CONFIGURED " WHERE device_index = %1")
 #define SQL_DELETE_SELECTED_SIGNALS (SQL_SET_SIGNALS_NOT_CONFIGURED "WHERE signals.signal_index IN (%1)")
@@ -218,6 +400,9 @@
     "select signal_index, signal_name, data_type " \
     "from signals where device_index = %1 and storage%2_linked = true and is_configured = true " \
     "order by signal_name ASC"
+
+
+#endif
 
 
 #define SQL_SELECT_DB_INFO \

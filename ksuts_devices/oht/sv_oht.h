@@ -41,7 +41,7 @@ public:
   ~SvOHT();
   
   
-  idev::DeviceTypes type() const { return idev::sdtOHT_Gamma12700; }
+//  idev::DeviceTypes type() const { return idev::sdtOHT_Gamma12700; }
   
   bool readyRead() { return _ready_read; }
   
@@ -53,18 +53,16 @@ public:
   
 //  bool start(quint32 msecs) { Q_UNUSED(msecs); return true; }
 
-  SerialPortParams* serialParams() { return &_serial_params; }
+  DeviceParams* serialParams() const { return &_device_params; }
   bool setParams(const QString& params);
-  
-  void setSerialPortParams(const SerialPortParams& params);
   
 private:
   QSerialPort _serial;
   
-  SerialPortParams _serial_params;
   bool _ready_read = false;
   
   OHTHeader _header;
+
   quint8 _data_type;
   quint8 _data_length;
   quint16 _crc;

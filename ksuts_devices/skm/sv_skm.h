@@ -1,4 +1,4 @@
-#ifndef SKM_H
+﻿#ifndef SKM_H
 #define SKM_H
 
 #include <QtCore/QCommandLineParser>
@@ -38,7 +38,7 @@ public:
   ~SvSKM();
   
   
-  idev::DeviceTypes type() const { return idev::sdtSKM; }
+//  idev::DeviceTypes type() const { return idev::sdtSKM; }
   
   bool readyRead() { return _ready_read; }
   
@@ -48,18 +48,15 @@ public:
   void write(const QByteArray* data);
   void read();
   
-  SerialPortParams* serialParams() { return &_serial_params; }
   bool setParams(const QString& params);
-  
-  void setSerialPortParams(const SerialPortParams& params);
   
 private:
   QSerialPort _serial;
-  
-  SerialPortParams _serial_params;
+
   bool _ready_read = false;
   
   SKMHeader _header;
+
   quint8 _data_type;
   quint8 _data_length;
   quint16 _crc;
@@ -74,8 +71,6 @@ private:
   quint8 _buf[512];
   quint64 _buf_offset = 0;
   quint8 _confirm[512];
-
-//  QTimer _ttt1;
 
   void parse_packet();
   void analizeData();
