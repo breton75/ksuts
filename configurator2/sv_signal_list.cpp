@@ -6,7 +6,7 @@ extern SvPGDB* PGDB;
 
 SvSignalList* SIGNALLIST_UI;
 
-SvSignalList::SvSignalList(int deviceIndex, QString deviceName, QWidget *parent) :
+SvSignalList::SvSignalList(int deviceIndex, QWidget *parent) :
   QDialog(parent),
   ui(new Ui::SvSignalList)
 {
@@ -16,7 +16,27 @@ SvSignalList::SvSignalList(int deviceIndex, QString deviceName, QWidget *parent)
 
   _device_index = deviceIndex;
 
-  ui->label->setText(deviceName);
+  QSqlError serr;
+  QSqlQuery q(PGDB->db);
+
+  try {
+
+    serr = PGDB->execSQL(QString(SQL_SELECT_ONE_DEVICE).arg(_device_index), &q);
+
+    if(serr.type() != QSqlError::NoError) _exception.raise(serr.text());
+
+    _device_name = q.value("device_name").toString();
+    _hardware_code = q.value("hardware_code").toString();
+  }
+
+  catch(SvException& e) {
+    _device_name = serr.text();
+    _hardware_code = "";
+  }
+
+  q.finish();
+
+  ui->label->setText(_device_name);
 
   AppParams::loadLayoutWidget(this);
 
@@ -56,51 +76,53 @@ bool SvSignalList::readSignals(TreeModel* model, QString queryString)
     QString query;
 
     if(model == _model_current)
-      query = queryString.isEmpty() ? QString(SQL_SELECT_CONFIGURED_SIGNALS_DEVICE).arg(_device_index) : queryString;
+      query = queryString.isEmpty() ? QString(SQL_SELECT_INVOLVED_SIGNALS_DEVICE).arg(_device_index) : queryString;
 
     else {
 
-      switch (_device_index) {
-        case OPA_gamma119:
-          query = queryString.isEmpty() ? QString(SQL_SELECT_NOT_CONFIGURED_SIGNALS_DEVICE_OPA).arg(OPA_gamma119_SIGNALS) : queryString;
-          break;
+      query = queryString.isEmpty() ? QString(SQL_SELECT_NOT_INVOLVED_SIGNALS_HARDWARE).arg(_hardware_code) : queryString;
 
-        case OPA_gamma122:
-          query = queryString.isEmpty() ? QString(SQL_SELECT_NOT_CONFIGURED_SIGNALS_DEVICE_OPA).arg(OPA_gamma122_SIGNALS) : queryString;
-          break;
+//      switch (_device_index) {
+//        case OPA_gamma119:
+//          query = queryString.isEmpty() ? QString(SQL_SELECT_NOT_INVOLVED_SIGNALS_DEVICE_OPA).arg(OPA_gamma119_SIGNALS) : queryString;
+//          break;
 
-        case OPA_gamma218:
-          query = queryString.isEmpty() ? QString(SQL_SELECT_NOT_CONFIGURED_SIGNALS_DEVICE_OPA).arg(OPA_gamma218_SIGNALS) : queryString;
-          break;
+//        case OPA_gamma122:
+//          query = queryString.isEmpty() ? QString(SQL_SELECT_NOT_INVOLVED_SIGNALS_DEVICE_OPA).arg(OPA_gamma122_SIGNALS) : queryString;
+//          break;
 
-        case OPA_gamma8:
-          query = queryString.isEmpty() ? QString(SQL_SELECT_NOT_CONFIGURED_SIGNALS_DEVICE_OPA).arg(OPA_gamma8_SIGNALS) : queryString;
-          break;
+//        case OPA_gamma218:
+//          query = queryString.isEmpty() ? QString(SQL_SELECT_NOT_INVOLVED_SIGNALS_DEVICE_OPA).arg(OPA_gamma218_SIGNALS) : queryString;
+//          break;
 
-        case OPA_gamma38:
-          query = queryString.isEmpty() ? QString(SQL_SELECT_NOT_CONFIGURED_SIGNALS_DEVICE_OPA).arg(OPA_gamma38_SIGNALS) : queryString;
-          break;
+//        case OPA_gamma8:
+//          query = queryString.isEmpty() ? QString(SQL_SELECT_NOT_INVOLVED_SIGNALS_DEVICE_OPA).arg(OPA_gamma8_SIGNALS) : queryString;
+//          break;
 
-        case OPA_gamma67:
-          query = queryString.isEmpty() ? QString(SQL_SELECT_NOT_CONFIGURED_SIGNALS_DEVICE_OPA).arg(OPA_gamma67_SIGNALS) : queryString;
-          break;
+//        case OPA_gamma38:
+//          query = queryString.isEmpty() ? QString(SQL_SELECT_NOT_INVOLVED_SIGNALS_DEVICE_OPA).arg(OPA_gamma38_SIGNALS) : queryString;
+//          break;
 
-        case OPA_gamma93:
-          query = queryString.isEmpty() ? QString(SQL_SELECT_NOT_CONFIGURED_SIGNALS_DEVICE_OPA).arg(OPA_gamma93_SIGNALS) : queryString;
-          break;
+//        case OPA_gamma67:
+//          query = queryString.isEmpty() ? QString(SQL_SELECT_NOT_INVOLVED_SIGNALS_DEVICE_OPA).arg(OPA_gamma67_SIGNALS) : queryString;
+//          break;
 
-        case OPA_gamma123:
-          query = queryString.isEmpty() ? QString(SQL_SELECT_NOT_CONFIGURED_SIGNALS_DEVICE_OPA).arg(OPA_gamma123_SIGNALS) : queryString;
-          break;
+//        case OPA_gamma93:
+//          query = queryString.isEmpty() ? QString(SQL_SELECT_NOT_INVOLVED_SIGNALS_DEVICE_OPA).arg(OPA_gamma93_SIGNALS) : queryString;
+//          break;
 
-        case OPA_gamma150:
-          query = queryString.isEmpty() ? QString(SQL_SELECT_NOT_CONFIGURED_SIGNALS_DEVICE_OPA).arg(OPA_gamma150_SIGNALS) : queryString;
-          break;
+//        case OPA_gamma123:
+//          query = queryString.isEmpty() ? QString(SQL_SELECT_NOT_INVOLVED_SIGNALS_DEVICE_OPA).arg(OPA_gamma123_SIGNALS) : queryString;
+//          break;
+
+//        case OPA_gamma150:
+//          query = queryString.isEmpty() ? QString(SQL_SELECT_NOT_INVOLVED_SIGNALS_DEVICE_OPA).arg(OPA_gamma150_SIGNALS) : queryString;
+//          break;
           
-        default:
-          query = queryString.isEmpty() ? QString(SQL_SELECT_NOT_CONFIGURED_SIGNALS_DEVICE).arg(_device_index) : queryString;
-          break;
-      }
+//        default:
+//          query = queryString.isEmpty() ? QString(SQL_SELECT_NOT_INVOLVED_SIGNALS_DEVICE).arg(_device_index) : queryString;
+//          break;
+//      }
     }
 
     q = new QSqlQuery(PGDB->db);
@@ -207,8 +229,8 @@ void SvSignalList::on_bnRemoveAll_clicked()
     QSqlError serr = PGDB->execSQL(QString(SQL_DELETE_ALL_SIGNALS).arg(_device_index));
     if(serr.type() != QSqlError::NoError) _exception.raise(serr.text());
 
-    serr = PGDB->execSQL(SQL_UPDATE_DEVICE_INDEX_OPA_AFTER_DELETE);
-    if(serr.type() != QSqlError::NoError) _exception.raise(serr.text());
+//    serr = PGDB->execSQL(SQL_UPDATE_DEVICE_INDEX_OPA_AFTER_DELETE);
+//    if(serr.type() != QSqlError::NoError) _exception.raise(serr.text());
 
     readSignals(_model_current);
     updateTable(ui->tableCurrent, _model_current);
@@ -319,8 +341,8 @@ void SvSignalList::on_bnRemoveSelected_clicked()
     QSqlError serr = PGDB->execSQL(QString(SQL_DELETE_SELECTED_SIGNALS).arg(signals_list));
     if(serr.type() != QSqlError::NoError) _exception.raise(serr.text());
 
-    serr = PGDB->execSQL(SQL_UPDATE_DEVICE_INDEX_OPA_AFTER_DELETE);
-    if(serr.type() != QSqlError::NoError) _exception.raise(serr.text());
+//    serr = PGDB->execSQL(SQL_UPDATE_DEVICE_INDEX_OPA_AFTER_DELETE);
+//    if(serr.type() != QSqlError::NoError) _exception.raise(serr.text());
 
     readSignals(_model_current);
     updateTable(ui->tableCurrent, _model_current);

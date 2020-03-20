@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-QT       += core gui xml sql serialport network
+QT       += core gui xml sql serialport network dbus
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -15,6 +15,7 @@ CONFIG += c++11
 
 VERSION = 2.1.1    # major.minor.patch
 DEFINES += APP_VERSION=\\\"$$VERSION\\\"
+DEFINES += VERSION_2
 
 DEFINES += APP_DEBUG=1
 
@@ -40,14 +41,15 @@ SOURCES += \
     ../../svlib/sv_log.cpp \
     ../../svlib/sv_pgdb.cpp \
     sv_logon.cpp \
-    sv_serialeditor.cpp \
     sv_signal_list.cpp \
     sv_storage_list.cpp \
     sv_storage_editor.cpp \
     sv_device_list.cpp \
     ../../svlib/sv_config.cpp \
     edit_autorun.cpp \
-    sv_editconfig.cpp
+    sv_editconfig.cpp \
+    ../global/sv_serialeditor.cpp \
+    ../../svlib/sv_dbus.cpp
 
 HEADERS += \
         mainwindow.h \
@@ -62,7 +64,6 @@ HEADERS += \
     ../../svlib/sv_log.h \
     ../../svlib/sv_pgdb.h \
     sv_logon.h \
-    sv_serialeditor.h \
     ../global/dev_defs.h \
     sv_signal_list.h \
     sv_storage_list.h \
@@ -74,20 +75,22 @@ HEADERS += \
     edit_autorun.h \
     sv_editconfig.h \
     ../../svlib/sv_busy_window.h \
-    ../global/gen_defs.h
+    ../global/gen_defs.h \
+    ../global/sv_serialeditor.h \
+    ../../svlib/sv_dbus.h
 
 FORMS += \
         mainwindow.ui \
     sv_device_editor.ui \
     sv_signal_editor.ui \
     logon.ui \
-    sv_serialeditor.ui \
     sv_signal_list.ui \
     sv_storage_list.ui \
     sv_storage_editor.ui \
     sv_device_list.ui \
     edit_autorun.ui \
-    sv_editconfig.ui
+    sv_editconfig.ui \
+    ../global/sv_serialeditor.ui
 
 RESOURCES += \
     res.qrc

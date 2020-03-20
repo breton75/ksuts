@@ -194,9 +194,13 @@ void SvOHT::on_bnStartStop_clicked()
           connect(&timer_0x14, &QTimer::timeout, this, &SvOHT::setData_0x14);
           connect(&timer_0x19, &QTimer::timeout, this, &SvOHT::setData_0x19);
 
-          timer_0x13.start(getRndTimeout(ui->spinRandomInterval->value()));
-          timer_0x14.start(getRndTimeout(ui->spinRandomInterval->value()));
-          timer_0x19.start(getRndTimeout(ui->spinRandomInterval->value()));
+          timer_0x13.setInterval(getRndTimeout(ui->spinRandomInterval->value()));
+          timer_0x14.setInterval(getRndTimeout(ui->spinRandomInterval->value()));
+          timer_0x19.setInterval(getRndTimeout(ui->spinRandomInterval->value()));
+              timer_0x13.setSingleShot(false);
+          timer_0x13.start();
+          timer_0x14.start();
+          timer_0x19.start();
           
         }
         
@@ -460,8 +464,8 @@ void SvOHT::setData_0x13()
     
   }
   
-  if(p_data_regim == DataRegims::Random)
-    timer_0x13.start(getRndTimeout(ui->spinRandomInterval->value()));
+//  if(p_data_regim == DataRegims::Random)
+//    timer_0x13.start(getRndTimeout(ui->spinRandomInterval->value()));
   
 }
 
@@ -509,8 +513,8 @@ void SvOHT::setData_0x14()
     
   }
   
-  if(p_data_regim == DataRegims::Random)
-    timer_0x14.start(getRndTimeout(ui->spinRandomInterval->value()));
+//  if(p_data_regim == DataRegims::Random)
+//    timer_0x14.start(getRndTimeout(ui->spinRandomInterval->value()));
   
 }
 
@@ -557,8 +561,8 @@ void SvOHT::setData_0x19()
     
   }
   
-  if(p_data_regim == DataRegims::Random)
-    timer_0x19.start(getRndTimeout(ui->spinRandomInterval->value()));
+//  if(p_data_regim == DataRegims::Random)
+//    timer_0x19.start(getRndTimeout(ui->spinRandomInterval->value()));
   
 }
 

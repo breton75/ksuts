@@ -1,4 +1,4 @@
-#ifndef SV_SIGNAL_LIST_H
+﻿#ifndef SV_SIGNAL_LIST_H
 #define SV_SIGNAL_LIST_H
 
 #include <QDialog>
@@ -25,7 +25,7 @@ public:
   enum Result { Accepted = QDialog::Accepted, Rejected = QDialog::Rejected, Error = -1 };
 //  enum DataSource { dsPGDB, dsSQLITE };
 
-  explicit SvSignalList(int deviceIndex, QString deviceName, QWidget *parent = 0);
+  explicit SvSignalList(int deviceIndex, QWidget *parent = 0);
   ~SvSignalList();
 
   QString lastError() { return _last_error; }
@@ -47,6 +47,7 @@ private:
   Ui::SvSignalList *ui;
 
   int _device_index;
+  QString _hardware_code;
   QString _device_name = "";
 
   TreeModel* _model_current;

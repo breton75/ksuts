@@ -1,10 +1,10 @@
-#include "sv_device_editor.h"
+﻿#include "sv_device_editor.h"
 
 SvDeviceEditor *DEVICE_UI;
 
 //extern SvSQLITE *SQLITE;
 extern SvPGDB *PGDB;
-extern SvSerialEditor* SERIALEDITOR_UI;
+//extern SvSerialEditor* SERIALEDITOR_UI;
 
 SvDeviceEditor::SvDeviceEditor(QWidget *parent, int deviceIndex) :
   QDialog(parent),
@@ -87,6 +87,12 @@ SvDeviceEditor::SvDeviceEditor(QWidget *parent, int deviceIndex) :
   connect(ui->bnCancel, &QPushButton::clicked, this, &QDialog::reject);
 //  connect(ui->bnConfig, SIGNAL(clicked()), this, SLOT(config()));
 
+  connect(ui->bnEditConnectionParams, &QPushButton::clicked, [=](){
+                                if(sv::SvSerialEditor::showDialog(ui->editConnectionParams->text(), _device_name, this) == QDialog::Accepted)
+                                  ui->editConnectionParams->setText(sv::SvSerialEditor::stringParams());
+                                sv::SvSerialEditor::deleteDialog();
+                              });
+
   this->setModal(true);
   this->show();
 }
@@ -108,7 +114,7 @@ bool SvDeviceEditor::loadDevices()
     if(showMode == smNew)
 
       /* выбираем список устройств, которых нет в конфигурации */
-      serr = PGDB->execSQL(QString(SQL_SELECT_NOT_CONFIGURED_DEVICES), q);
+      serr = PGDB->execSQL(QString(SQL_SELECT_NOT_INVOLVED_DEVICES), q);
 
     else
       /* выбираем только одно устройство */
@@ -231,25 +237,25 @@ void SvDeviceEditor::updateDeviceInfo(int index)
 
 }
 
-void SvDeviceEditor::on_bnEditConnectionParams_clicked()
-{
-  SERIALEDITOR_UI = new SvSerialEditor(_device_connection_params, this);
-  int result = SERIALEDITOR_UI->exec();
+//void SvDeviceEditor::on_bnEditConnectionParams_clicked()
+//{
+//  SERIALEDITOR_UI = new SvSerialEditor(_device_connection_params, this);
+//  int result = SERIALEDITOR_UI->exec();
 
-  switch (result) {
+//  switch (result) {
 
-    case SvSerialEditor::Error:
-      break;
+//    case SvSerialEditor::Error:
+//      break;
 
-    case SvSerialEditor::Accepted:
-      ui->editConnectionParams->setText(SERIALEDITOR_UI->stringParams());
-      break;
+//    case SvSerialEditor::Accepted:
+//      ui->editConnectionParams->setText(SERIALEDITOR_UI->stringParams());
+//      break;
 
-  }
+//  }
 
-  delete SERIALEDITOR_UI;
+//  delete SERIALEDITOR_UI;
 
-}
+//}
 
 
 

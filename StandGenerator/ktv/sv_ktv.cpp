@@ -380,29 +380,12 @@ void SvKTV::setData_0x33()
     foreach (quint8 sensorNum, p_0x33_items.keys()) {
      
       KTV_Type_0x33* cur_0x33 = p_0x33_items.value(sensorNum);
-      
-//      static quint8 snum = 0xF0;
-//      static quint8 snh  = 0xF0;
-//      static quint8 snl  = 0xF0;
-//      static quint8 temp = 0xF0;
-//      static quint8 vlag = 0xF0;
-      
-//      if(p_data_regim == DataRegims::Random) {
         
-//        snum = sensorNum;
-//        snh  = 0x00;
-//        snl  = 0x01;
-//        temp = random_sensors.contains(cur_0x33->sensor_number) ? rnd(100) : temp;
-//        vlag = random_sensors.contains(cur_0x33->sensor_number) ? rnd(100) : vlag;
-//      }
-//      else {
-        
-        snum = cur_0x33->item_is_active->checkState() != Qt::Checked ? 0xF0 : sensorNum;
-        snh  = cur_0x33->item_is_active->checkState() != Qt::Checked ? 0xF0 : 0x00;
-        snl  = cur_0x33->item_is_active->checkState() != Qt::Checked ? 0xF0 : 0x01;
-        temp = cur_0x33->item_is_active->checkState() != Qt::Checked ? 0xF0 : cur_0x33->item_temperature->data(Qt::DisplayRole).toUInt();
-        vlag = cur_0x33->item_is_active->checkState() != Qt::Checked ? 0xF0 : cur_0x33->item_vlagnost->data(Qt::DisplayRole).toUInt();
-//      }
+      snum = cur_0x33->item_is_active->checkState() != Qt::Checked ? 0xF0 : sensorNum;
+      snh  = cur_0x33->item_is_active->checkState() != Qt::Checked ? 0xF0 : 0x00;
+      snl  = cur_0x33->item_is_active->checkState() != Qt::Checked ? 0xF0 : 0x01;
+      temp = cur_0x33->item_is_active->checkState() != Qt::Checked ? 0xF0 : cur_0x33->item_temperature->data(Qt::DisplayRole).toUInt();
+      vlag = cur_0x33->item_is_active->checkState() != Qt::Checked ? 0xF0 : cur_0x33->item_vlagnost->data(Qt::DisplayRole).toUInt();
       
       checkAndAppend(snum);
       checkAndAppend(snh);
@@ -424,8 +407,8 @@ void SvKTV::setData_0x33()
     
   }
   
-  if(p_data_regim == DataRegims::Random)
-    timer_0x33.start(getRndTimeout(ui->spinRandomInterval->value()));
+//  if(p_data_regim == DataRegims::Random)
+//    timer_0x33.start(getRndTimeout(ui->spinRandomInterval->value()));
 
 }
 

@@ -6,6 +6,7 @@
 #include <QDebug>
 #include <QThread>
 #include <QMutex>
+#include <QTimer>
 
 #include "../../svlib/sv_exception.h"
 #include "../../svlib/sv_log.h"

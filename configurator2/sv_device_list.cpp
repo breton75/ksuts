@@ -1,4 +1,4 @@
-#include "sv_device_list.h"
+﻿#include "sv_device_list.h"
 #include "ui_sv_device_list.h"
 
 extern SvPGDB* PGDB;
@@ -53,10 +53,10 @@ bool SvDeviceList::readDevices(TreeModel* model, QString queryString)
     QString query;
 
     if(model == _model_current)
-      query = QString(SQL_SELECT_CONFIGURED_DEVICES);
+      query = QString(SQL_SELECT_INVOLVED_DEVICES);
 
     else
-      query = QString(SQL_SELECT_NOT_CONFIGURED_DEVICES);
+      query = QString(SQL_SELECT_NOT_INVOLVED_DEVICES);
 
 
     q = new QSqlQuery(PGDB->db);
@@ -152,7 +152,7 @@ void SvDeviceList::on_bnRemoveAll_clicked()
 
     PGDB->db.transaction();
     serr = PGDB->execSQL(QString(SQL_DELETE_ALL_DEVICES));
-    serr = PGDB->execSQL(QString(SQL_SET_SIGNALS_NOT_CONFIGURED));
+    serr = PGDB->execSQL(QString(SQL_SET_SIGNALS_NOT_INVOLVED));
 
     if(serr.type() != QSqlError::NoError)
       _e.raise(serr.text());
@@ -268,8 +268,8 @@ void SvDeviceList::on_bnRemoveSelected_clicked()
     if(serr.type() == QSqlError::NoError) {
       serr = PGDB->execSQL(QString(SQL_DELETE_SIGNALS_WHERE_DEVICE_IN).arg(devices_list));
 
-      if(serr.type() == QSqlError::NoError)
-        serr = PGDB->execSQL(SQL_UPDATE_DEVICE_INDEX_OPA_AFTER_DELETE);
+//      if(serr.type() == QSqlError::NoError)
+//        serr = PGDB->execSQL(SQL_UPDATE_DEVICE_INDEX_OPA_AFTER_DELETE);
     }
 
     if(serr.type() != QSqlError::NoError)

@@ -9,7 +9,6 @@
 
 #include "../../svlib/sv_exception.h"
 
-#include "../global/sv_idevice.h"
 #include "../global/dev_defs.h"
 
 namespace Ui {

@@ -21,6 +21,7 @@
 #include "../../svlib/sv_config.h"
 #include "../../svlib/sv_clog.h"
 #include "../../svlib/sv_busy_window.h"
+#include "../../svlib/sv_dbus.h"
 
 #include "../global/sql_defs.h"
 #include "../global/autorun_defs.h"
@@ -63,6 +64,8 @@ class MainWindow;
 class MainWindow : public QMainWindow
 {
   Q_OBJECT
+
+  SvDBus _dbus;
 
 public:
   explicit MainWindow(const CFG& cfg, QWidget *parent = 0);
@@ -207,6 +210,7 @@ private slots:
 
   void on_treeView_doubleClicked(const QModelIndex &index);
 
+  void messageSlot(QString sender, QString message);
 
 public slots:
   void loadConfig();

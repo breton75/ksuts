@@ -28,6 +28,7 @@
 #include "../../svlib/sv_sqlite.h"
 #include "../../svlib/sv_exception.h"
 #include "../../svlib/sv_config.h"
+#include "../../svlib/sv_dbus.h"
 
 #include "sv_storage.h"
 
@@ -40,6 +41,8 @@ QMap<int, SvSignal*> SIGNALS;
 
 clog::SvCLog lout;
 SvException exception;
+
+SvDBus dbus;
 
 const OptionStructList AppOptions = {
     {{OPTION_DB_HOST}, "Адрес сервера базы данных.","localhost", "", ""},
@@ -76,14 +79,14 @@ const OptionStructList AppOptions = {
 bool parse_params(const QStringList &args, CFG& cfg, const QString& file_name);
 
 bool initConfig(const CFG &cfg);
-
+void close_db();
 bool readDevices(const CFG& cfg);
 bool readStorages();
 //bool readCOBs();
 //bool cobToRepository(QString storage_field_name);
 bool readSignals(const CFG &cfg);
 
-idev::SvIDevice* create_device(const QSqlQuery* q, const CFG &cfg);
+idev::SvIDevice* create_device(const QSqlQuery* q);
 SvStorage* create_storage(QSqlQuery *q);
 //SvCOB* create_cob(const QSqlQuery* q);
 SvSignal* create_signal(const QSqlQuery* q);
@@ -229,7 +232,7 @@ bool parse_params(const QStringList& args, CFG& cfg, const QString& file_name)
   }
 
   catch(SvException &e) {
-    lout << clog::llError << QString("%1\n").arg(e.error) << clog::endl;
+    dbus << clog::llError << QString("%1\n").arg(e.error) << clog::endl;
     return false;
   }
 }
@@ -239,6 +242,7 @@ int main(int argc, char *argv[])
   // запрос версии для монитора
   if((argc > 1) && (QString(argv[1]).trimmed() == "-v")) {
     std::cout << QString(APP_VERSION).toStdString().c_str() << std::endl;
+    dbus.sendmsg("dsdsd");
     return 0;
   }
 
@@ -269,7 +273,7 @@ int main(int argc, char *argv[])
       lout.setFileNamePrefix(QString("dev%1").arg(cfg.single_device_index));
 
 
-    lout << clog::llDebug
+    dbus << clog::llDebug
          << "db_host=" << cfg.db_host << "\ndb_port=" << cfg.db_port
          << "\ndb_name=" << cfg.db_name << "\ndb_user=" << cfg.db_user << "\ndb_pass=" << cfg.db_pass
          << "\nlogging=" << (cfg.log_options.logging ? "on" : "off")
@@ -291,7 +295,7 @@ int main(int argc, char *argv[])
   }
 
   catch(SvException &e) {
-    lout << clog::llError << QString("%1\n").arg(e.error) << clog::endl;
+    dbus << clog::llError << QString("%1\n").arg(e.error) << clog::endl;
     return e.code;
   }
 
@@ -349,7 +353,7 @@ int main(int argc, char *argv[])
   atexit(close);
 
 
-  lout << clog::llInfo << QString("Сервер сбора и обработки данных КСУТС v.%1").arg(APP_VERSION) << clog::endl;
+  dbus << clog::llInfo << QString("Сервер сбора и обработки данных КСУТС v.%1").arg(APP_VERSION) << clog::endl;
 
   int result = 0;
 
@@ -432,7 +436,7 @@ bool initConfig(const CFG& cfg)
   
   try {
       
-    lout << clog::llInfo << QString("Подключаемся к базе данных %1:%2").arg(cfg.db_host).arg(cfg.db_port) << clog::endl;
+    dbus << clog::llInfo << QString("Подключаемся к базе данных %1:%2").arg(cfg.db_host).arg(cfg.db_port) << clog::endl;
     
     PG = new SvPGDB();
 
@@ -455,13 +459,13 @@ bool initConfig(const CFG& cfg)
 
     QString db_version = q.value("db_version").toString();
 
-    lout << clog::llInfo << QString("Версия БД: %1").arg(db_version) << clog::endl;
+    dbus << clog::llInfo << QString("Версия БД: %1").arg(db_version) << clog::endl;
     
     if(QString(ACTUAL_DB_VERSION) != db_version)
       exception.raise(1, QString("Версия БД не соответствует версии программы. Требуется версия БД %1\n")
                       .arg(ACTUAL_DB_VERSION));
 
-    lout << clog::llInfo << "OK\n" << clog::endl;
+    dbus << clog::llInfo << "OK\n" << clog::endl;
 
     return true;
     
@@ -469,7 +473,7 @@ bool initConfig(const CFG& cfg)
   
   catch(SvException& e) {
     
-    lout << clog::llError << QString("Ошибка: %1\n").arg(e.error) << clog::endl;
+    dbus << clog::llError << QString("Ошибка: %1\n").arg(e.error) << clog::endl;
     return false;
   }
 }
@@ -478,35 +482,35 @@ bool initConfig(const CFG& cfg)
 bool readDevices(const CFG& cfg)
 {
   
-  lout << clog::llInfo << QString("Читаем устройства:") << clog::endl;
+  dbus << clog::llInfo << QString("Читаем устройства:") << clog::endl;
   
-  QSqlQuery q = new QSqlQuery(PG->db);
+  QSqlQuery q(PG->db);
   
   try {
 
     QSqlError serr;
 
     if(cfg.single_device_mode)
-      serr = PG->execSQL(QString(SQL_SELECT_SINGLE_INVOLVED_DEVICE).arg(cfg.single_device_index), q);
+      serr = PG->execSQL(QString(SQL_SELECT_SINGLE_INVOLVED_DEVICE).arg(cfg.single_device_index), &q);
 
     else
-      serr = PG->execSQL(SQL_SELECT_INVOLVED_DEVICES, q);
+      serr = PG->execSQL(SQL_SELECT_INVOLVED_DEVICES, &q);
 
     if(serr.type() != QSqlError::NoError) exception.raise(serr.text());
     
     int counter = 0;
     while(q.next()) {
        
-      idev::SvIDevice* newdev = create_device(&q, cfg);
+      idev::SvIDevice* newdev = create_device(&q);
       
       if(newdev) {
 
         DEVICES.insert(newdev->config()->index, newdev);
 
-        lout << clog::llDebug << QString("  %1 [Индекс %2] %3").
+        dbus << clog::llDebug << QString("  %1 [Индекс %2] %3").
                 arg(newdev->config()->name).
                 arg(newdev->config()->index).
-                arg(newdev->params())
+                arg(newdev->config()->device_params_string)
              << clog::endl;
 
         counter++;
@@ -514,7 +518,7 @@ bool readDevices(const CFG& cfg)
       }
 
       else
-         lout << clog::llError << QString("Не удалось добавить устройство %1 [Индекс %2]\n")
+         dbus << clog::llError << QString("Не удалось добавить устройство %1 [Индекс %2]\n")
                                         .arg(q.value("device_name").toString())
                                         .arg(q.value("device_index").toInt())
              << clog::endl;
@@ -528,7 +532,7 @@ bool readDevices(const CFG& cfg)
     if(counter == 0)
       exception.raise("Устройства в конфигурации не найдены");
 
-    lout << clog::llInfo << QString("OK [прочитано %1]\n").arg(counter) << clog::endl;
+    dbus << clog::llInfo << QString("OK [прочитано %1]\n").arg(counter) << clog::endl;
     
     return true;
     
@@ -536,7 +540,7 @@ bool readDevices(const CFG& cfg)
   
   catch(SvException& e) {
     
-    lout << clog::llError << QString("Ошибка: %1\n").arg(e.error) << clog::endl;
+    dbus << clog::llError << QString("Ошибка: %1\n").arg(e.error) << clog::endl;
     return false;
     
   }
@@ -544,7 +548,7 @@ bool readDevices(const CFG& cfg)
 
 bool readStorages()
 {
-  lout << clog::llInfo << QString("Читаем хранилища:") << clog::endl;
+  dbus << clog::llInfo << QString("Читаем хранилища:") << clog::endl;
   
   QSqlQuery* q = new QSqlQuery(PG->db);
   
@@ -563,12 +567,12 @@ bool readStorages()
         
         STORAGES.insert(newstorage->index(), newstorage);
 
-        lout << clog::llDebug << QString("  %1 [Индекс %2] %3:%4").arg(newstorage->params()->name).arg(newstorage->params()->index).arg(newstorage->params()->host).arg(newstorage->params()->port) << clog::endl;
+        dbus << clog::llDebug << QString("  %1 [Индекс %2] %3:%4").arg(newstorage->params()->name).arg(newstorage->params()->index).arg(newstorage->params()->host).arg(newstorage->params()->port) << clog::endl;
         
         counter++;
       }
       else
-         lout << clog::llError << QString("Не удалось добавить хранилище %1 [Индекс %2]\n")
+         dbus << clog::llError << QString("Не удалось добавить хранилище %1 [Индекс %2]\n")
                         .arg(q->value("storage_name").toString())
                         .arg(q->value("storage_index").toInt())
              << clog::endl;
@@ -577,7 +581,7 @@ bool readStorages()
     q->finish();
     delete q;
     
-    lout << clog::llInfo << QString("OK [Прочитано %1]\n").arg(counter) << clog::endl;
+    dbus << clog::llInfo << QString("OK [Прочитано %1]\n").arg(counter) << clog::endl;
     
     return true;
     
@@ -586,7 +590,7 @@ bool readStorages()
   catch(SvException& e) {
     
     delete q;
-    lout << clog::llError << QString("Ошибка: %1\n").arg(e.error) << clog::endl;
+    dbus << clog::llError << QString("Ошибка: %1\n").arg(e.error) << clog::endl;
     return false;
     
   }
@@ -595,7 +599,7 @@ bool readStorages()
 
 bool readSignals(const CFG& cfg)
 {
-  lout << clog::llInfo << QString("Читаем сигналы:") << clog::endl;
+  dbus << clog::llInfo << QString("Читаем сигналы:") << clog::endl;
   
   QSqlQuery* q = new QSqlQuery(PG->db);
   
@@ -628,14 +632,14 @@ bool readSignals(const CFG& cfg)
         
         SIGNALS.insert(newsig->index(), newsig);
         
-        lout << clog::llAll <<  QString("  %1 [Индекс %2]").arg(newsig->params()->name).arg(newsig->index());
+        dbus << clog::llAll <<  QString("  %1 [Индекс %2]").arg(newsig->params()->name).arg(newsig->index());
 
         // раскидываем сигналы по устройствам
         if(DEVICES.contains(newsig->params()->device_index)) {
 
           DEVICES.value(newsig->params()->device_index)->addSignal(newsig);
 
-          lout << clog::llAll << QString("%1 %2").arg(QString(31 - newsig->params()->name.length(), QChar('-'))).arg(DEVICES.value(newsig->params()->device_index)->config()->name);
+          dbus << clog::llAll << QString("%1 %2").arg(QString(31 - newsig->params()->name.length(), QChar('-'))).arg(DEVICES.value(newsig->params()->device_index)->config()->name);
 
         }
 
@@ -644,7 +648,7 @@ bool readSignals(const CFG& cfg)
 
           STORAGES.value(0)->addSignal(newsig);
 
-          lout << clog::llAll << QString("%1 %2").arg(QString(6, QChar('-'))).arg(STORAGES.value(0)->params()->name);
+          dbus << clog::llAll << QString("%1 %2").arg(QString(6, QChar('-'))).arg(STORAGES.value(0)->params()->name);
 
         }
 
@@ -652,7 +656,7 @@ bool readSignals(const CFG& cfg)
 
           STORAGES.value(1)->addSignal(newsig);
 
-          lout << clog::llAll <<  QString("%1 %2").arg(QString(6, QChar('-'))).arg(STORAGES.value(1)->params()->name);
+          dbus << clog::llAll <<  QString("%1 %2").arg(QString(6, QChar('-'))).arg(STORAGES.value(1)->params()->name);
 
         }
 
@@ -660,11 +664,11 @@ bool readSignals(const CFG& cfg)
 
           STORAGES.value(2)->addSignal(newsig);
 
-          lout << clog::llAll <<  QString("%1 %2").arg(QString(6, QChar('-'))).arg(STORAGES.value(2)->params()->name);
+          dbus << clog::llAll <<  QString("%1 %2").arg(QString(6, QChar('-'))).arg(STORAGES.value(2)->params()->name);
 
         }
 
-        lout << clog::llAll << clog::endl;
+        dbus << clog::llAll << clog::endl;
 
         counter++;
 
@@ -682,7 +686,7 @@ bool readSignals(const CFG& cfg)
     q->finish();
     delete q;
     
-    lout << clog::llInfo << QString("OK [Прочитано %1]\n").arg(counter)  << clog::endl;
+    dbus << clog::llInfo << QString("OK [Прочитано %1]\n").arg(counter)  << clog::endl;
     
     return true;
     
@@ -692,7 +696,7 @@ bool readSignals(const CFG& cfg)
     
     q->finish();
     delete q;
-    lout << clog::llError << QString("Ошибка: %1\n").arg(e.error) << clog::endl;
+    dbus << clog::llError << QString("Ошибка: %1\n").arg(e.error) << clog::endl;
     return false;
     
   }
@@ -700,7 +704,7 @@ bool readSignals(const CFG& cfg)
 }
 
 
-idev::SvIDevice* create_device(const QSqlQuery* q, const CFG& cfg)
+idev::SvIDevice* create_device(const QSqlQuery* q)
 {  
   idev::SvIDevice* newdev = nullptr;
   
@@ -717,6 +721,7 @@ idev::SvIDevice* create_device(const QSqlQuery* q, const CFG& cfg)
   config.is_involved = q->value("device_is_involved").toBool();
   config.debug_mode = q->value("device_debug").toBool();
   config.timeout = q->value("device_timeout").toUInt();
+  config.device_params_string = q->value("device_params").toString();
 
   QString params = q->value("device_params").toString();
   
@@ -737,7 +742,7 @@ idev::SvIDevice* create_device(const QSqlQuery* q, const CFG& cfg)
         newdev = new SvSKM(lout);
         break;
 
-    case idev::sdtSKTV:
+    case idev::sdtKTV:
         newdev = new SvSKTV(lout);
         break;
 
@@ -842,7 +847,7 @@ bool openDevices()
                                           .arg(device->config()->index)
                                           .arg(device->lastError()));
 
-      lout << clog::llDebug << QString("  %1 [%2]: OK").arg(device->config()->name).arg(device->params()) << clog::endl;
+      lout << clog::llDebug << QString("  %1: OK").arg(device->config()->name) << clog::endl;
         
     }
     

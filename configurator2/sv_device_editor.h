@@ -1,4 +1,4 @@
-#ifndef SV_DEVICEEDITOR_H
+﻿#ifndef SV_DEVICEEDITOR_H
 #define SV_DEVICEEDITOR_H
 
 #include <QDialog>
@@ -20,13 +20,13 @@
 
 #include "../global/sql_defs.h"
 #include "../global/dev_defs.h"
+#include "../global/sv_serialeditor.h"
 
 #include "../../svlib/sv_settings.h"
 #include "../../svlib/sv_sqlite.h"
 #include "../../svlib/sv_exception.h"
 #include "../../svlib/sv_pgdb.h"
 
-#include "sv_serialeditor.h"
 
 namespace Ui {
   class SvDeviceDialog;
@@ -51,7 +51,7 @@ class SvDeviceEditor : public QDialog
   private slots:
     void updateDeviceInfo(int index);
 
-    void on_bnEditConnectionParams_clicked();
+//    void on_bnEditConnectionParams_clicked();
 
 public slots:
     void accept() Q_DECL_OVERRIDE;

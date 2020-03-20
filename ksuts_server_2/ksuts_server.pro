@@ -1,10 +1,10 @@
 QT -= gui
-QT += serialport sql network
+QT += serialport sql network dbus
 
 CONFIG += c++11 console
 CONFIG -= app_bundle
 
-TARGET = /home/user/ksuts_server/ksuts_server
+TARGET = /home/user/ksuts_server/ksuts_server2
 
 DEFINES += APP_DEBUG=1
 DEFINES += TEST_VALUES
@@ -12,6 +12,9 @@ DEFINES += TEST_VALUES
 VERSION = 2.0.0    # major.minor.patch
 DEFINES += APP_VERSION=\\\"$$VERSION\\\"
 DEFINES += VERSION_2
+
+DBUS_ADAPTORS += ame.proj12700.ksuts.xml
+#DBUS_INTERFACES += ame.proj12700.ksuts.xml
 
 # The following define makes your compiler emit warnings if you use
 # any feature of Qt which as been marked deprecated (the exact warnings
@@ -35,7 +38,8 @@ SOURCES += main.cpp \
     ../ksuts_devices/sktv/sv_sktv.cpp \
     ../../svlib/sv_config.cpp \
     ../../svlib/sv_fnt.cpp \
-    sv_storagewatcher.cpp
+    sv_storagewatcher.cpp \
+    ../../svlib/sv_dbus.cpp
 
 HEADERS += \
     ../../svlib/sv_exception.h \
@@ -57,4 +61,5 @@ HEADERS += \
     ../ksuts_devices/sktv/sv_sktv.h \
     ../../svlib/sv_config.h \
     ../../svlib/sv_fnt.h \
-    sv_storagewatcher.h
+    sv_storagewatcher.h \
+    ../../svlib/sv_dbus.h

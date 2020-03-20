@@ -125,6 +125,8 @@ MainWindow::MainWindow(const CFG &cfg, QWidget *parent) :
 
   AppParams::loadLayout(this);
 
+  QDBusConnection::sessionBus().connect(QString(), QString(), "ame.proj12700.ksuts", "message", this, SLOT(messageSlot(QString,QString)));
+
 //  connect(ui->treeView, &QTreeView::entered)
 
 //  helpMenu = menuBar()->addMenu(tr("&Help"));
@@ -134,6 +136,11 @@ MainWindow::MainWindow(const CFG &cfg, QWidget *parent) :
 //  QMetaObject::connectSlotsByName(this);
 
 
+}
+
+void MainWindow::messageSlot(QString sender, QString message)
+{
+  ui->textLog->append(QString("%1: %2").arg(sender, message));
 }
 
 void MainWindow::closeEvent(QCloseEvent *event)
@@ -410,7 +417,7 @@ bool MainWindow::pourDevicesToRoot(TreeItem* rootItem)
 
     try {
 
-        serr = PGDB->execSQL(SQL_SELECT_CONFIGURED_DEVICES, q);
+        serr = PGDB->execSQL(SQL_SELECT_INVOLVED_DEVICES, q);
         if(serr.type() != QSqlError::NoError) _exception.raise(serr.text());
 
         // заполняем модель выбранными данными
@@ -470,7 +477,7 @@ bool MainWindow::pourSignalsToDevices(TreeItem* rootItem)
 
           q->finish();
 
-          serr = PGDB->execSQL(QString(SQL_SELECT_CONFIGURED_SIGNALS_DEVICE).arg(device->index), q);
+          serr = PGDB->execSQL(QString(SQL_SELECT_INVOLVED_SIGNALS_DEVICE).arg(device->index), q);
           if(serr.type() != QSqlError::NoError) _exception.raise(serr.text());
 
           // заполняем модель выбранными данными
@@ -757,7 +764,7 @@ void MainWindow::saveConfigAs()
     QString list;
 
     /// устройства
-    list = get_select_list(QString(SQL_SELECT_CONFIGURED_DEVICES), "device_index");
+    list = get_select_list(QString(SQL_SELECT_INVOLVED_DEVICES), "device_index");
 
     cfg += list.isEmpty() ? "" : QString("update devices set is_configured=true where device_index in (%1);\n").arg(list);
     cfg += QString("update devices set is_configured=false %1;\n")
@@ -765,7 +772,7 @@ void MainWindow::saveConfigAs()
 
 
     /// сигналы
-    list = get_select_list(QString(SQL_SELECT_CONFIGURED_SIGNALS), "signal_index");
+    list = get_select_list(QString(SQL_SELECT_INVOLVED_SIGNALS), "signal_index");
 
     cfg += list.isEmpty() ? "" : QString("update signals set is_configured=true  where signal_index in (%1);\n").arg(list);
     cfg += QString("update signals set is_configured=false %1;\n")
@@ -1056,7 +1063,7 @@ void MainWindow::editSignalList()
       return;
   }
 
-  SIGNALLIST_UI = new SvSignalList(device_index, _model->itemFromIndex(ui->treeView->currentIndex())->data(1).toString(), this);
+  SIGNALLIST_UI = new SvSignalList(device_index, this);
 
   int result = SIGNALLIST_UI->exec();
 
