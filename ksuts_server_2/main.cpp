@@ -32,6 +32,7 @@
 
 #include "sv_storage.h"
 
+
 SvPGDB* PG = nullptr;
 
 QMap<int, idev::SvIDevice*> DEVICES;
@@ -39,10 +40,10 @@ QMap<int, SvStorage*> STORAGES;
 //QMap<int, SvCOB*> COBS;
 QMap<int, SvSignal*> SIGNALS;
 
-clog::SvCLog lout;
+sv::SvConcoleLogger lout;
 SvException exception;
 
-SvDBus dbus;
+sv::SvDBus& dbus = sv::SvDBus::instance();
 
 const OptionStructList AppOptions = {
     {{OPTION_DB_HOST}, "Адрес сервера базы данных.","localhost", "", ""},
@@ -100,6 +101,8 @@ void close();
 void closeDevices();
 void deinitStorages();
 void deleteSignals();
+
+typedef sv::log::sender dSender;
 
 //bool create_tcp_server(const CFG &cfg);
 
@@ -168,7 +171,7 @@ bool parse_params(const QStringList& args, CFG& cfg, const QString& file_name)
     // single device mode
     val = cmd_parser.isSet(OPTION_SINGLE_DEVICE_MODE) ? cmd_parser.value(OPTION_SINGLE_DEVICE_MODE) :
                                                         cfg_parser.value(OPTION_SINGLE_DEVICE_MODE);
-    cfg.single_device_mode = clog::SvCLog::stringToBool(val);
+    cfg.single_device_mode = sv::log::stringToBool(val);
 
     // single device index
     // !!! ЭТОТ ПАРАМЕТР МОЖЕТ БЫТЬ ЗАДАН ТОЛЬКО В КОМАНДНОЙ СТРОКЕ
@@ -181,12 +184,12 @@ bool parse_params(const QStringList& args, CFG& cfg, const QString& file_name)
     // logging
     val = cmd_parser.isSet(OPTION_LOGGING) ? cmd_parser.value(OPTION_LOGGING) :
                                              cfg_parser.value(OPTION_LOGGING);
-    cfg.log_options.logging = clog::SvCLog::stringToBool(val);
+    cfg.log_options.logging = sv::log::stringToBool(val);
 
     // log_level
     val = cmd_parser.isSet(OPTION_LOG_LEVEL) ? cmd_parser.value(OPTION_LOG_LEVEL) :
                                                cfg_parser.value(OPTION_LOG_LEVEL);
-    cfg.log_options.log_level = clog::SvCLog::stringToLevel(val, &ok);
+    cfg.log_options.log_level = sv::log::stringToLevel(val, &ok);
     if(!ok) exception.raise(-1, QString("Неверный уровень логирования: %1").arg(val));
 
     // log_device
@@ -196,7 +199,7 @@ bool parse_params(const QStringList& args, CFG& cfg, const QString& file_name)
     cfg.log_options.log_devices.clear(); // обязательно
     for (int i = 0; i < vals.count(); ++i) {
 
-        cfg.log_options.log_devices.append(clog::SvCLog::stringToDevice(vals.at(i), &ok));
+        cfg.log_options.log_devices.append(sv::log::stringToDevice(vals.at(i), &ok));
         if(!ok) exception.raise(-1, QString("Неверное устройство логирования: %1").arg(val));
     }
 
@@ -212,19 +215,19 @@ bool parse_params(const QStringList& args, CFG& cfg, const QString& file_name)
     // log_truncate_on_rotation
     val = cmd_parser.isSet(OPTION_LOG_TRUNCATE_ON_ROTATION) ? cmd_parser.value(OPTION_LOG_TRUNCATE_ON_ROTATION) :
                                                               cfg_parser.value(OPTION_LOG_TRUNCATE_ON_ROTATION);
-    cfg.log_options.log_truncate_on_rotation = clog::SvCLog::stringToBool(val);
+    cfg.log_options.log_truncate_on_rotation = sv::log::stringToBool(val);
 
     // log_rotation_age
     val = cmd_parser.isSet(OPTION_LOG_ROTATION_AGE) ? cmd_parser.value(OPTION_LOG_ROTATION_AGE) :
                                                       cfg_parser.value(OPTION_LOG_ROTATION_AGE);
-    cfg.log_options.log_rotation_age = clog::SvCLog::stringToSeconds(val, &ok);
+    cfg.log_options.log_rotation_age = sv::log::stringToSeconds(val, &ok);
     if(!ok) exception.raise(-1, QString("Неверный формат времени: %1").arg(val));
 
 
     // log_rotation_size
     val = cmd_parser.isSet(OPTION_LOG_ROTATION_SIZE) ? cmd_parser.value(OPTION_LOG_ROTATION_SIZE) :
                                                        cfg_parser.value(OPTION_LOG_ROTATION_SIZE);
-    cfg.log_options.log_rotation_size = clog::SvCLog::stringToSize(val, &ok);
+    cfg.log_options.log_rotation_size = sv::log::stringToSize(val, &ok);
     if(!ok) exception.raise(-1, QString("Неверный формат размера файла: %1").arg(val));
 
     return true;
@@ -232,7 +235,7 @@ bool parse_params(const QStringList& args, CFG& cfg, const QString& file_name)
   }
 
   catch(SvException &e) {
-    dbus << clog::llError << QString("%1\n").arg(e.error) << clog::endl;
+//    dbus << clog::llError << QString("%1\n").arg(e.error) << clog::endl;
     return false;
   }
 }
@@ -242,7 +245,7 @@ int main(int argc, char *argv[])
   // запрос версии для монитора
   if((argc > 1) && (QString(argv[1]).trimmed() == "-v")) {
     std::cout << QString(APP_VERSION).toStdString().c_str() << std::endl;
-    dbus.sendmsg("dsdsd");
+//    dbus.sendmsg("mon", QString(APP_VERSION), sv::log::typeToString(sv::log::mtAttention));
     return 0;
   }
 
@@ -267,18 +270,18 @@ int main(int argc, char *argv[])
     if(!parse_params(a.arguments(), cfg, cfg_file_name))
         exception.raise(-1, "Ошибка разбора командной строки");
 
-    lout.setLogOptions(cfg.log_options);
+    dbus.setOptions(cfg.log_options);
 
-    if(cfg.single_device_mode)
-      lout.setFileNamePrefix(QString("dev%1").arg(cfg.single_device_index));
+//    if(cfg.single_device_mode)
+//      lout.setFileNamePrefix(QString("dev%1").arg(cfg.single_device_index));
 
 
-    dbus << clog::llDebug
+    dbus << sv::log::sender("dsds") << sv::log::llDebug
          << "db_host=" << cfg.db_host << "\ndb_port=" << cfg.db_port
          << "\ndb_name=" << cfg.db_name << "\ndb_user=" << cfg.db_user << "\ndb_pass=" << cfg.db_pass
          << "\nlogging=" << (cfg.log_options.logging ? "on" : "off")
-         << "\nlog_level=" << clog::SvCLog::logLevelToString(cfg.log_options.log_level)
-         << "\nlog_devices=" << clog::SvCLog::deviceListToString(cfg.log_options.log_devices)
+         << "\nlog_level=" << sv::log::levelToString(cfg.log_options.log_level)
+         << "\nlog_devices=" << sv::log::deviceListToString(cfg.log_options.log_devices)
          << "\nlog_directory=" << cfg.log_options.log_directory
          << "\nlog_filename=" << cfg.log_options.log_filename
          << "\nlog_truncate_on_rotation=" << (cfg.log_options.log_truncate_on_rotation ? "on" : "off")
@@ -286,7 +289,7 @@ int main(int argc, char *argv[])
          << "\nlog_rotation_size=" << cfg.log_options.log_rotation_size << " (bytes)"
          << "\nsingle_device_mode=" << (cfg.single_device_mode ? "on" : "off")
          << "\nsingle_device_index=" << cfg.single_device_index << "\n"
-         << clog::endl;
+         << sv::log::endl;
 
     // если задан режим работы 'только одно устройство', то проверяем, что задан индекс устройства
     if(cfg.single_device_mode && cfg.single_device_index < 0)
@@ -295,7 +298,7 @@ int main(int argc, char *argv[])
   }
 
   catch(SvException &e) {
-    dbus << clog::llError << QString("%1\n").arg(e.error) << clog::endl;
+    dbus << sv::log::llError << QString("%1\n").arg(e.error) << sv::log::endl;
     return e.code;
   }
 
@@ -353,7 +356,7 @@ int main(int argc, char *argv[])
   atexit(close);
 
 
-  dbus << clog::llInfo << QString("Сервер сбора и обработки данных КСУТС v.%1").arg(APP_VERSION) << clog::endl;
+  dbus << sv::log::llInfo << QString("Сервер сбора и обработки данных КСУТС v.%1").arg(APP_VERSION) << sv::log::endl;
 
   int result = 0;
 
@@ -436,11 +439,11 @@ bool initConfig(const CFG& cfg)
   
   try {
       
-    dbus << clog::llInfo << QString("Подключаемся к базе данных %1:%2").arg(cfg.db_host).arg(cfg.db_port) << clog::endl;
-    
+    dbus << sv::log::llInfo << QString("Подключаемся к базе данных %1:%2").arg(cfg.db_host).arg(cfg.db_port) << sv::log::endl;
+
     PG = new SvPGDB();
 
-//    lout << dbname << dbhost << dbport << dbuser << dbpass << clog::endl;
+//    lout << dbname << dbhost << dbport << dbuser << dbpass << sv::log::endl;
     PG->setConnectionParams(cfg.db_name, cfg.db_host, cfg.db_port, cfg.db_user, cfg.db_pass);
 
     QSqlError serr = PG->connectToDB();
@@ -459,13 +462,13 @@ bool initConfig(const CFG& cfg)
 
     QString db_version = q.value("db_version").toString();
 
-    dbus << clog::llInfo << QString("Версия БД: %1").arg(db_version) << clog::endl;
+    dbus << sv::log::llInfo << QString("Версия БД: %1").arg(db_version) << sv::log::endl;
     
     if(QString(ACTUAL_DB_VERSION) != db_version)
       exception.raise(1, QString("Версия БД не соответствует версии программы. Требуется версия БД %1\n")
                       .arg(ACTUAL_DB_VERSION));
 
-    dbus << clog::llInfo << "OK\n" << clog::endl;
+    dbus << sv::log::llInfo << "OK\n" << sv::log::endl;
 
     return true;
     
@@ -473,7 +476,7 @@ bool initConfig(const CFG& cfg)
   
   catch(SvException& e) {
     
-    dbus << clog::llError << QString("Ошибка: %1\n").arg(e.error) << clog::endl;
+    dbus << sv::log::llError << QString("Ошибка: %1\n").arg(e.error) << sv::log::endl;
     return false;
   }
 }
@@ -482,7 +485,7 @@ bool initConfig(const CFG& cfg)
 bool readDevices(const CFG& cfg)
 {
   
-  dbus << clog::llInfo << QString("Читаем устройства:") << clog::endl;
+  dbus << sv::log::mtDebug << sv::log::llInfo << QString("Читаем устройства:") << sv::log::endl;
   
   QSqlQuery q(PG->db);
   
@@ -507,21 +510,21 @@ bool readDevices(const CFG& cfg)
 
         DEVICES.insert(newdev->config()->index, newdev);
 
-        dbus << clog::llDebug << QString("  %1 [Индекс %2] %3").
+        dbus << sv::log::llDebug << QString("  %1 [Индекс %2] %3").
                 arg(newdev->config()->name).
                 arg(newdev->config()->index).
                 arg(newdev->config()->device_params_string)
-             << clog::endl;
+             << sv::log::endl;
 
         counter++;
 
       }
 
       else
-         dbus << clog::llError << QString("Не удалось добавить устройство %1 [Индекс %2]\n")
+         dbus << sv::log::mtError << sv::log::llError << QString("Не удалось добавить устройство %1 [Индекс %2]\n")
                                         .arg(q.value("device_name").toString())
                                         .arg(q.value("device_index").toInt())
-             << clog::endl;
+             << sv::log::endl;
       
 //        exception.raise(QString("Не удалось добавить устройство %1 (id %2)")
 //                        .arg(q->value("device_name").toString())
@@ -532,7 +535,7 @@ bool readDevices(const CFG& cfg)
     if(counter == 0)
       exception.raise("Устройства в конфигурации не найдены");
 
-    dbus << clog::llInfo << QString("OK [прочитано %1]\n").arg(counter) << clog::endl;
+    dbus << sv::log::mtSuccess << sv::log::llInfo << QString("OK [прочитано %1]\n").arg(counter) << sv::log::endl;
     
     return true;
     
@@ -540,7 +543,7 @@ bool readDevices(const CFG& cfg)
   
   catch(SvException& e) {
     
-    dbus << clog::llError << QString("Ошибка: %1\n").arg(e.error) << clog::endl;
+    dbus << sv::log::mtError << sv::log::llError << QString("Ошибка: %1\n").arg(e.error) << sv::log::endl;
     return false;
     
   }
@@ -548,7 +551,7 @@ bool readDevices(const CFG& cfg)
 
 bool readStorages()
 {
-  dbus << clog::llInfo << QString("Читаем хранилища:") << clog::endl;
+  dbus << sv::log::llInfo << QString("Читаем хранилища:") << sv::log::endl;
   
   QSqlQuery* q = new QSqlQuery(PG->db);
   
@@ -567,21 +570,21 @@ bool readStorages()
         
         STORAGES.insert(newstorage->index(), newstorage);
 
-        dbus << clog::llDebug << QString("  %1 [Индекс %2] %3:%4").arg(newstorage->params()->name).arg(newstorage->params()->index).arg(newstorage->params()->host).arg(newstorage->params()->port) << clog::endl;
+        dbus << sv::log::llDebug << QString("  %1 [Индекс %2] %3:%4").arg(newstorage->params()->name).arg(newstorage->params()->index).arg(newstorage->params()->host).arg(newstorage->params()->port) << sv::log::endl;
         
         counter++;
       }
       else
-         dbus << clog::llError << QString("Не удалось добавить хранилище %1 [Индекс %2]\n")
+         dbus << sv::log::llError << QString("Не удалось добавить хранилище %1 [Индекс %2]\n")
                         .arg(q->value("storage_name").toString())
                         .arg(q->value("storage_index").toInt())
-             << clog::endl;
+             << sv::log::endl;
         
     }
     q->finish();
     delete q;
     
-    dbus << clog::llInfo << QString("OK [Прочитано %1]\n").arg(counter) << clog::endl;
+    dbus << sv::log::llInfo << QString("OK [Прочитано %1]\n").arg(counter) << sv::log::endl;
     
     return true;
     
@@ -590,7 +593,7 @@ bool readStorages()
   catch(SvException& e) {
     
     delete q;
-    dbus << clog::llError << QString("Ошибка: %1\n").arg(e.error) << clog::endl;
+    dbus << sv::log::llError << QString("Ошибка: %1\n").arg(e.error) << sv::log::endl;
     return false;
     
   }
@@ -599,7 +602,7 @@ bool readStorages()
 
 bool readSignals(const CFG& cfg)
 {
-  dbus << clog::llInfo << QString("Читаем сигналы:") << clog::endl;
+  dbus << sv::log::llInfo << QString("Читаем сигналы:") << sv::log::endl;
   
   QSqlQuery* q = new QSqlQuery(PG->db);
   
@@ -632,14 +635,14 @@ bool readSignals(const CFG& cfg)
         
         SIGNALS.insert(newsig->index(), newsig);
         
-        dbus << clog::llAll <<  QString("  %1 [Индекс %2]").arg(newsig->params()->name).arg(newsig->index());
+        dbus << sv::log::llAll <<  QString("  %1 [Индекс %2]").arg(newsig->params()->name).arg(newsig->index());
 
         // раскидываем сигналы по устройствам
         if(DEVICES.contains(newsig->params()->device_index)) {
 
           DEVICES.value(newsig->params()->device_index)->addSignal(newsig);
 
-          dbus << clog::llAll << QString("%1 %2").arg(QString(31 - newsig->params()->name.length(), QChar('-'))).arg(DEVICES.value(newsig->params()->device_index)->config()->name);
+          dbus << sv::log::llAll << QString("%1 %2").arg(QString(31 - newsig->params()->name.length(), QChar('-'))).arg(DEVICES.value(newsig->params()->device_index)->config()->name);
 
         }
 
@@ -648,7 +651,7 @@ bool readSignals(const CFG& cfg)
 
           STORAGES.value(0)->addSignal(newsig);
 
-          dbus << clog::llAll << QString("%1 %2").arg(QString(6, QChar('-'))).arg(STORAGES.value(0)->params()->name);
+          dbus << sv::log::llAll << QString("%1 %2").arg(QString(6, QChar('-'))).arg(STORAGES.value(0)->params()->name);
 
         }
 
@@ -656,7 +659,7 @@ bool readSignals(const CFG& cfg)
 
           STORAGES.value(1)->addSignal(newsig);
 
-          dbus << clog::llAll <<  QString("%1 %2").arg(QString(6, QChar('-'))).arg(STORAGES.value(1)->params()->name);
+          dbus << sv::log::llAll <<  QString("%1 %2").arg(QString(6, QChar('-'))).arg(STORAGES.value(1)->params()->name);
 
         }
 
@@ -664,11 +667,11 @@ bool readSignals(const CFG& cfg)
 
           STORAGES.value(2)->addSignal(newsig);
 
-          dbus << clog::llAll <<  QString("%1 %2").arg(QString(6, QChar('-'))).arg(STORAGES.value(2)->params()->name);
+          dbus << sv::log::llAll <<  QString("%1 %2").arg(QString(6, QChar('-'))).arg(STORAGES.value(2)->params()->name);
 
         }
 
-        dbus << clog::llAll << clog::endl;
+        dbus << sv::log::llAll << sv::log::endl;
 
         counter++;
 
@@ -686,7 +689,7 @@ bool readSignals(const CFG& cfg)
     q->finish();
     delete q;
     
-    dbus << clog::llInfo << QString("OK [Прочитано %1]\n").arg(counter)  << clog::endl;
+    dbus << sv::log::llInfo << QString("OK [Прочитано %1]\n").arg(counter)  << sv::log::endl;
     
     return true;
     
@@ -696,7 +699,7 @@ bool readSignals(const CFG& cfg)
     
     q->finish();
     delete q;
-    dbus << clog::llError << QString("Ошибка: %1\n").arg(e.error) << clog::endl;
+    dbus << sv::log::llError << QString("Ошибка: %1\n").arg(e.error) << sv::log::endl;
     return false;
     
   }
@@ -731,7 +734,7 @@ idev::SvIDevice* create_device(const QSqlQuery* q)
       
       case idev::sdtOHT:
 
-        newdev = new SvOHT(lout);
+        newdev = new SvOHT(dbus);
         break;
         
       case idev::sdtOPA:
@@ -743,7 +746,7 @@ idev::SvIDevice* create_device(const QSqlQuery* q)
         break;
 
     case idev::sdtKTV:
-        newdev = new SvSKTV(lout);
+        newdev = new SvSKTV(dbus);
         break;
 
       default:
@@ -764,7 +767,7 @@ idev::SvIDevice* create_device(const QSqlQuery* q)
     if(newdev)
       delete newdev;
     
-    lout << clog::llError << QString("Ошибка: %1\n").arg(e.error) << clog::endl;
+    dbus << sv::log::llError << QString("Ошибка: %1\n").arg(e.error) << sv::log::endl;
     
     return Q_NULLPTR;
     
@@ -800,7 +803,7 @@ SvStorage* create_storage(QSqlQuery* q)
     if(newstorage)
       delete newstorage;
     
-    lout << clog::llError << QString("Ошибка: %1\n").arg(e.error) << clog::endl;
+    dbus << sv::log::llError << QString("Ошибка: %1\n").arg(e.error) << sv::log::endl;
     
     return Q_NULLPTR;
     
@@ -834,7 +837,7 @@ SvSignal* create_signal(const QSqlQuery* q)
 
 bool openDevices()
 {
-  lout << clog::llInfo << "Открываем устройства:" << clog::endl;
+  dbus << sv::log::llInfo << "Открываем устройства:" << sv::log::endl;
  
   try {
     
@@ -847,11 +850,11 @@ bool openDevices()
                                           .arg(device->config()->index)
                                           .arg(device->lastError()));
 
-      lout << clog::llDebug << QString("  %1: OK").arg(device->config()->name) << clog::endl;
+      dbus << sv::log::llDebug << QString("  %1: OK").arg(device->config()->name) << sv::log::endl;
         
     }
     
-    lout << clog::llInfo << QString("OK\n") << clog::endl;
+    dbus << sv::log::llInfo << QString("OK\n") << sv::log::endl;
     
     return true;
     
@@ -859,7 +862,7 @@ bool openDevices()
   
   catch(SvException& e) {
     
-    lout << clog::llError << QString("Ошибка: %1\n").arg(e.error) << clog::endl;
+    dbus << sv::log::llError << QString("Ошибка: %1\n").arg(e.error) << sv::log::endl;
     return false;
     
   }
@@ -868,7 +871,7 @@ bool openDevices()
 
 bool initStorages()
 {
-   lout << clog::llInfo << "Инициализируем хранилища" <<  clog::endl;
+   dbus << sv::log::llInfo << "Инициализируем хранилища" <<  sv::log::endl;
   
    try {
      
@@ -882,17 +885,17 @@ bool initStorages()
 
          storage->start();
 
-         lout << clog::llDebug << QString("  %1 (%2:%3): OK")
+         dbus << sv::log::llDebug << QString("  %1 (%2:%3): OK")
                    .arg(storage->params()->name)
                    .arg(storage->params()->host)
                    .arg(storage->params()->port)
-                << clog::endl;
+                << sv::log::endl;
 
        }
      }
        
          
-     lout << clog::llInfo << QString("OK\n") << clog::endl;
+     dbus << sv::log::llInfo << QString("OK\n") << sv::log::endl;
 
      return true;
      
@@ -900,7 +903,7 @@ bool initStorages()
    
    catch(SvException& e) {
      
-     lout << clog::llError << QString("Ошибка: %1").arg(e.error) << clog::endl;
+     dbus << sv::log::llError << QString("Ошибка: %1").arg(e.error) << sv::log::endl;
      return false;
      
    }
@@ -910,7 +913,7 @@ bool initStorages()
 
 void closeDevices()
 {
-  lout << clog::llInfo << "Закрываем устройства:" << clog::endl;
+  dbus << sv::log::llInfo << "Закрываем устройства:" << sv::log::endl;
 
   try {
 
@@ -919,25 +922,25 @@ void closeDevices()
 
       idev::SvIDevice* device = DEVICES.value(key);
 
-      lout << clog::llDebug << QString("  %1 (%2):").arg(device->config()->name).arg(device->config()->ifc_name) << clog::endi;
+      dbus << sv::log::llDebug << QString("  %1 (%2):").arg(device->config()->name).arg(device->config()->ifc_name) << sv::log::endi;
 
       device->close();
       delete DEVICES.take(key);
 
-      lout << clog::llInfo << "\tOK" << clog::endl;
+      dbus << sv::log::llInfo << "\tOK" << sv::log::endl;
 
       counter++;
 
     }
 
-//    lout << clog::llInfo << QString("OK\n") << clog::endl;
-    lout << clog::llInfo << QString("OK [Закрыто %1]\n").arg(counter)  << clog::endl;
+//    lout << sv::log::llInfo << QString("OK\n") << sv::log::endl;
+    dbus << sv::log::llInfo << QString("OK [Закрыто %1]\n").arg(counter)  << sv::log::endl;
 
   }
 
   catch(SvException& e) {
 
-    lout << clog::llError << QString("Ошибка: %1").arg(e.error) << clog::endl;
+    dbus << sv::log::llError << QString("Ошибка: %1").arg(e.error) << sv::log::endl;
 
   }
 
@@ -945,7 +948,7 @@ void closeDevices()
 
 void deinitStorages()
 {
-  lout << clog::llInfo << "Закрываем хранилища:" << clog::endl;
+  dbus << sv::log::llInfo << "Закрываем хранилища:" << sv::log::endl;
 
   int counter = 0;
   foreach (int key, STORAGES.keys()) {
@@ -953,25 +956,25 @@ void deinitStorages()
     SvStorage* storage = STORAGES.value(key);
 
 //    if(detiled)
-//      lout << QString("  %1\t%2:%3:").arg(storage->params()->name).arg(storage->params()->host).arg(storage->params()->port) << clog::endi;
+//      lout << QString("  %1\t%2:%3:").arg(storage->params()->name).arg(storage->params()->host).arg(storage->params()->port) << sv::log::endi;
 
     storage->stop();
     delete STORAGES.take(key);
 
-//    lout << clog::llInfo << "\tOK" << clog::endl;
+//    lout << sv::log::llInfo << "\tOK" << sv::log::endl;
 
     counter++;
 
   }
 
-//  lout << clog::llInfo << QString("OK\n") << clog::endl;
-  lout << clog::llInfo << QString("OK [Закрыто %1]\n").arg(counter)  << clog::endl;
+//  lout << sv::log::llInfo << QString("OK\n") << sv::log::endl;
+  dbus << sv::log::llInfo << QString("OK [Закрыто %1]\n").arg(counter)  << sv::log::endl;
 
 }
 
 void deleteSignals()
 {
-  lout << clog::llInfo << "Удаляем сигналы:" << clog::endl;
+  dbus << sv::log::llInfo << "Удаляем сигналы:" << sv::log::endl;
 
   int counter = 0;
   foreach (int key, SIGNALS.keys()) {
@@ -979,39 +982,15 @@ void deleteSignals()
 //    SvSignal* signal = SIGNALS.value(key);
 
 //    if(detiled)
-//      lout << QString("  %1 [index %2]:").arg(signal->params()->name).arg(signal->params()->index) << clog::endi;
+//      lout << QString("  %1 [index %2]:").arg(signal->params()->name).arg(signal->params()->index) << sv::log::endi;
 
     delete SIGNALS.take(key);
 
     counter++;
-//    lout << clog::llInfo << "\tOK" << clog::endl;
+//    lout << sv::log::llInfo << "\tOK" << sv::log::endl;
 
   }
 
-  lout << clog::llInfo << QString("OK [Удалено %1]\n").arg(counter)  << clog::endl;
+  dbus << sv::log::llInfo << QString("OK [Удалено %1]\n").arg(counter)  << sv::log::endl;
 
 }
-
-
-//bool create_tcp_server(const CFG& cfg)
-//{
-//  lout << clog::llInfo << QString("Запускаем TCP сервер СОЭЖ:") << clog::endl;
-
-//  try {
-
-//    server = new svtcp::SvTcpServer(lout, cfg.log_options.log_level == clog::llAll);
-//    if(!server->startServer(cfg.soeg_port, cfg.db_name, cfg.db_host, cfg.db_port, cfg.db_user, cfg.db_pass))
-//      exception.raise(QString("%1").arg(server->lastError()));
-
-//    return true;
-
-//  }
-
-//  catch(SvException& e) {
-
-//    lout << clog::llError << QString("Ошибка: %1\n").arg(e.error) << clog::endl;
-//    return false;
-
-//  }
-
-//}

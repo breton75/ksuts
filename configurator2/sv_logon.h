@@ -1,4 +1,4 @@
-#ifndef SV_USERLOGON_H
+﻿#ifndef SV_USERLOGON_H
 #define SV_USERLOGON_H
 
 #include <QDialog>
@@ -10,7 +10,7 @@
 #include <QProcess>
 
 #include "../../svlib/sv_pgdb.h"
-#include "../../svlib/sv_log.h"
+#include "../../svlib/sv_clog.h"
 
 namespace Ui {
   class SvLogonDialog;
@@ -65,7 +65,7 @@ private:
     QString _pass = "";
 //    QString _role = "";
     
-    svlog::SvLog _log;
+    sv::SvWidgetLogger _log;
 };
 
 

@@ -125,7 +125,7 @@ MainWindow::MainWindow(const CFG &cfg, QWidget *parent) :
 
   AppParams::loadLayout(this);
 
-  QDBusConnection::sessionBus().connect(QString(), QString(), "ame.proj12700.ksuts", "message", this, SLOT(messageSlot(QString,QString)));
+  QDBusConnection::sessionBus().connect(QString(), QString(), DBUS_SERVER_NAME, "message", this, SLOT(messageSlot(const QString&,const QString&,const QString&)));
 
 //  connect(ui->treeView, &QTreeView::entered)
 
@@ -138,9 +138,10 @@ MainWindow::MainWindow(const CFG &cfg, QWidget *parent) :
 
 }
 
-void MainWindow::messageSlot(QString sender, QString message)
+void MainWindow::messageSlot(const QString& sender, const QString& message, const QString& type)
 {
-  ui->textLog->append(QString("%1: %2").arg(sender, message));
+//  ui->textLog->append(QString("%1: %2: %3").arg(sender, type, message));
+  log << sv::log::stringToType(type) << QString("%1: %2").arg(sender, message) << sv::log::endl;
 }
 
 void MainWindow::closeEvent(QCloseEvent *event)
@@ -276,7 +277,7 @@ bool MainWindow::init()
     PGDB = nullptr;
     QSqlDatabase::removeDatabase(p_connection_name);
 
-    log << svlog::Critical << e.error << svlog::endl;
+    log << sv::log::mtCritical << e.error << sv::log::endl;
 
     return false;
 
@@ -401,7 +402,7 @@ bool MainWindow::makeTree()
     q->finish();
     delete q;
 
-    log << svlog::Time << svlog::Critical << e.error << svlog::endl;
+    log << sv::log::Time << sv::log::mtCritical << e.error << sv::log::endl;
 
     return false;
 
@@ -451,6 +452,8 @@ bool MainWindow::pourDevicesToRoot(TreeItem* rootItem)
         return false;
 
     }
+
+    return true;
 }
 
 bool MainWindow::pourSignalsToDevices(TreeItem* rootItem)
@@ -502,7 +505,7 @@ bool MainWindow::pourSignalsToDevices(TreeItem* rootItem)
         }
 
         delete q;
-        return true;
+
 
   }
 
@@ -516,6 +519,9 @@ bool MainWindow::pourSignalsToDevices(TreeItem* rootItem)
     return false;
 
   }
+
+    return true;
+
 }
 
 bool MainWindow::pourStoragesToRoot(TreeItem *rootItem)
@@ -558,6 +564,8 @@ bool MainWindow::pourStoragesToRoot(TreeItem *rootItem)
         return false;
 
     }
+
+    return true;
 }
 
 bool MainWindow::pourDevicesToStorages(TreeItem* rootItem)
@@ -605,7 +613,7 @@ bool MainWindow::pourDevicesToStorages(TreeItem* rootItem)
 
         q->finish();
         delete q;
-        log << svlog::Time << svlog::Critical << e.error << svlog::endl;
+        log << sv::log::Time << sv::log::mtCritical << e.error << sv::log::endl;
         throw;
         return false;
 
@@ -666,7 +674,7 @@ bool MainWindow::pourSignalsToStorages(TreeItem* rootItem)
 
         q->finish();
         delete q;
-        log << svlog::Time << svlog::Critical << e.error << svlog::endl;
+        log << sv::log::Time << sv::log::mtCritical << e.error << sv::log::endl;
         throw e;
         return false;
 
@@ -1353,7 +1361,7 @@ void MainWindow::make_stand_info()
     p_current_stand_info_html.replace("%SERVICES%", services_str);
 
     p_trayIcon->setToolTip(p_current_stand_info_hint);
-//    log <<  << svlog::endl;
+//    log <<  << sv::log::endl;
 
     delete q;
 
@@ -1580,7 +1588,7 @@ void MainWindow::update_stand_info()
   if(_standRoot == _model->itemFromIndex(ui->treeView->currentIndex()) &&
      old_stand_info_hint.compare(p_current_stand_info_hint)) {
 
-//    log << "browser\n"<< ui->textBrowser->toHtml() << "\n\n\nstr\n" << p_current_stand_info_html << svlog::endl;
+//    log << "browser\n"<< ui->textBrowser->toHtml() << "\n\n\nstr\n" << p_current_stand_info_html << sv::log::endl;
     ui->textBrowser->setHtml(p_current_stand_info_html);
 
   }

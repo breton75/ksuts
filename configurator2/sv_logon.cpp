@@ -1,4 +1,4 @@
-#include "sv_logon.h"
+﻿#include "sv_logon.h"
 #include "ui_logon.h"
 
 extern SvPGDB *PGDB;
@@ -68,14 +68,14 @@ void SvUserLogon::accept()
   PGDB = new SvPGDB();
   PGDB->setConnectionParams(_dbName, _host, _port, _login, _pass);
   
-  _log << svlog::Info << QString("Connecting to database (%1)").arg(_connectionErrorCount) << svlog::endl;
+  _log << sv::log::mtInfo << QString("Connecting to database (%1)").arg(_connectionErrorCount) << sv::log::endl;
   QApplication::processEvents();
   
   QSqlError serr = PGDB->connectToDB();
   
   if((serr.type() != QSqlError::NoError)) {
     
-    _log << svlog::Error << serr.databaseText() << svlog::endl;
+    _log << sv::log::mtError << serr.databaseText() << sv::log::endl;
     
     ui->textEdit->setVisible(true);
     _connectionErrorCount++;

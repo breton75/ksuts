@@ -1,7 +1,7 @@
 ﻿#include "sv_storage.h"
 
 
-SvStorage::SvStorage(StorageParams params, clog::SvCLog &log, QObject *parent):
+SvStorage::SvStorage(StorageParams params, sv::SvConcoleLogger &log, QObject *parent):
   QObject(parent),
   _log(log)
 {
@@ -55,15 +55,15 @@ bool SvStorage::init()
 
 void SvStorage::logerr(QString e)
 {
-  _log << clog::TimeZZZ << clog::llError << e << '\n' << clog::endl;
+  _log << sv::log::TimeZZZ << sv::log::llError << e << '\n' << sv::log::endl;
 }
 
 void SvStorage::logreconnect()
 {
-  _log << clog::TimeZZZ << clog::llInfo << QString("Phew! %1 reconnected to %2:%3:%4\n")
+  _log << sv::log::TimeZZZ << sv::log::llInfo << QString("Phew! %1 reconnected to %2:%3:%4\n")
           .arg(_params.name).arg(_params.database_name)
           .arg(_params.host).arg(_params.port)
-       << clog::endl;
+       << sv::log::endl;
 }
 
 void SvStorage::reconnect()

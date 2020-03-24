@@ -95,7 +95,7 @@ class SvStorage: public QObject
     Q_OBJECT
   
 public:
-  SvStorage(StorageParams params, clog::SvCLog &log, QObject *parent = Q_NULLPTR);
+  SvStorage(StorageParams params, sv::SvConcoleLogger &log, QObject *parent = Q_NULLPTR);
   ~SvStorage();
   
   int index() { return _params.index; }
@@ -125,7 +125,7 @@ private:
   
   int _pos = -1;
   
-  clog::SvCLog _log;
+  sv::SvConcoleLogger& _log;
 
   QTimer* _reconnect_timer = nullptr;
 

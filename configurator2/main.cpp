@@ -6,6 +6,8 @@
 #include "sv_logon.h"
 #include "../../svlib/sv_settings.h"
 #include "../../svlib/sv_log.h"
+#include "../../svlib/sv_abstract_message_logger.h"
+
 #include "../global/gen_defs.h"
 
 void signal_handler(int sig);
@@ -114,15 +116,30 @@ bool parse_params(const QStringList& args, CFG& cfg, const QString& file_name)
     cfg.postgres_bin_path = cmd_parser.isSet(OPTION_PATH_TO_POSTGRES_BIN) ? cmd_parser.value(OPTION_PATH_TO_POSTGRES_BIN) :
                                                                        cfg_parser.value(OPTION_PATH_TO_POSTGRES_BIN);
 
+
+    // single device mode
+    val = cmd_parser.isSet(OPTION_SINGLE_DEVICE_MODE) ? cmd_parser.value(OPTION_SINGLE_DEVICE_MODE) :
+                                                        cfg_parser.value(OPTION_SINGLE_DEVICE_MODE);
+
+    cfg.single_device_mode = sv::log::stringToBool(val);
+
+    // single device index
+    // !!! ЭТОТ ПАРАМЕТР МОЖЕТ БЫТЬ ЗАДАН ТОЛЬКО В КОМАНДНОЙ СТРОКЕ
+    val = cmd_parser.isSet(OPTION_SINGLE_DEVICE_INDEX) ? cmd_parser.value(OPTION_SINGLE_DEVICE_INDEX) : "-1";
+
+    cfg.single_device_index = val.toInt(&ok);
+    if(!ok) exception.raise(-1, QString("Неверный индекс устройства: %1").arg(val));
+
+
     // logging
     val = cmd_parser.isSet(OPTION_LOGGING) ? cmd_parser.value(OPTION_LOGGING) :
                                              cfg_parser.value(OPTION_LOGGING);
-    cfg.log_options.logging = clog::SvCLog::stringToBool(val);
+    cfg.log_options.logging = sv::log::stringToBool(val);
 
     // log_level
     val = cmd_parser.isSet(OPTION_LOG_LEVEL) ? cmd_parser.value(OPTION_LOG_LEVEL) :
                                                cfg_parser.value(OPTION_LOG_LEVEL);
-    cfg.log_options.log_level = clog::SvCLog::stringToLevel(val, &ok);
+    cfg.log_options.log_level = sv::log::stringToLevel(val, &ok);
     if(!ok) exception.raise(-1, QString("Неверный уровень логирования: %1").arg(val));
 
     // log_device
@@ -132,7 +149,7 @@ bool parse_params(const QStringList& args, CFG& cfg, const QString& file_name)
     cfg.log_options.log_devices.clear(); // обязательно
     for (int i = 0; i < vals.count(); ++i) {
 
-        cfg.log_options.log_devices.append(clog::SvCLog::stringToDevice(vals.at(i), &ok));
+        cfg.log_options.log_devices.append(sv::log::stringToDevice(vals.at(i), &ok));
         if(!ok) exception.raise(-1, QString("Неверное устройство логирования: %1").arg(val));
     }
 
@@ -148,19 +165,19 @@ bool parse_params(const QStringList& args, CFG& cfg, const QString& file_name)
     // log_truncate_on_rotation
     val = cmd_parser.isSet(OPTION_LOG_TRUNCATE_ON_ROTATION) ? cmd_parser.value(OPTION_LOG_TRUNCATE_ON_ROTATION) :
                                                               cfg_parser.value(OPTION_LOG_TRUNCATE_ON_ROTATION);
-    cfg.log_options.log_truncate_on_rotation = clog::SvCLog::stringToBool(val);
+    cfg.log_options.log_truncate_on_rotation = sv::log::stringToBool(val);
 
     // log_rotation_age
     val = cmd_parser.isSet(OPTION_LOG_ROTATION_AGE) ? cmd_parser.value(OPTION_LOG_ROTATION_AGE) :
                                                       cfg_parser.value(OPTION_LOG_ROTATION_AGE);
-    cfg.log_options.log_rotation_age = clog::SvCLog::stringToSeconds(val, &ok);
+    cfg.log_options.log_rotation_age = sv::log::stringToSeconds(val, &ok);
     if(!ok) exception.raise(-1, QString("Неверный формат времени: %1").arg(val));
 
 
     // log_rotation_size
     val = cmd_parser.isSet(OPTION_LOG_ROTATION_SIZE) ? cmd_parser.value(OPTION_LOG_ROTATION_SIZE) :
                                                        cfg_parser.value(OPTION_LOG_ROTATION_SIZE);
-    cfg.log_options.log_rotation_size = clog::SvCLog::stringToSize(val, &ok);
+    cfg.log_options.log_rotation_size = sv::log::stringToSize(val, &ok);
     if(!ok) exception.raise(-1, QString("Неверный формат размера файла: %1").arg(val));
 
     return true;
@@ -223,7 +240,6 @@ int main(int argc, char *argv[])
           .arg(QCoreApplication::applicationDirPath())
           .arg(QDir::separator())
           .arg("ksuts_server");
-
   if(!parse_params(a.arguments(), cfg, cfg_file_name)) {
 
       return -1;

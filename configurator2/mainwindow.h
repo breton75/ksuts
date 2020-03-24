@@ -15,7 +15,7 @@
 #include <QApplication>
 
 #include "../../svlib/sv_exception.h"
-#include "../../svlib/sv_log.h"
+//#include "../../svlib/sv_log.h"
 #include "../../svlib/sv_settings.h"
 #include "../../svlib/sv_pgdb.h"
 #include "../../svlib/sv_config.h"
@@ -65,13 +65,14 @@ class MainWindow : public QMainWindow
 {
   Q_OBJECT
 
-  SvDBus _dbus;
+  sv::SvDBus& _dbus = sv::SvDBus::instance();
+
 
 public:
   explicit MainWindow(const CFG& cfg, QWidget *parent = 0);
   ~MainWindow();
 
-  svlog::SvLog log;
+  sv::SvWidgetLogger log;
 
   bool init();
 
@@ -210,7 +211,7 @@ private slots:
 
   void on_treeView_doubleClicked(const QModelIndex &index);
 
-  void messageSlot(QString sender, QString message);
+  void messageSlot(const QString& sender, const QString& message, const QString &type);
 
 public slots:
   void loadConfig();

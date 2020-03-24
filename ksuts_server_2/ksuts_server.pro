@@ -39,7 +39,8 @@ SOURCES += main.cpp \
     ../../svlib/sv_config.cpp \
     ../../svlib/sv_fnt.cpp \
     sv_storagewatcher.cpp \
-    ../../svlib/sv_dbus.cpp
+    ../../svlib/sv_dbus.cpp \
+    ../../svlib/sv_abstract_message_logger.cpp
 
 HEADERS += \
     ../../svlib/sv_exception.h \
@@ -62,4 +63,5 @@ HEADERS += \
     ../../svlib/sv_config.h \
     ../../svlib/sv_fnt.h \
     sv_storagewatcher.h \
-    ../../svlib/sv_dbus.h
+    ../../svlib/sv_dbus.h \
+    ../../svlib/sv_abstract_message_logger.h

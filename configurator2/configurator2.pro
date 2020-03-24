@@ -18,6 +18,7 @@ DEFINES += APP_VERSION=\\\"$$VERSION\\\"
 DEFINES += VERSION_2
 
 DEFINES += APP_DEBUG=1
+DEFINES += GUI_APP
 
 # The following define makes your compiler emit warnings if you use
 # any feature of Qt which has been marked as deprecated (the exact warnings
@@ -38,7 +39,6 @@ SOURCES += \
     treeitem.cpp \
     treemodel.cpp \
     sv_device_editor.cpp \
-    ../../svlib/sv_log.cpp \
     ../../svlib/sv_pgdb.cpp \
     sv_logon.cpp \
     sv_signal_list.cpp \
@@ -49,7 +49,10 @@ SOURCES += \
     edit_autorun.cpp \
     sv_editconfig.cpp \
     ../global/sv_serialeditor.cpp \
-    ../../svlib/sv_dbus.cpp
+    ../../svlib/sv_dbus.cpp \
+    ../../svlib/sv_clog.cpp \
+    ../../svlib/sv_abstract_message_logger.cpp \
+    ../../svlib/sv_fnt.cpp
 
 HEADERS += \
         mainwindow.h \
@@ -61,7 +64,6 @@ HEADERS += \
     sv_oht.h \
     sv_idevice.h \
     sv_device_editor.h \
-    ../../svlib/sv_log.h \
     ../../svlib/sv_pgdb.h \
     sv_logon.h \
     ../global/dev_defs.h \
@@ -77,7 +79,10 @@ HEADERS += \
     ../../svlib/sv_busy_window.h \
     ../global/gen_defs.h \
     ../global/sv_serialeditor.h \
-    ../../svlib/sv_dbus.h
+    ../../svlib/sv_dbus.h \
+    ../../svlib/sv_clog.h \
+    ../../svlib/sv_abstract_message_logger.h \
+    ../../svlib/sv_fnt.h
 
 FORMS += \
         mainwindow.ui \
