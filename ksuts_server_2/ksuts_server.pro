@@ -44,12 +44,10 @@ SOURCES += main.cpp \
 
 HEADERS += \
     ../../svlib/sv_exception.h \
-    ../global/sv_idevice.h \
     ../ksuts_devices/oht/sv_oht.h \
     ../global/sql_defs.h \
     ../global/sv_signal.h \
     ../../svlib/sv_pgdb.h \
-    ../global/dev_defs.h \
     ../ksuts_devices/oht/oht_defs.h \
     ../../svlib/sv_clog.h \
     sv_storage.h \
@@ -64,4 +62,7 @@ HEADERS += \
     ../../svlib/sv_fnt.h \
     sv_storagewatcher.h \
     ../../svlib/sv_dbus.h \
-    ../../svlib/sv_abstract_message_logger.h
+    ../../svlib/sv_abstract_message_logger.h \
+    ../global/sv_abstract_device.h \
+    ../../svlib/sv_crc.h \
+    ../global/device_params.h

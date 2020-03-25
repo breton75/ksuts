@@ -7,10 +7,9 @@
 
 /** *****************   ************************* **/
 
-SvOPA::SvOPA(clog::SvCLog& log):
-  idev::SvIDevice(),
-  _log(log),
-  p_hardware_type(idev::sdtOPA)
+SvOPA::SvOPA(sv::SvAbstarctLogger &log):
+  dev::SvAbstractDevice(dev::OPA),
+  _log(log)
 {
 
 }
@@ -27,18 +26,18 @@ bool SvOPA::setParams(const QString& params)
 {
   try {
     
-    DeviceParamsParser p(params);
+    dev::DeviceParamsParser p(params);
     if(!p.parse())
       _exception->raise(p.lastError());
     
-    p_device_params = p.serialParams();
+    p_params = p.params();
     
-    _serial.setPortName(   p_device_params.portname);
-    _serial.setBaudRate(   p_device_params.baudrate);
-    _serial.setDataBits(   p_device_params.databits);
-    _serial.setFlowControl(p_device_params.flowcontrol);
-    _serial.setParity(     p_device_params.parity);
-    _serial.setStopBits(   p_device_params.stopbits);
+    _serial.setPortName(   p_params.portname);
+    _serial.setBaudRate(   p_params.baudrate);
+    _serial.setDataBits(   p_params.databits);
+    _serial.setFlowControl(p_params.flowcontrol);
+    _serial.setParity(     p_params.parity);
+    _serial.setStopBits(   p_params.stopbits);
 
     return true;
       
@@ -101,9 +100,9 @@ void SvOPA::read()
 
     // для сбора реальных логов
     if(p_config.debug_mode)
-      _log << clog::llDebug2
-           << clog::TimeZZZ << clog::in
-           << QString(QByteArray((const char*)&_buf[cur_offset], _buf_offset - cur_offset).toHex()) << clog::endl;
+      _log << sv::log::llDebug2
+           << sv::log::TimeZZZ << sv::log::in
+           << QString(QByteArray((const char*)&_buf[cur_offset], _buf_offset - cur_offset).toHex()) << sv::log::endl;
 
     if(_buf_offset >= _hSize) {
 
@@ -121,9 +120,9 @@ void SvOPA::read()
         REGISTER += _header.OFFSET;
 
         if(p_config.debug_mode)
-          _log << clog::llDebug
-               << clog::TimeZZZ << clog::in
-               << QString(QByteArray((const char*)&_buf[0], _buf_offset).toHex()) << clog::endl;
+          _log << sv::log::llDebug
+               << sv::log::TimeZZZ << sv::log::in
+               << QString(QByteArray((const char*)&_buf[0], _buf_offset).toHex()) << sv::log::endl;
 
           // если хоть какие то пакеты сыпятся (для данного получателя), то
           // считаем, что линия передачи в порядке и задаем новую контрольную точку времени
@@ -132,7 +131,7 @@ void SvOPA::read()
           // ставим состояние данной линии
           setLineStatus();
 
-          switch (REGISTER - p_device_params.address) {
+          switch (REGISTER - p_params.address) {
 
               case 0x03:
               case 0x05:
@@ -161,7 +160,7 @@ void SvOPA::read()
   
   catch(SvException& e) {
     
-    _log << clog::llError << e.error << clog::endl;
+    _log << sv::log::llError << e.error << sv::log::endl;
     return;
     
   }
@@ -169,41 +168,41 @@ void SvOPA::read()
 
 void SvOPA::setLineStatus()
 {
-    switch (deviceType()) {
+    switch (params()->address) {
 
-      case idev::sdtOPA_SS1_119:
+      case 0x0400:
         setSignalValue(POMP_SS1_119_STATUS, 1);
         break;
 
-      case idev::sdtOPA_SS1_122:
+      case 0x04A0:
         setSignalValue(POMP_SS1_122_STATUS, 1);
         break;
 
-      case idev::sdtOPA_12SS1_218:
+      case 0x0540:
         setSignalValue(POMP_SS1_218_STATUS, 1);
         break;
 
-      case idev::sdtOPA_12SS1_8:
+      case 0x05E0:
         setSignalValue(POMP_SS1_8_STATUS, 1);
         break;
 
-      case idev::sdtOPA_12SS1_38:
+      case 0x0680:
         setSignalValue(POMP_SS1_38_STATUS, 1);
         break;
 
-      case idev::sdtOPA_12SS1_67:
+      case 0x0720:
         setSignalValue(POMP_SS1_67_STATUS, 1);
         break;
 
-      case idev::sdtOPA_12SS1_93:
+      case 0x07C0:
         setSignalValue(POMP_SS1_93_STATUS, 1);
         break;
 
-      case idev::sdtOPA_12SS1_123:
+      case 0x0860:
         setSignalValue(POMP_SS1_123_STATUS, 1);
         break;
 
-      case idev::sdtOPA_12SS1_150:
+      case 0x0900:
         setSignalValue(POMP_SS1_150_STATUS, 1);
         break;
 
@@ -230,9 +229,9 @@ void SvOPA::sendConfirmation()
     _serial.write((const char*)&_confirm[0], 8);
 
     if(p_config.debug_mode)
-      _log << clog::llDebug
-           << clog::TimeZZZ << clog::out
-           << QString(QByteArray((const char*)&_confirm[0], 8).toHex()) << clog::endl;
+      _log << sv::log::llDebug
+           << sv::log::TimeZZZ << sv::log::out
+           << QString(QByteArray((const char*)&_confirm[0], 8).toHex()) << sv::log::endl;
 
 }
 
@@ -256,8 +255,8 @@ void SvOPA::analizeData()
     /// если crc не совпадает, то выходим без обработки и ответа
     if(crc != _crc) {
 
-      _log << clog::llError
-           << clog::TimeZZZ
+      _log << sv::log::llError
+           << sv::log::TimeZZZ
            << QString("wrong crc! ожидалось %1, получено %2").arg(crc, 0, 16).arg(_crc, 0, 16); // << QString::number(_crc2, 16);
 
       return;
@@ -299,7 +298,7 @@ void SvOPA::analizeData()
   
   catch(SvException& e) {
     
-    _log << clog::llError << e.error << clog::endl;
+    _log << sv::log::llError << e.error << sv::log::endl;
     return;
     
   }
@@ -317,41 +316,41 @@ void SvOPA::func_0x77()
 
 void SvOPA::func_0x19()
 {
-  switch (deviceType()) {
-    
-    case idev::sdtOPA_SS1_119:
+  switch (params()->address) {
+
+    case 0x0400:
       setSignalValue(FI20_SS1_119, _data[0]);  
       break;
       
-    case idev::sdtOPA_SS1_122:
+    case 0x04A0:
       setSignalValue(FI20_SS1_122, _data[0]);  
       break;
       
-    case idev::sdtOPA_12SS1_218:
+    case 0x0540:
       setSignalValue(FI82_12SS1_218, _data[0]);  
       break;
       
-    case idev::sdtOPA_12SS1_8:
+    case 0x05E0:
       setSignalValue(FI82_12SS1_8, _data[0]);  
       break;
       
-    case idev::sdtOPA_12SS1_38:
+    case 0x0680:
       setSignalValue(FI82_12SS1_38, _data[0]);  
       break;
       
-    case idev::sdtOPA_12SS1_67:
+    case 0x0720:
       setSignalValue(FI82_12SS1_67, _data[0]);  
       break;
       
-    case idev::sdtOPA_12SS1_93:
+    case 0x07C0:
       setSignalValue(FI82_12SS1_93, _data[0]);  
       break;
       
-    case idev::sdtOPA_12SS1_123:
+    case 0x0860:
       setSignalValue(FI82_12SS1_123, _data[0]);  
       break;
       
-    case idev::sdtOPA_12SS1_150:
+    case 0x0900:
       setSignalValue(FI82_12SS1_150, _data[0]);  
       break;
       

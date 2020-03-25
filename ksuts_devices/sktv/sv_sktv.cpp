@@ -3,10 +3,9 @@
 
 /** *****************   ************************* **/
 
-SvSKTV::SvSKTV(clog::SvCLog &log):
-  idev::SvIDevice(),
-  _log(log),
-  p_hardware_type(idev::sdtKTV)
+SvSKTV::SvSKTV(sv::SvAbstarctLogger &log):
+  dev::SvAbstractDevice(dev::KTV),
+  _log(log)
 {
 
 }
@@ -23,18 +22,18 @@ bool SvSKTV::setParams(const QString& params)
 {
   try {
     
-    DeviceParamsParser p(params);
+    dev::DeviceParamsParser p(params);
     if(!p.parse())
       _exception->raise(p.lastError());
     
-    p_device_params = p.serialParams();
+    p_params = p.params();
     
-    _serial.setPortName(   p_device_params.portname);
-    _serial.setBaudRate(   p_device_params.baudrate);
-    _serial.setDataBits(   p_device_params.databits);
-    _serial.setFlowControl(p_device_params.flowcontrol);
-    _serial.setParity(     p_device_params.parity);
-    _serial.setStopBits(   p_device_params.stopbits);
+    _serial.setPortName(   p_params.portname);
+    _serial.setBaudRate(   p_params.baudrate);
+    _serial.setDataBits(   p_params.databits);
+    _serial.setFlowControl(p_params.flowcontrol);
+    _serial.setParity(     p_params.parity);
+    _serial.setStopBits(   p_params.stopbits);
 
     return true;
       
@@ -126,9 +125,9 @@ void SvSKTV::read()
 
     // для сбора реальных логов
     if(p_config.debug_mode)
-      _log << clog::llDebug2
-           << clog::TimeZZZ << clog::in
-           << QString(QByteArray((const char*)&_buf[cur_offset], _buf_offset - cur_offset).toHex()) << clog::endl;
+      _log << sv::log::llDebug2
+           << sv::log::TimeZZZ << sv::log::in
+           << QString(QByteArray((const char*)&_buf[cur_offset], _buf_offset - cur_offset).toHex()) << sv::log::endl;
 
 
     _buf_offset += _serial.read((char*)(&_buf[0] + _buf_offset), 512 - _buf_offset);
@@ -160,10 +159,10 @@ void SvSKTV::read()
           _buf_offset = offset_of_2f55 + 1;
 
           if(p_config.debug_mode)
-              _log << clog::llDebug
-                   << clog::TimeZZZ << clog::in
+              _log << sv::log::llDebug
+                   << sv::log::TimeZZZ << sv::log::in
                    << QString(QByteArray((const char*)&_buf[0], _buf_offset).toHex())
-                   << clog::endl;
+                   << sv::log::endl;
 
           memcpy(&_data_type, &_buf[sizeof(_header)], 1);
 
@@ -192,7 +191,7 @@ void SvSKTV::read()
   
   catch(SvException& e) {
     
-    _log << clog::llError << e.error << clog::endl;
+    _log << sv::log::llError << e.error << sv::log::endl;
     return;
     
   }
@@ -234,8 +233,8 @@ bool SvSKTV::sendConfirmation()
     /// если crc не совпадает, то выходим без обработки и ответа
     if(crc != _crc) {
 
-        _log << clog::llError
-             << QString("Wrong crc! ожидалось %1, получено %2").arg(crc, 0, 16).arg(_crc, 0, 16) << clog::endl;
+        _log << sv::log::llError
+             << QString("Wrong crc! ожидалось %1, получено %2").arg(crc, 0, 16).arg(_crc, 0, 16) << sv::log::endl;
 
       return false;
 
@@ -269,9 +268,9 @@ bool SvSKTV::sendConfirmation()
     _serial.write((const char*)&_confirm[0], crc_offset + crc_length + 2);
 
     if(p_config.debug_mode)
-      _log << clog::llDebug
-           << clog::TimeZZZ << clog::out
-           << QString(QByteArray((const char*)&_confirm[0], crc_offset + crc_length + 2).toHex()) << clog::endl;
+      _log << sv::log::llDebug
+           << sv::log::TimeZZZ << sv::log::out
+           << QString(QByteArray((const char*)&_confirm[0], crc_offset + crc_length + 2).toHex()) << sv::log::endl;
 
     return true;
 
@@ -304,7 +303,7 @@ void SvSKTV::analizeData()
   
   catch(SvException& e) {
     
-    _log << clog::llError << e.error << clog::endl;
+    _log << sv::log::llError << e.error << sv::log::endl;
     return;
     
   }

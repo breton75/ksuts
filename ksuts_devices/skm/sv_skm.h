@@ -12,10 +12,12 @@
 #endif
 
 
-#include "../global/sv_idevice.h"
-#include "../global/dev_defs.h"
+#include "../global/sv_abstract_device.h"
+#include "../global/device_params.h"
+
 #include "../../svlib/sv_exception.h"
 #include "../../svlib/sv_clog.h"
+#include "../../svlib/sv_crc.h"
 
 #pragma pack(push,1)
 struct SKMHeader
@@ -29,52 +31,75 @@ struct SKMHeader
 
 //idev::SvIDevice* /*OHTSHARED_EXPORT*/ create_device(const QString& params_string);
 
-class /*OHTSHARED_EXPORT*/ SvSKM: public idev::SvIDevice
+class /*OHTSHARED_EXPORT*/ SvSKM: public dev::SvAbstractDevice
 {
-    clog::SvCLog& _log;
+    Q_OBJECT
+
+    sv::SvAbstarctLogger& _log;
   
 public:
-  SvSKM(clog::SvCLog &log);
+  SvSKM(sv::SvAbstarctLogger &log);
   ~SvSKM();
-  
-  
-//  idev::DeviceTypes type() const { return idev::sdtSKM; }
-  
-  bool readyRead() { return _ready_read; }
   
   bool open();
   void close();
   
-  void write(const QByteArray* data);
   void read();
   
+  bool setConfig(const dev::DeviceConfig& config);
   bool setParams(const QString& params);
   
 private:
-  QSerialPort _serial;
-
-  bool _ready_read = false;
-  
-  SKMHeader _header;
-
-  quint8 _data_type;
-  quint8 _data_length;
-  quint16 _crc;
-  quint8 _crc_tmp[2];
-  quint8 _data[512];
-  
   SvException* _exception;  
   
-//  size_t _hSize = sizeof(SKMHeader);
-  
-  QTimer _t;
-  quint8 _buf[512];
-  quint64 _buf_offset = 0;
-  quint8 _confirm[512];
+private slots:
+  void deleteThread();
+    
+};
 
-  void parse_packet();
-  void analizeData();
-  bool sendConfirmation();
+#define RESET_INTERVAL 10
+
+class SvSKMThread: public dev::SvAbstractDeviceThread
+{
+  Q_OBJECT
+
+public:
+  SvSKMThread(dev::SvAbstractDevice* device, sv::SvAbstarctLogger &log);
+  ~SvSKMThread();
+
+  void open() throw(SvException&) override;
+  void stop() override;
+
+private:
+  QSerialPort _port;
+
+  dev::SvAbstractDevice* _device;
+
+  bool is_active;
+
+  SKMHeader _header;
+  size_t _hSize = sizeof(SKMHeader);
+
+  quint8  _buf[512];
+  quint64 _buf_offset = 0;
+
+  quint8  _data_type;
+  quint8  _data_length;
+  quint8  _data[512];
+  quint16 _crc;
+  quint8  _crc_tmp[2];
+
+  quint8  _confirm[512];
+
+  QTimer  _reset_timer;
+
+  SvException _exception;
+
+
+  void run() override;
+
+  bool parse_data();
+  void send_confirmation();
 
   bool check_1F_2F(quint8 byte);
 
@@ -82,9 +107,11 @@ private:
   void func_0x02();
   void func_0x03();
 
+
 private slots:
-  void packetTimeout();
-    
+  void reset_buffer();
+
 };
+
 
 #endif // SKM_H

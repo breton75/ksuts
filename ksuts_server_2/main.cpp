@@ -14,7 +14,7 @@
 #include <QDir>
 #include <QPair>
 
-#include "../global/sv_idevice.h"
+#include "../global/sv_abstract_device.h"
 #include "../global/sql_defs.h"
 #include "../global/gen_defs.h"
 //#include "../global/dev_defs.h"
@@ -35,7 +35,7 @@
 
 SvPGDB* PG = nullptr;
 
-QMap<int, idev::SvIDevice*> DEVICES;
+QMap<int, dev::SvAbstractDevice*> DEVICES;
 QMap<int, SvStorage*> STORAGES;
 //QMap<int, SvCOB*> COBS;
 QMap<int, SvSignal*> SIGNALS;
@@ -87,7 +87,7 @@ bool readStorages();
 //bool cobToRepository(QString storage_field_name);
 bool readSignals(const CFG &cfg);
 
-idev::SvIDevice* create_device(const QSqlQuery* q);
+dev::SvAbstractDevice* create_device(const QSqlQuery* q);
 SvStorage* create_storage(QSqlQuery *q);
 //SvCOB* create_cob(const QSqlQuery* q);
 SvSignal* create_signal(const QSqlQuery* q);
@@ -504,7 +504,7 @@ bool readDevices(const CFG& cfg)
     int counter = 0;
     while(q.next()) {
        
-      idev::SvIDevice* newdev = create_device(&q);
+      dev::SvAbstractDevice* newdev = create_device(&q);
       
       if(newdev) {
 
@@ -707,15 +707,15 @@ bool readSignals(const CFG& cfg)
 }
 
 
-idev::SvIDevice* create_device(const QSqlQuery* q)
+dev::SvAbstractDevice* create_device(const QSqlQuery* q)
 {  
-  idev::SvIDevice* newdev = nullptr;
+  dev::SvAbstractDevice* newdev = nullptr;
   
-  idev::DeviceConfig config;
+  dev::DeviceConfig config;
 
   config.index = q->value("device_index").toInt();
   config.name = q->value("device_name").toString();
-  config.hardware_type = idev::HARDWARE_CODES.value(q->value("device_hardware_code").toString());
+  config.hardware_type = dev::HARDWARE_CODES.value(q->value("device_hardware_code").toString());
   config.ifc_id = q->value("device_ifc_id").toInt();
   config.ifc_name = q->value("device_ifc_name").toString();
   config.protocol_id = q->value("device_protocol_id").toInt();
@@ -732,21 +732,21 @@ idev::SvIDevice* create_device(const QSqlQuery* q)
     
     switch (config.hardware_type) {
       
-      case idev::sdtOHT:
+      case dev::OHT:
 
         newdev = new SvOHT(dbus);
         break;
         
-      case idev::sdtOPA:
-        newdev = new SvOPA(lout);
+      case dev::OPA:
+//        newdev = new SvOPA(lout);
         break;
         
-      case idev::sdtSKM:
-        newdev = new SvSKM(lout);
+      case dev::SKM:
+//        newdev = new SvSKM(lout);
         break;
 
-    case idev::sdtKTV:
-        newdev = new SvSKTV(dbus);
+    case dev::KTV:
+//        newdev = new SvSKTV(dbus);
         break;
 
       default:
@@ -843,7 +843,7 @@ bool openDevices()
     
     for(int key: DEVICES.keys()) {
       
-      idev::SvIDevice* device = DEVICES.value(key);
+      dev::SvAbstractDevice* device = DEVICES.value(key);
 
       if(!device->open()) exception.raise(QString("%1 [Индекс %2]: %3")
                                           .arg(device->config()->name)
@@ -920,7 +920,7 @@ void closeDevices()
     int counter = 0;
     for(int key: DEVICES.keys()) {
 
-      idev::SvIDevice* device = DEVICES.value(key);
+      dev::SvAbstractDevice* device = DEVICES.value(key);
 
       dbus << sv::log::llDebug << QString("  %1 (%2):").arg(device->config()->name).arg(device->config()->ifc_name) << sv::log::endi;
 

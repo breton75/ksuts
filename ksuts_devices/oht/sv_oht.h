@@ -12,8 +12,11 @@
 #endif
 
 
-#include "../global/sv_idevice.h"
-#include "../global/dev_defs.h"
+//#include "../global/sv_idevice.h"
+#include "../global/sv_abstract_device.h"
+#include "../global/device_params.h"
+
+#include "../../svlib/sv_crc.h"
 #include "../../svlib/sv_exception.h"
 #include "../../svlib/sv_clog.h"
 
@@ -31,71 +34,83 @@ struct OHTHeader
 
 //idev::SvIDevice* /*OHTSHARED_EXPORT*/ create_device(const QString& params_string);
 
-class /*OHTSHARED_EXPORT*/ SvOHT: public idev::SvIDevice
+class /*OHTSHARED_EXPORT*/ SvOHT: public dev::SvAbstractDevice
 {
+
+  Q_OBJECT
   
-    clog::SvCLog& _log;
+  sv::SvAbstarctLogger& _log;
 
 public:
-  SvOHT(clog::SvCLog &log);
+  SvOHT(sv::SvAbstarctLogger &log);
   ~SvOHT();
   
+  bool open()  override;
+  void close() override;
   
-//  idev::DeviceTypes type() const { return idev::sdtOHT_Gamma12700; }
-  
-  bool readyRead() { return _ready_read; }
-  
-  bool open();
-  void close();
-  
-//  void write(const QByteArray* data);
-  void read();
-  
-//  bool start(quint32 msecs) { Q_UNUSED(msecs); return true; }
-
-  DeviceParams* serialParams() const { return &_device_params; }
+  bool setConfig(const dev::DeviceConfig& config);
   bool setParams(const QString& params);
   
 private:
-  QSerialPort _serial;
-  
-  bool _ready_read = false;
-  
-  OHTHeader _header;
-
-  quint8 _data_type;
-  quint8 _data_length;
-  quint16 _crc;
-  quint8 _crc1;
-  quint8 _crc2;
-  quint8 _data[512];
-  
   SvException* _exception;  
-  
+
+private slots:
+  void deleteThread();
+    
+};
+
+#define RESET_INTERVAL 10
+
+class SvOHTThread: public dev::SvAbstractDeviceThread
+{
+  Q_OBJECT
+
+public:
+  SvOHTThread(dev::SvAbstractDevice* device, sv::SvAbstarctLogger &log);
+  ~SvOHTThread();
+
+  void open() throw(SvException&) override;
+  void stop() override;
+
+private:
+  QSerialPort _port;
+
+  dev::SvAbstractDevice* _device;
+
+  bool is_active;
+
+  OHTHeader _header;
   size_t _hSize = sizeof(OHTHeader);
-  
-  QTimer _t;
-  quint8 _buf[512];
+
+  quint8  _buf[512];
+  quint8  _data_type;
+  quint8  _data_length;
+  quint8  _data[512];
+  quint16 _crc;
+
   quint64 _buf_offset = 0;
-  quint8 _confirm[8];
 
-//  quint16 crc16(uchar* buf, int length);
-  void analizeData();
-  void sendConfirmation();
+  quint8  _confirm[8];
 
-  void func_0x00();
-  void func_0x77();
-  void func_0x33();
+  QTimer  _reset_timer;
+
+  SvException _exception;
+
+  bool _ready_read = false;
+
+
+  void run() override;
+
+  bool parse_data();
+  void send_confirmation();
+
   void func_0x19();
-  void func_0x02();
-  void func_0x03();
-  void func_0x04();
   void func_0x13();
   void func_0x14();
 
 private slots:
-  void packetTimeout();
-    
+  void reset_buffer();
+
 };
 
 #endif // OHT_H

@@ -13,10 +13,11 @@
 #endif
 
 
-#include "../global/sv_idevice.h"
-#include "../global/dev_defs.h"
+#include "../global/sv_abstract_device.h"
+#include "../global/device_params.h"
 #include "../../svlib/sv_exception.h"
 #include "../../svlib/sv_clog.h"
+#include "../../svlib/sv_crc.h"
 
 #pragma pack(push,1)
 struct OPAHeader
@@ -32,13 +33,13 @@ struct OPAHeader
 
 //idev::SvIDevice* /*OHTSHARED_EXPORT*/ create_device(const QString& params_string);
 
-class /*OHTSHARED_EXPORT*/ SvOPA: public idev::SvIDevice
+class /*OHTSHARED_EXPORT*/ SvOPA: public dev::SvAbstractDevice
 {
 
-    clog::SvCLog& _log;
+    sv::SvAbstarctLogger& _log;
 
 public:
-  SvOPA(clog::SvCLog& log);
+  SvOPA(sv::SvAbstarctLogger &log);
   ~SvOPA();
   
 //  virtual idev::DeviceTypes type() { return deviceType(); }

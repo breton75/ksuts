@@ -12,10 +12,11 @@
 #endif
 
 
-#include "../global/sv_idevice.h"
-#include "../global/dev_defs.h"
+#include "../global/sv_abstract_device.h"
+#include "../global/device_params.h"
 #include "../../svlib/sv_exception.h"
 #include "../../svlib/sv_clog.h"
+#include "../../svlib/sv_crc.h"
 
 #define EMULATE_MODE
 
@@ -31,14 +32,14 @@ struct SKTVHeader
 
 //idev::SvIDevice* /*OHTSHARED_EXPORT*/ create_device(const QString& params_string);
 
-class /*OHTSHARED_EXPORT*/ SvSKTV: public idev::SvIDevice
+class /*OHTSHARED_EXPORT*/ SvSKTV: public dev::SvAbstractDevice
 {
   Q_OBJECT
 
-  clog::SvCLog& _log;
+  sv::SvAbstarctLogger& _log;
 
 public:
-  SvSKTV(clog::SvCLog& log);
+  SvSKTV(sv::SvAbstarctLogger& log);
   ~SvSKTV();
   
   bool readyRead() { return _ready_read; }
