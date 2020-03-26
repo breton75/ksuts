@@ -23,10 +23,13 @@ SvSignalList::SvSignalList(int deviceIndex, QWidget *parent) :
 
     serr = PGDB->execSQL(QString(SQL_SELECT_ONE_DEVICE).arg(_device_index), &q);
 
-    if(serr.type() != QSqlError::NoError) _exception.raise(serr.text());
+    if(serr.type() != QSqlError::NoError)
+      _exception.raise(serr.text());
 
+    q.first();
     _device_name = q.value("device_name").toString();
-    _hardware_code = q.value("hardware_code").toString();
+    _hardware_code = q.value("device_hardware_code").toString();
+
   }
 
   catch(SvException& e) {

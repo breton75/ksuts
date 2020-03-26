@@ -19,7 +19,7 @@
 //#include "sv_device_config.h"
 
 #include "../global/sql_defs.h"
-#include "../global/dev_defs.h"
+#include "../global/device_params.h"
 #include "../global/sv_serialeditor.h"
 
 #include "../../svlib/sv_settings.h"

@@ -13,7 +13,7 @@
 
 
 //#include "../global/sv_idevice.h"
-#include "../global/sv_abstract_device.h"
+#include "../global/sv_abstract_serial_device.h"
 #include "../global/device_params.h"
 
 #include "../../svlib/sv_crc.h"
@@ -34,72 +34,74 @@ struct OHTHeader
 
 //idev::SvIDevice* /*OHTSHARED_EXPORT*/ create_device(const QString& params_string);
 
-class /*OHTSHARED_EXPORT*/ SvOHT: public dev::SvAbstractDevice
+class /*OHTSHARED_EXPORT*/ SvOHT: public dev::SvAbstractSerialDevice
 {
 
   Q_OBJECT
   
-  sv::SvAbstarctLogger& _log;
+//  sv::SvAbstarctLogger& _log;
 
 public:
   SvOHT(sv::SvAbstarctLogger &log);
-  ~SvOHT();
+//  ~SvOHT();
   
-  bool open()  override;
-  void close() override;
+//  bool open()  override;
+//  void close() override;
   
-  bool setConfig(const dev::DeviceConfig& config);
-  bool setParams(const QString& params);
+//  bool setConfig(const dev::DeviceConfig& config);
+//  bool setParams(const QString& params);
   
-private:
-  SvException* _exception;  
+//private:
+//  SvException* _exception;
 
-private slots:
-  void deleteThread();
+//private slots:
+//  void deleteThread();
+
+private:
+  void create_new_thread();
     
 };
 
 #define RESET_INTERVAL 10
 
-class SvOHTThread: public dev::SvAbstractDeviceThread
+class SvOHTThread: public dev::SvAbstractSerialDeviceThread
 {
   Q_OBJECT
 
 public:
   SvOHTThread(dev::SvAbstractDevice* device, sv::SvAbstarctLogger &log);
-  ~SvOHTThread();
+//  ~SvOHTThread();
 
-  void open() throw(SvException&) override;
-  void stop() override;
+//  void open() throw(SvException&) override;
+//  void stop() override;
 
 private:
-  QSerialPort _port;
+//  QSerialPort _port;
 
-  dev::SvAbstractDevice* _device;
+//  dev::SvAbstractDevice* _device;
 
-  bool is_active;
+//  bool is_active;
 
   OHTHeader _header;
   size_t _hSize = sizeof(OHTHeader);
 
-  quint8  _buf[512];
+//  quint8  _buf[512];
+//  quint64 _buf_offset = 0;
+
   quint8  _data_type;
   quint8  _data_length;
   quint8  _data[512];
   quint16 _crc;
 
-  quint64 _buf_offset = 0;
-
   quint8  _confirm[8];
 
-  QTimer  _reset_timer;
+//  QTimer  _reset_timer;
 
-  SvException _exception;
-
-  bool _ready_read = false;
+//  SvException _exception;
 
 
-  void run() override;
+//  void run() override;
+  void treat_data();
 
   bool parse_data();
   void send_confirmation();
@@ -108,8 +110,8 @@ private:
   void func_0x13();
   void func_0x14();
 
-private slots:
-  void reset_buffer();
+//private slots:
+//  void reset_buffer();
 
 };
 

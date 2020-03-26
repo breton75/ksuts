@@ -105,6 +105,28 @@ void SvSKMThread::stop()
   while(this->isRunning()) qApp->processEvents();
 }
 
+void SvSKMThread::open() throw(SvException&)
+{
+  _port.setPortName   (_device->params()->portname);
+  _port.setBaudRate   (_device->params()->baudrate);
+  _port.setStopBits   (_device->params()->stopbits);
+  _port.setFlowControl(_device->params()->flowcontrol);
+  _port.setDataBits   (_device->params()->databits);
+  _port.setParity     (_device->params()->parity);
+
+  if(!_port.open(QIODevice::ReadWrite))
+    throw _exception.assign(_port.errorString());
+
+  // с заданным интервалом сбрасываем буфер, чтобы отсекать мусор и битые пакеты
+  _reset_timer.setInterval(RESET_INTERVAL);
+  connect(&_port, SIGNAL(readyRead()), &_reset_timer, SLOT(start()));
+  connect(&_reset_timer, &QTimer::timeout, this, &SvSKMThread::reset_buffer);
+
+  // именно после open!
+  _port.moveToThread(this);
+
+}
+
 void SvSKMThread::reset_buffer()
 {
     _buf_offset = 0;
@@ -116,7 +138,7 @@ void SvSKMThread::run()
 
   while(is_active) {
 
-    while(!_port.waitForReadyRead(1)) {
+    while(_port.waitForReadyRead(1)) {
 
     if(_buf_offset > 512)
         reset_buffer();
@@ -126,8 +148,9 @@ void SvSKMThread::run()
     _buf_offset += _port.read((char*)(&_buf[0] + _buf_offset), 512 - _buf_offset);
 
     // для сбора реальных логов
-//    if(p_config.debug_mode)
-      p_log << sv::log::llDebug2
+    if(_device->config()->debug_mode)
+      p_log << sv::log::mtDebug
+            << sv::log::llDebug2
             << sv::log::TimeZZZ << sv::log::in
             << QString(QByteArray((const char*)&_buf[cur_offset], _buf_offset - cur_offset).toHex()) << sv::log::endl;
 
@@ -149,8 +172,9 @@ void SvSKMThread::run()
       // ищем признак конца пакета
       if((_buf[_buf_offset - 1] == 0x55) && (_buf[_buf_offset - 2] == 0x2F)) {
 
-//          if(p_config.debug_mode)
-            p_log << sv::log::llDebug
+          if(_device->config()->debug_mode)
+            p_log << sv::log::mtDebug
+                  << sv::log::llDebug
                   << sv::log::TimeZZZ << sv::log::in
                   << QString(QByteArray((const char*)&_buf[0], _buf_offset).toHex()) << sv::log::endl;
 
@@ -212,10 +236,10 @@ bool SvSKMThread::parse_data()
     // длина crc может увеличиться за счет удвоения управляющих байтов
     int crc_length = 1;
     memcpy(&_crc_tmp[1], &_buf[0] + sizeof(_header) + _data_length - crc_length++, 1);
-    if(check_1F_2F(_crc_tmp[1])) crc_length++;
+    if(check_1F_2F_55(_crc_tmp[1])) crc_length++;
 
     memcpy(&_crc_tmp[0], &_buf[0] + sizeof(_header) + _data_length - crc_length  , 1);
-    if(check_1F_2F(_crc_tmp[0])) crc_length++;
+    if(check_1F_2F_55(_crc_tmp[0])) crc_length++;
 
     memcpy(&_crc, &_crc_tmp[0], 2);
 
@@ -266,11 +290,11 @@ void SvSKMThread::send_confirmation()
 
     int crc_length = 0;
     _confirm[crc_offset + crc_length++] = crc & 0xFF;
-    if(check_1F_2F(quint8(crc & 0xFF)))
+    if(check_1F_2F_55(quint8(crc & 0xFF)))
         _confirm[crc_offset + crc_length++] = crc & 0xFF;
 
     _confirm[crc_offset + crc_length++] = crc >> 8;
-    if(check_1F_2F(quint8(crc >> 8)))
+    if(check_1F_2F_55(quint8(crc >> 8)))
         _confirm[crc_offset + crc_length++] = crc & 0xFF;
 
     _confirm[crc_offset + crc_length + 1] = 0x2F;
@@ -285,9 +309,9 @@ void SvSKMThread::send_confirmation()
 
 }
 
-bool SvSKMThread::check_1F_2F(quint8 byte)
+bool SvSKMThread::check_1F_2F_55(quint8 byte)
 {
-    return ((byte == 0x1F) || (byte == 0x2F));
+    return ((byte == 0x1F) || (byte == 0x2F) || (byte == 0x55));
 }
 
 void SvSKMThread::func_0x01()
@@ -304,11 +328,11 @@ void SvSKMThread::func_0x01()
 //    QString f = "";
 //    qDebug() << "vin" << vin << "factors_cnt" << factors_cnt;
 
-    if(check_1F_2F(factors_cnt)) offset++;
+    if(check_1F_2F_55(factors_cnt)) offset++;
     while(factors_cnt) {
 
         quint8 factor = _data[offset++];
-        if(check_1F_2F(factor)) offset++;
+        if(check_1F_2F_55(factor)) offset++;
 
         factors_cnt--;
 
@@ -328,8 +352,8 @@ void SvSKMThread::func_0x02()
   if(_data_length >= 3) {
 
     int b0 = 0;
-    int b1 = check_1F_2F(_data[b0]) ? b0 + 2 : b0 + 1;
-    int b2 = check_1F_2F(_data[b1]) ? b1 + 2 : b1 + 1;
+    int b1 = check_1F_2F_55(_data[b0]) ? b0 + 2 : b0 + 1;
+    int b2 = check_1F_2F_55(_data[b1]) ? b1 + 2 : b1 + 1;
 
     _device->setSignalValue(BI83_SS4_VD1 , CALC_VD1( ~_data[b0]) );
     _device->setSignalValue(BI83_SS4_VD2 , CALC_VD2( ~_data[b0]) );

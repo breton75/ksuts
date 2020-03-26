@@ -6,7 +6,7 @@
 #include "sv_logon.h"
 #include "../../svlib/sv_settings.h"
 #include "../../svlib/sv_log.h"
-#include "../../svlib/sv_abstract_message_logger.h"
+#include "../../svlib/sv_abstract_logger.h"
 
 #include "../global/gen_defs.h"
 

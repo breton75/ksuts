@@ -5,10 +5,10 @@
 
 #include <QtCore/qglobal.h>
 
-#if defined(OHT_LIBRARY)
-#  define OHTSHARED_EXPORT Q_DECL_EXPORT
+#if defined(SKM_LIBRARY)
+#  define SKMSHARED_EXPORT Q_DECL_EXPORT
 #else
-#  define OHTSHARED_EXPORT Q_DECL_IMPORT
+#  define SKMSHARED_EXPORT Q_DECL_IMPORT
 #endif
 
 
@@ -44,8 +44,6 @@ public:
   bool open();
   void close();
   
-  void read();
-  
   bool setConfig(const dev::DeviceConfig& config);
   bool setParams(const QString& params);
   
@@ -56,6 +54,7 @@ private slots:
   void deleteThread();
     
 };
+
 
 #define RESET_INTERVAL 10
 
@@ -101,7 +100,7 @@ private:
   bool parse_data();
   void send_confirmation();
 
-  bool check_1F_2F(quint8 byte);
+  bool check_1F_2F_55(quint8 byte);
 
   void func_0x01();
   void func_0x02();

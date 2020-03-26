@@ -18,7 +18,7 @@ DEFINES += APP_VERSION=\\\"$$VERSION\\\"
 DEFINES += VERSION_2
 
 DEFINES += APP_DEBUG=1
-DEFINES += GUI_APP
+#DEFINES += GUI_APP
 
 # The following define makes your compiler emit warnings if you use
 # any feature of Qt which has been marked as deprecated (the exact warnings
@@ -51,7 +51,7 @@ SOURCES += \
     ../global/sv_serialeditor.cpp \
     ../../svlib/sv_dbus.cpp \
     ../../svlib/sv_clog.cpp \
-    ../../svlib/sv_abstract_message_logger.cpp \
+    ../../svlib/sv_abstract_logger.cpp \
     ../../svlib/sv_fnt.cpp
 
 HEADERS += \
@@ -81,7 +81,7 @@ HEADERS += \
     ../global/sv_serialeditor.h \
     ../../svlib/sv_dbus.h \
     ../../svlib/sv_clog.h \
-    ../../svlib/sv_abstract_message_logger.h \
+    ../../svlib/sv_abstract_logger.h \
     ../../svlib/sv_fnt.h
 
 FORMS += \
