@@ -23,7 +23,7 @@
 #include "../ksuts_devices/oht/sv_oht.h"
 #include "../ksuts_devices/opa/sv_opa.h"
 #include "../ksuts_devices/skm/sv_skm.h"
-#include "../ksuts_devices/sktv/sv_sktv.h"
+#include "../ksuts_devices/sktv/sv_ktv.h"
 
 #include "../../svlib/sv_sqlite.h"
 #include "../../svlib/sv_exception.h"
@@ -40,10 +40,12 @@ QMap<int, SvStorage*> STORAGES;
 //QMap<int, SvCOB*> COBS;
 QMap<int, SvSignal*> SIGNALS;
 
-sv::SvConcoleLogger lout;
+QList<sv::SvAbstarctLogger*> LOGGERS;
+
 SvException exception;
 
-sv::SvDBus& dbus = sv::SvDBus::instance();
+//sv::SvConcoleLogger dbus;
+sv::SvDBus dbus;
 
 const OptionStructList AppOptions = {
     {{OPTION_DB_HOST}, "Адрес сервера базы данных.","localhost", "", ""},
@@ -64,33 +66,22 @@ const OptionStructList AppOptions = {
     {{OPTION_LOG_ROTATION_SIZE}, "Максимальный размер одного файла логов.", "10MB", "", ""}
 };
 
-//struct CFG {
-//    QString db_name;
-//    QString db_host;
-//    quint16 db_port;
-//    QString db_user;
-//    QString db_pass;
-//    quint16 soeg_port;
-//    clog::LogOptions log_options;
-//    bool single_device_mode;
-//    int single_device_index;
-//};
+bool parse_params(const QStringList &args, AppConfig& cfg, const QString& file_name);
 
-
-bool parse_params(const QStringList &args, CFG& cfg, const QString& file_name);
-
-bool initConfig(const CFG &cfg);
+bool initConfig(const AppConfig &cfg);
 void close_db();
-bool readDevices(const CFG& cfg);
+bool readDevices(const AppConfig &cfg);
 bool readStorages();
 //bool readCOBs();
 //bool cobToRepository(QString storage_field_name);
-bool readSignals(const CFG &cfg);
+bool readSignals(const AppConfig &cfg);
 
 dev::SvAbstractDevice* create_device(const QSqlQuery* q);
 SvStorage* create_storage(QSqlQuery *q);
 //SvCOB* create_cob(const QSqlQuery* q);
 SvSignal* create_signal(const QSqlQuery* q);
+
+sv::SvAbstarctLogger* create_logger(const sv::log::Options& options, const QString& sender);
 
 bool openDevices();
 bool initStorages();
@@ -102,11 +93,9 @@ void closeDevices();
 void deinitStorages();
 void deleteSignals();
 
-typedef sv::log::sender dSender;
-
 //bool create_tcp_server(const CFG &cfg);
 
-bool parse_params(const QStringList& args, CFG& cfg, const QString& file_name)
+bool parse_params(const QStringList& args, AppConfig &cfg, const QString& file_name)
 {
   try {
 
@@ -258,7 +247,7 @@ int main(int argc, char *argv[])
 
   QCoreApplication a(argc, argv);
 
-  CFG cfg;
+  AppConfig cfg;
 
   try {
 
@@ -271,12 +260,13 @@ int main(int argc, char *argv[])
         exception.raise(-1, "Ошибка разбора командной строки");
 
     dbus.setOptions(cfg.log_options);
+    dbus.setSender("main");
 
 //    if(cfg.single_device_mode)
 //      lout.setFileNamePrefix(QString("dev%1").arg(cfg.single_device_index));
 
 
-    dbus << sv::log::sender("dsds") << sv::log::llDebug
+    dbus << sv::log::llDebug
          << "db_host=" << cfg.db_host << "\ndb_port=" << cfg.db_port
          << "\ndb_name=" << cfg.db_name << "\ndb_user=" << cfg.db_user << "\ndb_pass=" << cfg.db_pass
          << "\nlogging=" << (cfg.log_options.logging ? "on" : "off")
@@ -434,7 +424,7 @@ void close()
   deleteSignals();
 }
 
-bool initConfig(const CFG& cfg)
+bool initConfig(const AppConfig& cfg)
 {
   
   try {
@@ -482,7 +472,7 @@ bool initConfig(const CFG& cfg)
 }
 
 
-bool readDevices(const CFG& cfg)
+bool readDevices(const AppConfig& cfg)
 {
   
   dbus << sv::log::mtDebug << sv::log::llInfo << QString("Читаем устройства:") << sv::log::endl;
@@ -509,6 +499,15 @@ bool readDevices(const CFG& cfg)
       if(newdev) {
 
         DEVICES.insert(newdev->config()->index, newdev);
+
+
+        sv::SvAbstarctLogger* logger = create_logger(cfg.log_options,
+                                                           QString("%1%2").arg(newdev->config()->hardware_name)
+                                                           .arg(newdev->config()->index));
+        LOGGERS.append(logger);
+
+        newdev->setLogger(*logger);
+
 
         dbus << sv::log::llDebug << QString("  %1 [Индекс %2] %3").
                 arg(newdev->config()->name).
@@ -600,7 +599,7 @@ bool readStorages()
 }
 
 
-bool readSignals(const CFG& cfg)
+bool readSignals(const AppConfig &cfg)
 {
   dbus << sv::log::llInfo << QString("Читаем сигналы:") << sv::log::endl;
   
@@ -614,7 +613,7 @@ bool readSignals(const CFG& cfg)
     
     int counter = 0;
     while(q->next()) { 
-       
+
       SvSignal* newsig = nullptr;
 
       if(!cfg.single_device_mode) {
@@ -632,48 +631,50 @@ bool readSignals(const CFG& cfg)
 
       
       if(newsig) {
-        
+
+        sv::log::Level lvl = sv::log::llAll;
+
         SIGNALS.insert(newsig->index(), newsig);
         
-        dbus << sv::log::llAll <<  QString("  %1 [Индекс %2]").arg(newsig->params()->name).arg(newsig->index());
+        dbus << lvl <<  QString("  %1 [Индекс %2]").arg(newsig->params()->name).arg(newsig->index());
 
         // раскидываем сигналы по устройствам
         if(DEVICES.contains(newsig->params()->device_index)) {
 
+
           DEVICES.value(newsig->params()->device_index)->addSignal(newsig);
 
-          dbus << sv::log::llAll << QString("%1 %2").arg(QString(31 - newsig->params()->name.length(), QChar('-'))).arg(DEVICES.value(newsig->params()->device_index)->config()->name);
+          dbus << lvl << QString("%1 %2").arg(QString(31 - newsig->params()->name.length(), QChar('-'))).arg(DEVICES.value(newsig->params()->device_index)->config()->name);
 
+          counter++;
+
+          // раскидываем сигналы по хранилищам
+          if(STORAGES.contains(0) && newsig->params()->storage0_linked) {
+
+            STORAGES.value(0)->addSignal(newsig);
+
+            dbus << lvl << QString("%1 %2").arg(QString(6, QChar('-'))).arg(STORAGES.value(0)->params()->name);
+
+          }
+
+          if(STORAGES.contains(1) && newsig->params()->storage1_linked) {
+
+            STORAGES.value(1)->addSignal(newsig);
+
+            dbus << lvl <<  QString("%1 %2").arg(QString(6, QChar('-'))).arg(STORAGES.value(1)->params()->name);
+
+          }
+
+          if(STORAGES.contains(2) && newsig->params()->storage2_linked) {
+
+            STORAGES.value(2)->addSignal(newsig);
+
+            dbus << lvl <<  QString("%1 %2").arg(QString(6, QChar('-'))).arg(STORAGES.value(2)->params()->name);
+
+          }
         }
 
-        // раскидываем сигналы по хранилищам
-        if(STORAGES.contains(0) && newsig->params()->storage0_linked) {
-
-          STORAGES.value(0)->addSignal(newsig);
-
-          dbus << sv::log::llAll << QString("%1 %2").arg(QString(6, QChar('-'))).arg(STORAGES.value(0)->params()->name);
-
-        }
-
-        if(STORAGES.contains(1) && newsig->params()->storage1_linked) {
-
-          STORAGES.value(1)->addSignal(newsig);
-
-          dbus << sv::log::llAll <<  QString("%1 %2").arg(QString(6, QChar('-'))).arg(STORAGES.value(1)->params()->name);
-
-        }
-
-        if(STORAGES.contains(2) && newsig->params()->storage2_linked) {
-
-          STORAGES.value(2)->addSignal(newsig);
-
-          dbus << sv::log::llAll <<  QString("%1 %2").arg(QString(6, QChar('-'))).arg(STORAGES.value(2)->params()->name);
-
-        }
-
-        dbus << sv::log::llAll << sv::log::endl;
-
-        counter++;
+        dbus << lvl << sv::log::endl;
 
       }
       
@@ -725,7 +726,6 @@ dev::SvAbstractDevice* create_device(const QSqlQuery* q)
   config.debug_mode = q->value("device_debug").toBool();
   config.timeout = q->value("device_timeout").toUInt();
   config.device_params_string = q->value("device_params").toString();
-
   QString params = q->value("device_params").toString();
   
   try {
@@ -733,20 +733,19 @@ dev::SvAbstractDevice* create_device(const QSqlQuery* q)
     switch (config.hardware_type) {
       
       case dev::OHT:
-
-        newdev = new SvOHT(dbus);
+        newdev = new SvOHT();
         break;
         
       case dev::OPA:
-//        newdev = new SvOPA(lout);
+        newdev = new SvOPA();
         break;
         
       case dev::SKM:
-//        newdev = new SvSKM(lout);
+        newdev = new SvSKM();
         break;
 
     case dev::KTV:
-//        newdev = new SvSKTV(dbus);
+        newdev = new SvKTV();
         break;
 
       default:
@@ -757,18 +756,18 @@ dev::SvAbstractDevice* create_device(const QSqlQuery* q)
     
     if(!newdev->setConfig(config)) exception.raise(newdev->lastError());
     if(!newdev->setParams(params)) exception.raise(newdev->lastError());
-    
+
     return newdev;
     
   }
   
   catch(SvException& e) {
     
+    dbus << sv::log::llError << QString("Ошибка: %1\n").arg(e.error) << sv::log::endl;
     if(newdev)
       delete newdev;
-    
-    dbus << sv::log::llError << QString("Ошибка: %1\n").arg(e.error) << sv::log::endl;
-    
+
+
     return Q_NULLPTR;
     
   }
@@ -792,7 +791,7 @@ SvStorage* create_storage(QSqlQuery* q)
   
   try {
     
-    newstorage = new SvStorage(params, lout);
+    newstorage = new SvStorage(params, dbus);
     
     return newstorage;
     
@@ -833,6 +832,14 @@ SvSignal* create_signal(const QSqlQuery* q)
     
   return new SvSignal(params);;
     
+}
+
+sv::SvAbstarctLogger* create_logger(const sv::log::Options& options, const QString& sender)
+{
+  sv::SvAbstarctLogger* l = new sv::SvDBus(options);
+  l->setSender(sender);
+
+  return l;
 }
 
 bool openDevices()
@@ -992,5 +999,16 @@ void deleteSignals()
   }
 
   dbus << sv::log::llInfo << QString("OK [Удалено %1]\n").arg(counter)  << sv::log::endl;
+
+}
+
+void deleteLoggers()
+{
+  dbus << sv::log::llInfo << "Удаляем логгеры:" << sv::log::endl;
+
+  for(sv::SvAbstarctLogger* logger: LOGGERS)
+    delete logger;
+
+  dbus << sv::log::llInfo << QString("OK\n")  << sv::log::endl;
 
 }

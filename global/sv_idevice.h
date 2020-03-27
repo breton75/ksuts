@@ -10,7 +10,7 @@
 #include <QDebug>
 
 #include "sv_signal.h"
-#include "dev_defs.h"
+#include "device_params.h"
 
 namespace idev {
 
@@ -33,9 +33,9 @@ namespace idev {
   };
 
   const QMap<QString, HardwareTypes> HARDWARE_CODES = {{"OHT", sdtOHT},
-                                                     {"OPA", sdtOPA},
-                                                     {"SKM", sdtSKM},
-                                                     {"KTV", sdtKTV}};
+                                                       {"OPA", sdtOPA},
+                                                       {"SKM", sdtSKM},
+                                                       {"KTV", sdtKTV}};
 
 //  const QMap<HardwareTypes, int> OPA_REGISTERS = {{sdtOPA_SS1_119,   0x0400},
 //                                                {sdtOPA_SS1_122,   0x04A0},
@@ -92,7 +92,9 @@ class idev::SvIDevice : public QObject
     Q_OBJECT
     
 public:
-  SvIDevice() { clearSignals(); }
+  SvIDevice(const idev::HardwareTypes hardware_type):
+    p_hardware_type(hardware_type)
+  { clearSignals(); }
   
   virtual ~SvIDevice() { }
   
@@ -117,15 +119,15 @@ public:
       p_lost_epoch = QDateTime::currentMSecsSinceEpoch() + p_config.timeout;
 //        qDebug() << "timeout:" << _config.timeout << " device:" << _config.name << " lost_epoch:" << _lost_epoch;
       foreach (SvSignal* s, p_signals.values())
-        s->setDeviceLosEpoch(p_lost_epoch);
+        s->setDeviceLostEpoch(p_lost_epoch);
   }
 
   bool isAlive() { return p_lost_epoch > quint64(QDateTime::currentMSecsSinceEpoch());  }
 
-  virtual idev::DeviceConfig* config() const { return &p_config; }
-  virtual void setConfig(const idev::DeviceConfig& config) { p_config = config; }
+  virtual const idev::DeviceConfig* config() const { return &p_config; }
+  virtual bool setConfig(const idev::DeviceConfig& config) { p_config = config; return true; }
   
-  virtual DeviceParams* params() const { return &p_device_params; }
+  virtual const dev::DeviceParams* params() const { return &p_device_params; }
   virtual bool setParams(const QString& params)  = 0; //{ _params = params; }
   
 //  virtual void write(const QByteArray* data) = 0;
@@ -133,7 +135,7 @@ public:
   
   void addSignal(SvSignal* signal) { p_signals.insert(signal->params()->name, signal); }
   void clearSignals() { p_signals.clear(); }
-  QMap<QString, SvSignal*>* Signals() const { return &p_signals; }
+  const QMap<QString, SvSignal*>* Signals() const { return &p_signals; }
   int signalsCount() { return p_signals.count(); }
   
   void setSignalValue(const QString SIGNAL_NAME, qreal VALUE)
@@ -164,7 +166,7 @@ public:
     
 protected:
   idev::DeviceConfig p_config;
-  DeviceParams       p_device_params;
+  dev::DeviceParams  p_device_params;
   
   QMap<QString, SvSignal*> p_signals;
   

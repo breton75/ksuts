@@ -1,8 +1,8 @@
 ﻿#include "sv_abstract_serial_device.h"
 
-dev::SvAbstractSerialDevice::SvAbstractSerialDevice(dev::HardwareType type, sv::SvAbstarctLogger &log):
-  dev::SvAbstractDevice(type),
-  p_log(log)
+dev::SvAbstractSerialDevice::SvAbstractSerialDevice(dev::HardwareType type):
+  dev::SvAbstractDevice(type)
+//  p_log(log)
 {
 
 }
@@ -41,6 +41,11 @@ bool dev::SvAbstractSerialDevice::setParams(const QString& params)
   }
 }
 
+void dev::SvAbstractSerialDevice::setLogger(const sv::SvAbstarctLogger& logger)
+{
+  p_logger = logger;
+}
+
 bool dev::SvAbstractSerialDevice::open()
 {
   try {
@@ -57,7 +62,8 @@ bool dev::SvAbstractSerialDevice::open()
 
   } catch(SvException& e) {
 
-    p_log << sv::log::mtError << sv::log::llError << e.error << sv::log::endl;
+    p_last_error = e.error;
+//    p_log << sv::log::mtError << sv::log::llError << e.error << sv::log::endl;
 
     deleteThread();
 
@@ -85,8 +91,8 @@ void dev::SvAbstractSerialDevice::deleteThread()
 
 
 /**         SvAbstractSerialDeviceThread         **/
-dev::SvAbstractSerialDeviceThread::SvAbstractSerialDeviceThread(dev::SvAbstractDevice *device, sv::SvAbstarctLogger &log):
-  dev::SvAbstractDeviceThread(log),
+dev::SvAbstractSerialDeviceThread::SvAbstractSerialDeviceThread(dev::SvAbstractDevice *device):
+  dev::SvAbstractDeviceThread(),
   p_device(device),
   is_active(false)
 {
@@ -106,12 +112,12 @@ void dev::SvAbstractSerialDeviceThread::stop()
 
 void dev::SvAbstractSerialDeviceThread::open() throw(SvException&)
 {
-  p_port.setPortName   (p_device->params()->portname);
-  p_port.setBaudRate   (p_device->params()->baudrate);
-  p_port.setStopBits   (p_device->params()->stopbits);
-  p_port.setFlowControl(p_device->params()->flowcontrol);
-  p_port.setDataBits   (p_device->params()->databits);
-  p_port.setParity     (p_device->params()->parity);
+  p_port.setPortName   (p_device->params()->serialParams.portname);
+  p_port.setBaudRate   (p_device->params()->serialParams.baudrate);
+  p_port.setStopBits   (p_device->params()->serialParams.stopbits);
+  p_port.setFlowControl(p_device->params()->serialParams.flowcontrol);
+  p_port.setDataBits   (p_device->params()->serialParams.databits);
+  p_port.setParity     (p_device->params()->serialParams.parity);
 
   if(!p_port.open(QIODevice::ReadWrite))
     throw p_exception.assign(p_port.errorString());
@@ -142,19 +148,12 @@ void dev::SvAbstractSerialDeviceThread::run()
       if(p_buf_offset > 512)
         reset_buffer();
 
-      quint64 cur_offset = p_buf_offset;
+      p_bytes_readed = p_port.read((char*)(&p_buf[0] + p_buf_offset), 512 - p_buf_offset);
 
-      p_buf_offset += p_port.read((char*)(&p_buf[0] + p_buf_offset), 512 - p_buf_offset);
-
-      // для сбора реальных логов
-      if(p_device->config()->debug_mode)
-        p_log << sv::log::mtDebug
-              << sv::log::llDebug2
-              << sv::log::TimeZZZ << sv::log::in
-              << QString(QByteArray((const char*)&p_buf[cur_offset], p_buf_offset - cur_offset).toHex()) << sv::log::endl;
+      p_buf_offset += p_bytes_readed;
 
 
-      treat_data();
+      parse();
 
 
     }

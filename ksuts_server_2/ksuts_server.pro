@@ -35,12 +35,13 @@ SOURCES += main.cpp \
     sv_storage.cpp \
     ../ksuts_devices/opa/sv_opa.cpp \
     ../ksuts_devices/skm/sv_skm.cpp \
-    ../ksuts_devices/sktv/sv_sktv.cpp \
     ../../svlib/sv_config.cpp \
     ../../svlib/sv_fnt.cpp \
     sv_storagewatcher.cpp \
     ../../svlib/sv_dbus.cpp \
-    ../../svlib/sv_abstract_message_logger.cpp
+    ../../svlib/sv_abstract_logger.cpp \
+    ../ksuts_devices/sktv/sv_ktv.cpp \
+    ../global/sv_abstract_serial_device.cpp
 
 HEADERS += \
     ../../svlib/sv_exception.h \
@@ -56,13 +57,15 @@ HEADERS += \
     ../ksuts_devices/opa/sv_opa.h \
     ../ksuts_devices/skm/sv_skm.h \
     ../ksuts_devices/skm/skm_defs.h \
-    ../ksuts_devices/sktv/sktv_defs.h \
-    ../ksuts_devices/sktv/sv_sktv.h \
     ../../svlib/sv_config.h \
     ../../svlib/sv_fnt.h \
     sv_storagewatcher.h \
     ../../svlib/sv_dbus.h \
-    ../../svlib/sv_abstract_message_logger.h \
     ../global/sv_abstract_device.h \
     ../../svlib/sv_crc.h \
-    ../global/device_params.h
+    ../global/device_params.h \
+    ../ksuts_devices/sktv/sv_ktv.h \
+    ../ksuts_devices/sktv/ktv_defs.h \
+    ../../svlib/sv_abstract_logger.h \
+    ../global/sv_abstract_serial_device.h \
+    ../../svlib/sv_serial_params.h

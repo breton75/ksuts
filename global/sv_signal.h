@@ -56,7 +56,7 @@ public:
   qreal value() { return _value; }// _params.data_type == dtInt ? _value.toInt() : _value.toFloat();  }
   bool isAlive() { return _lost_epoch > quint64(QDateTime::currentMSecsSinceEpoch()); }
 
-  void setDeviceLosEpoch(const quint64 lost_epoch) { _device_lost_epoch = lost_epoch; }
+  void setDeviceLostEpoch(const quint64 lost_epoch) { _device_lost_epoch = lost_epoch; }
   bool isDeviceAlive() { return _device_lost_epoch > quint64(QDateTime::currentMSecsSinceEpoch()); }
 
   bool operator==(SvSignal& other) const

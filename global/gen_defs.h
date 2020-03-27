@@ -29,7 +29,7 @@
 #define OPTION_TEMPLATES_DIRECTORY       "templates_directory"
 #define OPTION_PATH_TO_POSTGRES_BIN      "postgres_bin_path"
 
-struct CFG {
+struct AppConfig {
     QString db_name;
     QString db_host;
     quint16 db_port;
@@ -38,7 +38,7 @@ struct CFG {
     quint16 soeg_port;
     bool single_device_mode;
     int single_device_index;
-    clog::LogOptions log_options;
+    sv::log::Options log_options;
     QString autorun_cfg_file;
     QString templates_dir;
     QString postgres_bin_path;

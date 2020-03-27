@@ -9,7 +9,7 @@
 #include <QTimer>
 
 #include "../../svlib/sv_exception.h"
-#include "../../svlib/sv_clog.h"
+#include "../../svlib/sv_abstract_logger.h"
 
 #include "sv_signal.h"
 #include "device_params.h"
@@ -33,6 +33,7 @@ namespace dev {
   {
     int index = -1;
     QString name = "";
+    QString hardware_name = "";
     HardwareType hardware_type = HardwareType::UNDEFINED;
     int ifc_id = -1;
     QString ifc_name = "";
@@ -74,6 +75,7 @@ public:
 
   virtual bool setConfig(const dev::DeviceConfig& config) = 0;
   virtual bool setParams(const QString& params)  = 0;
+  virtual void setLogger(const sv::SvAbstarctLogger& logger)  = 0;
 
   virtual const dev::DeviceConfig* config() const { return &p_config; }
   virtual const dev::DeviceParams* params() const { return &p_params; }
@@ -146,8 +148,7 @@ class dev::SvAbstractDeviceThread: public QThread
   Q_OBJECT
   
 public:
-  SvAbstractDeviceThread(sv::SvAbstarctLogger& logger):
-    p_log(logger)
+  SvAbstractDeviceThread()
   {  }
 
 //  ~SvAbstractDeviceThread() = 0;
@@ -156,7 +157,7 @@ public:
   virtual void stop() = 0;
   
 protected:
-  sv::SvAbstarctLogger& p_log;
+//  sv::SvAbstarctLogger& p_log;
 
 
 //signals:

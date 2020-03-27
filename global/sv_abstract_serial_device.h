@@ -21,18 +21,20 @@ class dev::SvAbstractSerialDevice : public dev::SvAbstractDevice
   Q_OBJECT
 
 public:
-  SvAbstractSerialDevice(dev::HardwareType type, sv::SvAbstarctLogger &log);
+  SvAbstractSerialDevice(dev::HardwareType type);
   ~SvAbstractSerialDevice();
 
   bool open();
   void close();
 
-  bool setConfig(const dev::DeviceConfig& config);
-  bool setParams(const QString& params);
+  virtual bool setConfig(const dev::DeviceConfig& config);
+  virtual bool setParams(const QString& params);
+  virtual void setLogger(const sv::SvAbstarctLogger& logger);
 
 protected:
   SvException* p_exception;
-  sv::SvAbstarctLogger& p_log;
+
+  sv::SvAbstarctLogger& p_logger;
 
   virtual void create_new_thread() = 0;
 
@@ -46,7 +48,7 @@ class dev::SvAbstractSerialDeviceThread: public dev::SvAbstractDeviceThread
   Q_OBJECT
 
 public:
-  SvAbstractSerialDeviceThread(dev::SvAbstractDevice* device, sv::SvAbstarctLogger &log);
+  SvAbstractSerialDeviceThread(dev::SvAbstractDevice* device);
   virtual ~SvAbstractSerialDeviceThread();
 
   virtual void open() throw(SvException&);
@@ -61,6 +63,7 @@ protected:
 
   quint8  p_buf[512];
   quint64 p_buf_offset = 0;
+  quint64 p_bytes_readed = 0;
 
   QTimer  p_reset_timer;
 
@@ -69,7 +72,7 @@ protected:
 
   virtual void run() override;
 
-  virtual void treat_data() = 0;
+  virtual void parse() = 0;
 
 protected slots:
   virtual void reset_buffer();

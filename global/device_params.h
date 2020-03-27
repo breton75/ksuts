@@ -8,62 +8,29 @@
 #include <QtCore/QCommandLineParser>
 
 #include "../../svlib/sv_exception.h"
+#include "../../svlib/sv_serial_params.h"
 
 // имена параметров устройств
-#define P_SERIAL_BAUDRATE "baudrate"
-#define P_SERIAL_PORTNAME "portname"
-#define P_SERIAL_DATABITS "databits"
-#define P_SERIAL_PARITY   "parity"
-#define P_SERIAL_STOPBITS "stopbits"
-#define P_SERIAL_FLOWCTRL "flowcontrol"
 #define P_ADDRESS         "address"
 
 namespace dev {
-
-  const QList<int> Baudrates = {75, 115, 134, 150, 300, 600, 1200, 1800, 2400, 4800, 7200, 9600, 14400, 19200, 38400, 57600, 115200, 128000};
-  
-  const QMap<QSerialPort::DataBits, QString> DataBits = {{QSerialPort::Data5, "5"}, 
-                                                         {QSerialPort::Data6, "6"},
-                                                         {QSerialPort::Data7, "7"},
-                                                         {QSerialPort::Data8, "8"}};
-  
-  const QMap<QSerialPort::Parity, QString> Parities = {{QSerialPort::NoParity, "Нет"},
-                                                       {QSerialPort::EvenParity, "Чет"},
-                                                       {QSerialPort::OddParity, "Нечет"},
-                                                       {QSerialPort::SpaceParity, "Пробел"},
-                                                       {QSerialPort::MarkParity, "Маркер"}};
-  
-  const QMap<QSerialPort::StopBits, QString> StopBits = {{QSerialPort::OneStop, "1"},
-                                                         {QSerialPort::OneAndHalfStop, "1,5"},
-                                                         {QSerialPort::TwoStop, "2"}};
-  
-  const QMap<QSerialPort::FlowControl, QString> FlowControls = {{QSerialPort::NoFlowControl, "Нет"},
-                                                                {QSerialPort::HardwareControl, "Аппаратное"},
-                                                                {QSerialPort::SoftwareControl, "Программное"}};
-
-
 
 #ifdef VERSION_2
 
 
   struct DeviceParams {
 
-    QString                   portname =        "tty0";
-    quint32                   baudrate =        19200;
-    QSerialPort::DataBits     databits =        QSerialPort::Data8;
-    QSerialPort::Parity       parity =          QSerialPort::NoParity;
-    QSerialPort::StopBits     stopbits =        QSerialPort::OneStop;
-    QSerialPort::FlowControl  flowcontrol =     QSerialPort::NoFlowControl;
-    quint32                   address =         0;
+    SerialParams serialParams;
+    quint32      address = 0;
 
   };
 
   class DeviceParamsParser
   {
   public:
-    DeviceParamsParser(const QString& params_string):
+    DeviceParamsParser(const QString params_string):
       _params_string(params_string)
-    {   }
+    {  }
 
     QString lastError() { return _last_error; }
 
@@ -72,13 +39,8 @@ namespace dev {
     static QString getSring(DeviceParams params)
     {
 
-      QString result = QString("-%1=%2 -%3=%4 -%5=%6 -%7=%8 -%9=%10 -%11=%12 -%13=14")
-                  .arg(P_SERIAL_PORTNAME).arg(params.portname)
-                  .arg(P_SERIAL_BAUDRATE).arg(params.baudrate)
-                  .arg(P_SERIAL_DATABITS).arg(params.databits)
-                  .arg(P_SERIAL_PARITY  ).arg(params.parity)
-                  .arg(P_SERIAL_STOPBITS).arg(params.stopbits)
-                  .arg(P_SERIAL_FLOWCTRL).arg(params.flowcontrol)
+      QString result = QString("%1 -%2=%3")
+//                  .arg()
                   .arg(P_ADDRESS).arg(params.address);
 
       return result;
@@ -87,6 +49,19 @@ namespace dev {
 
     bool parse()
     {
+      // сначала парсим параметры серийного порта
+      dev::SerialParamsParser serial_parser(_params_string);
+
+      if(!serial_parser.parse()) {
+
+        _last_error = serial_parser.lastError();
+        return false;
+
+      }
+
+      _params.serialParams = serial_parser.params();
+
+      // парсим остальные параметры
       //! обязателен первый аргумент!! парсер считает, что там находится путь к программе
       QStringList params_list;
       params_list << "dumb_path_to_app" << _params_string.split(" ");
@@ -94,46 +69,19 @@ namespace dev {
       QCommandLineParser parser;
       parser.setSingleDashWordOptionMode(QCommandLineParser::ParseAsLongOptions);
 
-      parser.addOption(QCommandLineOption(P_SERIAL_BAUDRATE, "BAUDRATE", "19200", "19200"));
-      parser.addOption(QCommandLineOption(P_SERIAL_PORTNAME, "PORTNAME", "0", "0"));
-      parser.addOption(QCommandLineOption(P_SERIAL_DATABITS, "DATABITS", "8", "8"));
-      parser.addOption(QCommandLineOption(P_SERIAL_PARITY,   "PARITY",   "0", "0"));
-      parser.addOption(QCommandLineOption(P_SERIAL_STOPBITS, "STOPBITS", "2", "2"));
-      parser.addOption(QCommandLineOption(P_SERIAL_FLOWCTRL, "FLOWCTRL", "0", "0"));
       parser.addOption(QCommandLineOption(P_ADDRESS,         "ADDRESS",  "0", "0"));
 
 
-      quint32 d;
       bool ok;
 
       try {
 
-        if(!parser.parse(params_list)) _exception.raise(QString("Неверное значение параметра: %1").arg(_params_string));
+//        if(!parser.parse(params_list)) _exception.raise(QString("Неверное значение параметра: %1").arg(_params_string));
 
-        _params.baudrate = parser.value(P_SERIAL_BAUDRATE).toUInt(&ok);
-        if(!ok) _exception.raise(QString("Неверное значение параметра: %1").arg(P_SERIAL_BAUDRATE));
+        parser.parse(params_list);
 
-        d = parser.value(P_SERIAL_DATABITS).toUInt(&ok);
-        if(!(ok & DataBits.contains(QSerialPort::DataBits(d)))) _exception.raise(QString("Неверное значение параметра: %1").arg(P_SERIAL_DATABITS));
-        _params.databits = QSerialPort::DataBits(d);
-
-        d = parser.value(P_SERIAL_FLOWCTRL).toUInt(&ok);
-        if(!(ok & FlowControls.contains(QSerialPort::FlowControl(d)))) _exception.raise(QString("Неверное значение параметра: %1").arg(P_SERIAL_FLOWCTRL));
-        _params.flowcontrol = QSerialPort::FlowControl(d);
-
-        _params.portname = parser.value(P_SERIAL_PORTNAME); //.toUpper();
-
-        d = parser.value(P_SERIAL_PARITY).toUInt(&ok);
-        if(!ok) _exception.raise(QString("Неверное значение параметра: %1").arg(P_SERIAL_PARITY));
-        _params.parity = QSerialPort::Parity(d);
-
-        d = parser.value(P_SERIAL_STOPBITS).toUInt(&ok);
-        if(!ok) _exception.raise(QString("Неверное значение параметра: %1").arg(P_SERIAL_STOPBITS));
-        _params.stopbits = QSerialPort::StopBits(d);
-
-        _params.address = parser.value(P_ADDRESS).toUInt(&ok);
+        _params.address = QString(parser.isSet(P_ADDRESS) ? parser.value(P_ADDRESS) : "0").toUInt(&ok);
         if(!ok) _exception.raise(QString("Неверное значение параметра: %1").arg(P_ADDRESS));
-
 
         return true;
 
