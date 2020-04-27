@@ -5,10 +5,10 @@
 
 #include <QtCore/qglobal.h>
 
-#if defined(OHT_LIBRARY)
-#  define OHTSHARED_EXPORT Q_DECL_EXPORT
+#if defined(OHT_EKI1524_LIBRARY)
+#  define OHT_EKI1524_SHARED_EXPORT Q_DECL_EXPORT
 #else
-#  define OHTSHARED_EXPORT Q_DECL_IMPORT
+#  define OHT_EKI1524_SHARED_EXPORT Q_DECL_IMPORT
 #endif
 
 
@@ -42,7 +42,7 @@ class /*OHTSHARED_EXPORT*/ SvOHT: public dev::SvAbstractSerialDevice
 //  sv::SvAbstractLogger& _log;
 
 public:
-  SvOHT(sv::SvAbstractLogger &log);
+  SvOHT(sv::SvAbstractLogger *logger = nullptr);
 //  ~SvOHT();
   
 //  bool open()  override;
@@ -69,7 +69,7 @@ class SvOHTThread: public dev::SvAbstractSerialDeviceThread
   Q_OBJECT
 
 public:
-  SvOHTThread(dev::SvAbstractDevice* device, sv::SvAbstractLogger &log);
+  SvOHTThread(dev::SvAbstractDevice* device, sv::SvAbstractLogger *logger = nullptr);
 //  ~SvOHTThread();
 
 //  void open() throw(SvException&) override;

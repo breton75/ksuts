@@ -8,8 +8,8 @@
 /** *****************   ************************* **/
 
 SvOPA::SvOPA(sv::SvAbstractLogger *logger):
-  dev::SvAbstractDevice(dev::OPA, logger),
-  p_logger(logger)
+  dev::SvAbstractDevice(dev::OPA, logger)
+//  p_logger(logger)
 {
 
 }
@@ -26,18 +26,18 @@ bool SvOPA::setParams(const QString& params)
 {
   try {
     
-    dev::DeviceParamsParser p(params);
-    if(!p.parse())
-      _exception->raise(p.lastError());
+//    dev::SerialParamsParser p(params);
+//    if(!p.parse())
+//      _exception->raise(p.lastError());
     
-    p_params = p.params();
+//    p_params = p.params();
     
-    _serial.setPortName(   p_params.portname);
-    _serial.setBaudRate(   p_params.baudrate);
-    _serial.setDataBits(   p_params.databits);
-    _serial.setFlowControl(p_params.flowcontrol);
-    _serial.setParity(     p_params.parity);
-    _serial.setStopBits(   p_params.stopbits);
+//    _serial.setPortName(   p_params.serialParams.portname);
+//    _serial.setBaudRate(   p_params.serialParams.baudrate);
+//    _serial.setDataBits(   p_params.serialParams.databits);
+//    _serial.setFlowControl(p_params.serialParams.flowcontrol);
+//    _serial.setParity(     p_params.serialParams.parity);
+//    _serial.setStopBits(   p_params.serialParams.stopbits);
 
     return true;
       
@@ -99,10 +99,10 @@ void SvOPA::read()
     _buf_offset += _serial.read((char*)(&_buf[0] + _buf_offset), 512 - _buf_offset);
 
     // для сбора реальных логов
-    if(p_config.debug_mode)
-      _log << sv::log::llDebug2
-           << sv::log::TimeZZZ << sv::log::in
-           << QString(QByteArray((const char*)&_buf[cur_offset], _buf_offset - cur_offset).toHex()) << sv::log::endl;
+    if(p_logger && p_config.debug_mode)
+      *p_logger << sv::log::llDebug2
+                << sv::log::TimeZZZ << sv::log::in
+                << QString(QByteArray((const char*)&_buf[cur_offset], _buf_offset - cur_offset).toHex()) << sv::log::endl;
 
     if(_buf_offset >= _hSize) {
 
@@ -119,10 +119,10 @@ void SvOPA::read()
         REGISTER <<= 8;
         REGISTER += _header.OFFSET;
 
-        if(p_config.debug_mode)
-          _log << sv::log::llDebug
-               << sv::log::TimeZZZ << sv::log::in
-               << QString(QByteArray((const char*)&_buf[0], _buf_offset).toHex()) << sv::log::endl;
+        if(p_logger && p_config.debug_mode)
+          *p_logger << sv::log::llDebug
+                    << sv::log::TimeZZZ << sv::log::in
+                    << QString(QByteArray((const char*)&_buf[0], _buf_offset).toHex()) << sv::log::endl;
 
           // если хоть какие то пакеты сыпятся (для данного получателя), то
           // считаем, что линия передачи в порядке и задаем новую контрольную точку времени
@@ -160,7 +160,7 @@ void SvOPA::read()
   
   catch(SvException& e) {
     
-    _log << sv::log::llError << e.error << sv::log::endl;
+    *p_logger << sv::log::llError << e.error << sv::log::endl;
     return;
     
   }
@@ -229,7 +229,7 @@ void SvOPA::sendConfirmation()
     _serial.write((const char*)&_confirm[0], 8);
 
     if(p_config.debug_mode)
-      _log << sv::log::llDebug
+      *p_logger << sv::log::llDebug
            << sv::log::TimeZZZ << sv::log::out
            << QString(QByteArray((const char*)&_confirm[0], 8).toHex()) << sv::log::endl;
 
@@ -255,7 +255,7 @@ void SvOPA::analizeData()
     /// если crc не совпадает, то выходим без обработки и ответа
     if(crc != _crc) {
 
-      _log << sv::log::llError
+      *p_logger << sv::log::llError
            << sv::log::TimeZZZ
            << QString("wrong crc! ожидалось %1, получено %2").arg(crc, 0, 16).arg(_crc, 0, 16); // << QString::number(_crc2, 16);
 
@@ -298,7 +298,7 @@ void SvOPA::analizeData()
   
   catch(SvException& e) {
     
-    _log << sv::log::llError << e.error << sv::log::endl;
+    *p_logger << sv::log::llError << e.error << sv::log::endl;
     return;
     
   }

@@ -742,7 +742,7 @@ dev::SvAbstractDevice* create_device(const QSqlQuery* q)
         break;
         
       case dev::OPA:
-        newdev = new SvOPA();
+//        newdev = new SvOPA();
         break;
         
       case dev::SKM:

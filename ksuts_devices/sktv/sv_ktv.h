@@ -50,7 +50,7 @@ class SvKTVThread: public dev::SvAbstractSerialDeviceThread
   Q_OBJECT
 
 public:
-  SvKTVThread(dev::SvAbstractDevice* device, sv::SvAbstractLogger &log);
+  SvKTVThread(dev::SvAbstractDevice* device, sv::SvAbstractLogger *log = nullptr);
 
 private:
 
@@ -71,7 +71,8 @@ private:
 
   void treat_data();
 
-  bool parse_packet();
+  bool parse_data();
+
   void send_confirmation();
   void set_data();
 

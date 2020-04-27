@@ -74,7 +74,7 @@ protected:
 
   virtual void run() override;
 
-  virtual void parse() = 0;
+  virtual bool parse_data() = 0;
 
 protected slots:
   virtual void reset_buffer();

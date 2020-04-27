@@ -81,8 +81,8 @@ public:
   {
       p_logger = logger;
 
-      if(p_thread)
-          p_thread->setLogger(logger);
+//      if(p_thread)
+//          p_thread->setLogger(logger);
   }
 
   virtual const sv::SvAbstractLogger* logger() const { return p_logger; }

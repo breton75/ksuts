@@ -4,8 +4,8 @@
 /** *****************   ************************* **/
 
 SvSKM::SvSKM(sv::SvAbstractLogger *logger):
-  dev::SvAbstractDevice(dev::SKM, logger),
-  p_logger(logger)
+  dev::SvAbstractDevice(dev::SKM, logger)
+//  p_logger(logger)
 {
 
 }
@@ -48,7 +48,7 @@ bool SvSKM::open()
 {
   try {
 
-    p_thread = new SvSKMThread(this, _log);
+    p_thread = new SvSKMThread(this, p_logger);
     connect(p_thread, &dev::SvAbstractDeviceThread::finished, this, &SvSKM::deleteThread);
     connect(p_thread, &dev::SvAbstractDeviceThread::finished, p_thread, &dev::SvAbstractDeviceThread::deleteLater);
 
@@ -59,7 +59,7 @@ bool SvSKM::open()
 
   } catch(SvException& e) {
 
-    _log << sv::log::mtError << sv::log::llError << e.error << sv::log::endl;
+    *p_logger << sv::log::mtError << sv::log::llError << e.error << sv::log::endl;
 
     deleteThread();
 
@@ -107,12 +107,12 @@ void SvSKMThread::stop()
 
 void SvSKMThread::open() throw(SvException&)
 {
-  _port.setPortName   (_device->params()->portname);
-  _port.setBaudRate   (_device->params()->baudrate);
-  _port.setStopBits   (_device->params()->stopbits);
-  _port.setFlowControl(_device->params()->flowcontrol);
-  _port.setDataBits   (_device->params()->databits);
-  _port.setParity     (_device->params()->parity);
+  _port.setPortName   (_device->params()->serialParams.portname);
+  _port.setBaudRate   (_device->params()->serialParams.baudrate);
+  _port.setStopBits   (_device->params()->serialParams.stopbits);
+  _port.setFlowControl(_device->params()->serialParams.flowcontrol);
+  _port.setDataBits   (_device->params()->serialParams.databits);
+  _port.setParity     (_device->params()->serialParams.parity);
 
   if(!_port.open(QIODevice::ReadWrite))
     throw _exception.assign(_port.errorString());
@@ -149,7 +149,7 @@ void SvSKMThread::run()
 
     // для сбора реальных логов
     if(_device->config()->debug_mode)
-      p_log << sv::log::mtDebug
+      *p_logger << sv::log::mtDebug
             << sv::log::llDebug2
             << sv::log::TimeZZZ << sv::log::in
             << QString(QByteArray((const char*)&_buf[cur_offset], _buf_offset - cur_offset).toHex()) << sv::log::endl;
@@ -173,7 +173,7 @@ void SvSKMThread::run()
       if((_buf[_buf_offset - 1] == 0x55) && (_buf[_buf_offset - 2] == 0x2F)) {
 
           if(_device->config()->debug_mode)
-            p_log << sv::log::mtDebug
+            *p_logger << sv::log::mtDebug
                   << sv::log::llDebug
                   << sv::log::TimeZZZ << sv::log::in
                   << QString(QByteArray((const char*)&_buf[0], _buf_offset).toHex()) << sv::log::endl;
@@ -303,7 +303,7 @@ void SvSKMThread::send_confirmation()
     _port.write((const char*)&_confirm[0], crc_offset + crc_length + 2);
 
 //    if(_device->config().debug_mode)
-      p_log << sv::log::llDebug
+      *p_logger << sv::log::llDebug
             << sv::log::TimeZZZ << sv::log::out
             << QString(QByteArray((const char*)&_confirm[0], crc_offset + crc_length + 2).toHex()) << sv::log::endl;
 

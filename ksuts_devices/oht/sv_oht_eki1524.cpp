@@ -1,4 +1,4 @@
-﻿#include "sv_oht_eki1524.h".h"
+﻿#include "sv_oht_eki1524.h"
 
 #include "oht_defs.h"
 
@@ -77,8 +77,8 @@
 
 /** *****************   ************************* **/
 
-SvOHT::SvOHT(sv::SvAbstractLogger &log):
-  dev::SvAbstractSerialDevice(dev::OHT, log)
+SvOHT::SvOHT(sv::SvAbstractLogger *logger):
+  dev::SvAbstractSerialDevice(dev::OHT, logger)
 //  _log(log)
 {
 
@@ -86,7 +86,7 @@ SvOHT::SvOHT(sv::SvAbstractLogger &log):
 
 void SvOHT::create_new_thread()
 {
-  p_thread = new SvOHTThread(this, p_log);
+  p_thread = new SvOHTThread(this, p_logger);
 }
 
 //SvOHT::~SvOHT()
@@ -164,8 +164,8 @@ void SvOHT::create_new_thread()
 //}
 
 /**         SvOHTThread         **/
-SvOHTThread::SvOHTThread(dev::SvAbstractDevice *device, sv::SvAbstractLogger &log):
-  dev::SvAbstractSerialDeviceThread(device, log)
+SvOHTThread::SvOHTThread(dev::SvAbstractDevice *device, sv::SvAbstractLogger *logger):
+  dev::SvAbstractSerialDeviceThread(device, logger)
 //  p_device(device),
 //  is_active(false)
 {
@@ -226,7 +226,7 @@ void SvOHTThread::treat_data()
     if(p_buf_offset >= _hSize + _header.byte_count + 2) {
 
         if(p_device->config()->debug_mode)
-          p_log << sv::log::mtDebug
+          *p_logger << sv::log::mtDebug
                 << sv::log::llDebug
                 << sv::log::TimeZZZ << sv::log::in
                 << QString(QByteArray((const char*)&p_buf[0], p_buf_offset).toHex()) << sv::log::endl;
@@ -396,7 +396,7 @@ void SvOHTThread::send_confirmation()
     p_port.write((const char*)&_confirm[0], 8);
 
     if(p_device->config()->debug_mode)
-      p_log << sv::log::mtDebug
+      *p_logger << sv::log::mtDebug
             << sv::log::llDebug
             << sv::log::TimeZZZ << sv::log::out
             << QString(QByteArray((const char*)&_confirm[0], 8).toHex()) << sv::log::endl;
@@ -424,7 +424,7 @@ bool SvOHTThread::parse_data()
 
   // если crc не совпадает, то выходим без обработки и ответа
   if(crc != _crc)
-      p_log << sv::log::mtError
+      *p_logger << sv::log::mtError
             << sv::log::llError
             << sv::log::TimeZZZ
             << QString("Ошибка crc! Ожидалось %1, получено %2").arg(crc, 0, 16).arg(_crc, 0, 16);
