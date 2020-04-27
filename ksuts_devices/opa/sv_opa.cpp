@@ -7,9 +7,9 @@
 
 /** *****************   ************************* **/
 
-SvOPA::SvOPA(sv::SvAbstarctLogger &log):
-  dev::SvAbstractDevice(dev::OPA),
-  _log(log)
+SvOPA::SvOPA(sv::SvAbstractLogger *logger):
+  dev::SvAbstractDevice(dev::OPA, logger),
+  p_logger(logger)
 {
 
 }

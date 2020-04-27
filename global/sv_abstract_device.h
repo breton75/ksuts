@@ -60,9 +60,10 @@ class dev::SvAbstractDevice: public QObject
   Q_OBJECT
   
 public:
-  SvAbstractDevice(const dev::HardwareType hardware_type):
+  SvAbstractDevice(dev::HardwareType hardware_type, sv::SvAbstractLogger* logger = nullptr):
     p_hardware_type(hardware_type),
-    p_thread(nullptr)
+    p_thread(nullptr),
+    p_logger(logger)
   {
     clearSignals();
   }
@@ -74,8 +75,17 @@ public:
   virtual dev::SvAbstractDeviceThread* thread() const { return p_thread; }
 
   virtual bool setConfig(const dev::DeviceConfig& config) = 0;
-  virtual bool setParams(const QString& params)  = 0;
-  virtual void setLogger(const sv::SvAbstarctLogger& logger)  = 0;
+  virtual bool setParams(const QString& params) = 0;
+
+  virtual void setLogger(sv::SvAbstractLogger* logger)
+  {
+      p_logger = logger;
+
+      if(p_thread)
+          p_thread->setLogger(logger);
+  }
+
+  virtual const sv::SvAbstractLogger* logger() const { return p_logger; }
 
   virtual const dev::DeviceConfig* config() const { return &p_config; }
   virtual const dev::DeviceParams* params() const { return &p_params; }
@@ -126,10 +136,12 @@ public:
 protected:
   dev::HardwareType p_hardware_type;
 
-  dev::SvAbstractDeviceThread* p_thread;
+  dev::SvAbstractDeviceThread* p_thread = nullptr;
 
   dev::DeviceConfig  p_config;
   dev::DeviceParams  p_params;
+
+  sv::SvAbstractLogger* p_logger = nullptr;
 
   dev::SignalMap p_signals;
 
@@ -148,16 +160,22 @@ class dev::SvAbstractDeviceThread: public QThread
   Q_OBJECT
   
 public:
-  SvAbstractDeviceThread()
+  SvAbstractDeviceThread(sv::SvAbstractLogger* logger = nullptr):
+      p_logger(logger)
   {  }
 
 //  ~SvAbstractDeviceThread() = 0;
 
   virtual void open() throw(SvException&) = 0;
   virtual void stop() = 0;
+
+  virtual void setLogger(sv::SvAbstractLogger* logger)
+  {
+    p_logger = logger;
+  }
   
 protected:
-//  sv::SvAbstarctLogger& p_log;
+  sv::SvAbstractLogger* p_logger = nullptr;
 
 
 //signals:

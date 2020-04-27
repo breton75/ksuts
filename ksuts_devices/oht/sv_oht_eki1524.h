@@ -1,5 +1,5 @@
-﻿#ifndef OHT_H
-#define OHT_H
+﻿#ifndef OHT_EKI1524_H
+#define OHT_EKI1524_H
 
 #include <QtCore/QCommandLineParser>
 
@@ -42,7 +42,7 @@ class /*OHTSHARED_EXPORT*/ SvOHT: public dev::SvAbstractSerialDevice
 //  sv::SvAbstractLogger& _log;
 
 public:
-  SvOHT(sv::SvAbstractLogger* logger = nullptr);
+  SvOHT(sv::SvAbstractLogger &log);
 //  ~SvOHT();
   
 //  bool open()  override;
@@ -69,7 +69,7 @@ class SvOHTThread: public dev::SvAbstractSerialDeviceThread
   Q_OBJECT
 
 public:
-  SvOHTThread(dev::SvAbstractDevice* device, sv::SvAbstractLogger *logger = nullptr);
+  SvOHTThread(dev::SvAbstractDevice* device, sv::SvAbstractLogger &log);
 //  ~SvOHTThread();
 
 //  void open() throw(SvException&) override;
@@ -115,4 +115,4 @@ private:
 
 };
 
-#endif // OHT_H
+#endif // OHT_EKI1524_H

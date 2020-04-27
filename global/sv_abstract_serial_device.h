@@ -21,7 +21,7 @@ class dev::SvAbstractSerialDevice : public dev::SvAbstractDevice
   Q_OBJECT
 
 public:
-  SvAbstractSerialDevice(dev::HardwareType type);
+  SvAbstractSerialDevice(dev::HardwareType type, sv::SvAbstractLogger* logger = nullptr);
   ~SvAbstractSerialDevice();
 
   bool open();
@@ -29,12 +29,13 @@ public:
 
   virtual bool setConfig(const dev::DeviceConfig& config);
   virtual bool setParams(const QString& params);
-  virtual void setLogger(const sv::SvAbstarctLogger& logger);
+
+//  virtual void setLogger(const sv::SvAbstractLogger* logger);
 
 protected:
   SvException* p_exception;
 
-  sv::SvAbstarctLogger& p_logger;
+//  sv::SvAbstractLogger& p_logger;
 
   virtual void create_new_thread() = 0;
 
@@ -48,7 +49,7 @@ class dev::SvAbstractSerialDeviceThread: public dev::SvAbstractDeviceThread
   Q_OBJECT
 
 public:
-  SvAbstractSerialDeviceThread(dev::SvAbstractDevice* device);
+  SvAbstractSerialDeviceThread(dev::SvAbstractDevice* device, sv::SvAbstractLogger *logger = nullptr);
   virtual ~SvAbstractSerialDeviceThread();
 
   virtual void open() throw(SvException&);
@@ -57,7 +58,8 @@ public:
 protected:
   QSerialPort p_port;
 
-  dev::SvAbstractDevice* p_device;
+  dev::SvAbstractDevice *p_device;
+//  sv::SvAbstractLogger  *p_logger;
 
   bool is_active;
 

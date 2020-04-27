@@ -1,7 +1,7 @@
 ﻿#include "sv_abstract_serial_device.h"
 
-dev::SvAbstractSerialDevice::SvAbstractSerialDevice(dev::HardwareType type):
-  dev::SvAbstractDevice(type)
+dev::SvAbstractSerialDevice::SvAbstractSerialDevice(dev::HardwareType type, sv::SvAbstractLogger *logger):
+  dev::SvAbstractDevice(type, logger)
 //  p_log(log)
 {
 
@@ -41,10 +41,10 @@ bool dev::SvAbstractSerialDevice::setParams(const QString& params)
   }
 }
 
-void dev::SvAbstractSerialDevice::setLogger(const sv::SvAbstarctLogger& logger)
-{
-  p_logger = logger;
-}
+//void dev::SvAbstractSerialDevice::setLogger(const sv::SvAbstractLogger *logger)
+//{
+//  p_logger = *logger;
+//}
 
 bool dev::SvAbstractSerialDevice::open()
 {
@@ -91,8 +91,8 @@ void dev::SvAbstractSerialDevice::deleteThread()
 
 
 /**         SvAbstractSerialDeviceThread         **/
-dev::SvAbstractSerialDeviceThread::SvAbstractSerialDeviceThread(dev::SvAbstractDevice *device):
-  dev::SvAbstractDeviceThread(),
+dev::SvAbstractSerialDeviceThread::SvAbstractSerialDeviceThread(dev::SvAbstractDevice *device, sv::SvAbstractLogger *logger):
+  dev::SvAbstractDeviceThread(logger),
   p_device(device),
   is_active(false)
 {

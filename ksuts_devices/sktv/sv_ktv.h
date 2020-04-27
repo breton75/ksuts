@@ -38,7 +38,7 @@ class /*OHTSHARED_EXPORT*/ SvKTV: public dev::SvAbstractSerialDevice
   Q_OBJECT
 
 public:
-  SvKTV(sv::SvAbstarctLogger& log);
+  SvKTV(sv::SvAbstractLogger *logger = nullptr);
 
 private:
   void create_new_thread();
@@ -50,7 +50,7 @@ class SvKTVThread: public dev::SvAbstractSerialDeviceThread
   Q_OBJECT
 
 public:
-  SvKTVThread(dev::SvAbstractDevice* device, sv::SvAbstarctLogger &log);
+  SvKTVThread(dev::SvAbstractDevice* device, sv::SvAbstractLogger &log);
 
 private:
 

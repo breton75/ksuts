@@ -1,7 +1,7 @@
 ﻿#include "sv_storage.h"
 
 
-SvStorage::SvStorage(StorageParams params, sv::SvAbstarctLogger &log, QObject *parent):
+SvStorage::SvStorage(StorageParams params, sv::SvAbstractLogger &log, QObject *parent):
   QObject(parent),
   _log(log)
 {

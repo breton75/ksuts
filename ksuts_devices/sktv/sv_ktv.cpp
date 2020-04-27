@@ -3,21 +3,21 @@
 
 /** *****************   ************************* **/
 
-SvKTV::SvKTV(sv::SvAbstarctLogger &log):
-  dev::SvAbstractSerialDevice(dev::KTV, log)
+SvKTV::SvKTV(sv::SvAbstractLogger *logger):
+  dev::SvAbstractSerialDevice(dev::KTV, logger)
 {
 
 }
 
 void SvKTV::create_new_thread()
 {
-  p_thread = new SvKTVThread(this, p_log);
+  p_thread = new SvKTVThread(this, p_logger);
 }
 
 
 
 /**         SvKTVThread         **/
-SvKTVThread::SvKTVThread(dev::SvAbstractDevice *device, sv::SvAbstarctLogger &log):
+SvKTVThread::SvKTVThread(dev::SvAbstractDevice *device, sv::SvAbstractLogger &log):
   dev::SvAbstractSerialDeviceThread(device, log)
 {
 

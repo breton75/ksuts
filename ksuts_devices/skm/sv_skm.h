@@ -35,10 +35,10 @@ class /*OHTSHARED_EXPORT*/ SvSKM: public dev::SvAbstractDevice
 {
     Q_OBJECT
 
-    sv::SvAbstarctLogger& _log;
+//    sv::SvAbstractLogger& _log;
   
 public:
-  SvSKM(sv::SvAbstarctLogger &log);
+  SvSKM(sv::SvAbstractLogger *logger = nullptr);
   ~SvSKM();
   
   bool open();
@@ -63,7 +63,7 @@ class SvSKMThread: public dev::SvAbstractDeviceThread
   Q_OBJECT
 
 public:
-  SvSKMThread(dev::SvAbstractDevice* device, sv::SvAbstarctLogger &log);
+  SvSKMThread(dev::SvAbstractDevice* device, sv::SvAbstractLogger *logger = nullptr);
   ~SvSKMThread();
 
   void open() throw(SvException&) override;

@@ -41,7 +41,8 @@ SOURCES += main.cpp \
     ../../svlib/sv_dbus.cpp \
     ../../svlib/sv_abstract_logger.cpp \
     ../ksuts_devices/sktv/sv_ktv.cpp \
-    ../global/sv_abstract_serial_device.cpp
+    ../global/sv_abstract_serial_device.cpp \
+    ../ksuts_devices/oht/sv_oht_eki1524.cpp
 
 HEADERS += \
     ../../svlib/sv_exception.h \
@@ -68,4 +69,5 @@ HEADERS += \
     ../ksuts_devices/sktv/ktv_defs.h \
     ../../svlib/sv_abstract_logger.h \
     ../global/sv_abstract_serial_device.h \
-    ../../svlib/sv_serial_params.h
+    ../../svlib/sv_serial_params.h \
+    ../ksuts_devices/oht/sv_oht_eki1524.h

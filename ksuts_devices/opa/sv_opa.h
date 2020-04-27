@@ -36,10 +36,10 @@ struct OPAHeader
 class /*OHTSHARED_EXPORT*/ SvOPA: public dev::SvAbstractDevice
 {
 
-    sv::SvAbstarctLogger& _log;
+//    sv::SvAbstractLogger& _log;
 
 public:
-  SvOPA(sv::SvAbstarctLogger &log);
+  SvOPA(sv::SvAbstractLogger *logger = nullptr);
   ~SvOPA();
   
 //  virtual idev::DeviceTypes type() { return deviceType(); }

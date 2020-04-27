@@ -40,7 +40,7 @@ QMap<int, SvStorage*> STORAGES;
 //QMap<int, SvCOB*> COBS;
 QMap<int, SvSignal*> SIGNALS;
 
-QList<sv::SvAbstarctLogger*> LOGGERS;
+QList<sv::SvAbstractLogger*> LOGGERS;
 
 SvException exception;
 
@@ -81,7 +81,7 @@ SvStorage* create_storage(QSqlQuery *q);
 //SvCOB* create_cob(const QSqlQuery* q);
 SvSignal* create_signal(const QSqlQuery* q);
 
-sv::SvAbstarctLogger* create_logger(const sv::log::Options& options, const QString& sender);
+sv::SvAbstractLogger* create_logger(const sv::log::Options& options, const QString& sender);
 
 bool openDevices();
 bool initStorages();
@@ -501,12 +501,17 @@ bool readDevices(const AppConfig& cfg)
         DEVICES.insert(newdev->config()->index, newdev);
 
 
-        sv::SvAbstarctLogger* logger = create_logger(cfg.log_options,
-                                                           QString("%1%2").arg(newdev->config()->hardware_name)
-                                                           .arg(newdev->config()->index));
-        LOGGERS.append(logger);
+        if(cfg.log_options.logging) {
 
-        newdev->setLogger(*logger);
+            sv::SvAbstractLogger* logger = create_logger(cfg.log_options,
+                                                               QString("%1%2")
+                                                                    .arg(newdev->config()->hardware_name)
+                                                                    .arg(newdev->config()->index));
+            LOGGERS.append(logger);
+
+            newdev->setLogger(logger);
+
+        }
 
 
         dbus << sv::log::llDebug << QString("  %1 [Индекс %2] %3").
@@ -834,9 +839,9 @@ SvSignal* create_signal(const QSqlQuery* q)
     
 }
 
-sv::SvAbstarctLogger* create_logger(const sv::log::Options& options, const QString& sender)
+sv::SvAbstractLogger* create_logger(const sv::log::Options& options, const QString& sender)
 {
-  sv::SvAbstarctLogger* l = new sv::SvDBus(options);
+  sv::SvAbstractLogger* l = new sv::SvDBus(options);
   l->setSender(sender);
 
   return l;
@@ -1006,7 +1011,7 @@ void deleteLoggers()
 {
   dbus << sv::log::llInfo << "Удаляем логгеры:" << sv::log::endl;
 
-  for(sv::SvAbstarctLogger* logger: LOGGERS)
+  for(sv::SvAbstractLogger* logger: LOGGERS)
     delete logger;
 
   dbus << sv::log::llInfo << QString("OK\n")  << sv::log::endl;

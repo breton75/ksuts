@@ -3,9 +3,9 @@
 
 /** *****************   ************************* **/
 
-SvSKM::SvSKM(sv::SvAbstarctLogger &log):
-  dev::SvAbstractDevice(dev::SKM),
-  _log(log)
+SvSKM::SvSKM(sv::SvAbstractLogger *logger):
+  dev::SvAbstractDevice(dev::SKM, logger),
+  p_logger(logger)
 {
 
 }
@@ -86,8 +86,8 @@ void SvSKM::deleteThread()
 }
 
 /**         SvOHTThread         **/
-SvSKMThread::SvSKMThread(dev::SvAbstractDevice *device, sv::SvAbstarctLogger &log):
-  dev::SvAbstractDeviceThread(log),
+SvSKMThread::SvSKMThread(dev::SvAbstractDevice *device, sv::SvAbstractLogger *logger):
+  dev::SvAbstractDeviceThread(logger),
   _device(device),
   is_active(false)
 {
