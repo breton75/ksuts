@@ -400,7 +400,8 @@ void SvOHTThread::send_confirmation()
       *p_logger << sv::log::mtDebug
                 << sv::log::llDebug
                 << sv::log::TimeZZZ << sv::log::out
-                << QString(QByteArray((const char*)&_confirm[0], 8).toHex()) << sv::log::endl;
+                << QString(QByteArray((const char*)&_confirm[0], 8).toHex())
+                << sv::log::endl;
 
 }
 
@@ -428,7 +429,8 @@ bool SvOHTThread::parse_data()
       *p_logger << sv::log::mtError
                 << sv::log::llError
                 << sv::log::TimeZZZ
-                << QString("Ошибка crc! Ожидалось %1, получено %2").arg(crc, 0, 16).arg(_crc, 0, 16);
+                << QString("Ошибка crc! Ожидалось %1, получено %2").arg(crc, 0, 16).arg(_crc, 0, 16)
+                << sv::log::endl;
 
   return crc == _crc;
 

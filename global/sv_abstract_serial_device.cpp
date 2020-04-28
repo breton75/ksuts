@@ -153,7 +153,7 @@ void dev::SvAbstractSerialDeviceThread::run()
       p_buf_offset += p_bytes_readed;
 
 
-      parse_data();
+      treat_data();
 
 
     }
