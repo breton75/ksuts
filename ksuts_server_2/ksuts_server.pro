@@ -40,8 +40,8 @@ SOURCES += main.cpp \
     ../../svlib/sv_dbus.cpp \
     ../../svlib/sv_abstract_logger.cpp \
     ../ksuts_devices/sktv/sv_ktv.cpp \
-    ../global/sv_abstract_serial_device.cpp \
-    ../../svlib/sv_fnt.cpp
+    ../../svlib/sv_fnt.cpp \
+    ../global/sv_abstract_ksuts_device.cpp
 
 HEADERS += \
     ../../svlib/sv_exception.h \
@@ -67,5 +67,5 @@ HEADERS += \
     ../ksuts_devices/sktv/sv_ktv.h \
     ../ksuts_devices/sktv/ktv_defs.h \
     ../../svlib/sv_abstract_logger.h \
-    ../global/sv_abstract_serial_device.h \
-    ../../svlib/sv_serial_params.h
+    ../../svlib/sv_serial_params.h \
+    ../global/sv_abstract_ksuts_device.h

@@ -4,6 +4,7 @@
 #include <QtWidgets/QDialog>
 #include <QtSerialPort/QSerialPort>
 #include <QtSerialPort/QSerialPortInfo>
+#include <QHostAddress>
 #include <QMap>
 #include <QtCore/QCommandLineParser>
 
@@ -11,7 +12,9 @@
 #include "../../svlib/sv_serial_params.h"
 
 // имена параметров устройств
-#define P_ADDRESS         "address"
+#define P_ADDRESS   "address"
+#define P_UDP_HOST  "udp_host"
+#define P_UDP_PORT  "udp_port"
 
 namespace dev {
 
@@ -22,6 +25,8 @@ namespace dev {
 
     SerialParams serialParams;
     quint32      address = 0;
+    QHostAddress udp_host;
+    quint16      udp_port = 5200;
 
   };
 
@@ -36,12 +41,14 @@ namespace dev {
 
     DeviceParams params() { return _params; }
 
-    static QString getSring(DeviceParams params)
+    static QString getString(DeviceParams params)
     {
 
-      QString result = QString("%1 -%2=%3")
-//                  .arg()
-                  .arg(P_ADDRESS).arg(params.address);
+      QString result = QString("%1 -%2=%3 -%4=%5 -%6=%7")
+                  .arg(dev::SerialParamsParser::getString(params.serialParams))
+                  .arg(P_ADDRESS).arg(params.address)
+                  .arg(P_UDP_HOST).arg(params.udp_host.toString())
+                  .arg(P_UDP_PORT).arg(params.udp_port);
 
       return result;
 
@@ -70,7 +77,7 @@ namespace dev {
       parser.setSingleDashWordOptionMode(QCommandLineParser::ParseAsLongOptions);
 
       parser.addOption(QCommandLineOption(P_ADDRESS,         "ADDRESS",  "0", "0"));
-
+      parser.addOption(QCommandLineOption(P_UDP_PORT,        "UDP_PORT", "5200", "5200"));
 
       bool ok;
 
@@ -82,6 +89,9 @@ namespace dev {
 
         _params.address = QString(parser.isSet(P_ADDRESS) ? parser.value(P_ADDRESS) : "0").toUInt(&ok);
         if(!ok) _exception.raise(QString("Неверное значение параметра: %1").arg(P_ADDRESS));
+
+        _params.udp_port = QString(parser.isSet(P_UDP_PORT) ? parser.value(P_UDP_PORT) : "5200").toUInt(&ok);
+        if(!ok) _exception.raise(QString("Неверное значение параметра: %1").arg(P_UDP_PORT));
 
         return true;
 

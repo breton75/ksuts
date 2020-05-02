@@ -13,7 +13,7 @@
 
 
 //#include "../global/sv_idevice.h"
-#include "../global/sv_abstract_serial_device.h"
+#include "../global/sv_abstract_ksuts_device.h"
 #include "../global/device_params.h"
 
 #include "../../svlib/sv_crc.h"
@@ -32,87 +32,82 @@ struct OHTHeader
 };
 #pragma pack(pop)
 
+namespace oht {
+
+  class SvUDPThread;
+  class SvSerialThread;
+
+  void func_0x19(dev::SvAbstractDevice* device, dev::DATA* DATA);
+  void func_0x13(dev::SvAbstractDevice* device, dev::DATA* DATA);
+  void func_0x14(dev::SvAbstractDevice* device, dev::DATA* DATA);
+
+}
+
+
 //idev::SvIDevice* /*OHTSHARED_EXPORT*/ create_device(const QString& params_string);
 
-class /*OHTSHARED_EXPORT*/ SvOHT: public dev::SvAbstractSerialDevice
+class /*OHTSHARED_EXPORT*/ SvOHT: public dev::SvAbstractKsutsDevice
 {
 
   Q_OBJECT
-  
-//  sv::SvAbstractLogger& _log;
 
 public:
   SvOHT(sv::SvAbstractLogger* logger = nullptr);
-//  ~SvOHT();
-  
-//  bool open()  override;
-//  void close() override;
-  
-//  bool setConfig(const dev::DeviceConfig& config);
-//  bool setParams(const QString& params);
-  
-//private:
-//  SvException* _exception;
-
-//private slots:
-//  void deleteThread();
 
 private:
-  void create_new_thread();
+  bool create_new_thread();
     
 };
 
 #define RESET_INTERVAL 10
 
-class SvOHTThread: public dev::SvAbstractSerialDeviceThread
+
+class oht::SvUDPThread: public dev::SvAbstractUdpDeviceThread
 {
   Q_OBJECT
 
 public:
-  SvOHTThread(dev::SvAbstractDevice* device, sv::SvAbstractLogger *logger = nullptr);
-//  ~SvOHTThread();
-
-//  void open() throw(SvException&) override;
-//  void stop() override;
+  SvUDPThread(dev::SvAbstractDevice* device, sv::SvAbstractLogger *logger = nullptr);
 
 private:
-//  QSerialPort _port;
-
-//  dev::SvAbstractDevice* _device;
-
-//  bool is_active;
 
   OHTHeader _header;
   size_t _hSize = sizeof(OHTHeader);
 
-//  quint8  _buf[512];
-//  quint64 _buf_offset = 0;
-
-  quint8  _data_type;
-  quint8  _data_length;
-  quint8  _data[512];
-  quint16 _crc;
+  dev::DATA _DATA;
 
   quint8  _confirm[8];
-
-//  QTimer  _reset_timer;
-
-//  SvException _exception;
-
-
-//  void run() override;
-  void treat_data();
 
   bool parse_data();
   void send_confirmation();
 
-  void func_0x19();
-  void func_0x13();
-  void func_0x14();
-
-//private slots:
-//  void reset_buffer();
+  void treat_data();
 
 };
+
+
+class oht::SvSerialThread: public dev::SvAbstractSerialDeviceThread
+{
+  Q_OBJECT
+
+public:
+  SvSerialThread(dev::SvAbstractDevice* device, sv::SvAbstractLogger *logger = nullptr);
+
+private:
+
+  OHTHeader _header;
+  size_t _hSize = sizeof(OHTHeader);
+
+  dev::DATA _DATA;
+
+  quint8  _confirm[8];
+
+  bool parse_data();
+  void send_confirmation();
+
+  void treat_data();
+
+};
+
 
 #endif // OHT_H

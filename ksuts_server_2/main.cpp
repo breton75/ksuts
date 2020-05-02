@@ -722,7 +722,7 @@ dev::SvAbstractDevice* create_device(const QSqlQuery* q)
   config.index = q->value("device_index").toInt();
   config.name = q->value("device_name").toString();
   config.hardware_type = dev::HARDWARE_CODES.value(q->value("device_hardware_code").toString());
-  config.ifc_id = q->value("device_ifc_id").toInt();
+  config.ifc_type = dev::IFC_CODES.value(q->value("device_ifc_name").toString());
   config.ifc_name = q->value("device_ifc_name").toString();
   config.protocol_id = q->value("device_protocol_id").toInt();
   config.protocol_name = q->value("device_protocol_name").toString();

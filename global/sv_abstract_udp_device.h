@@ -1,7 +1,8 @@
-﻿#ifndef SVABSTRACTSERIALDEVICE_H
-#define SVABSTRACTSERIALDEVICE_H
+﻿#ifndef SV_ABSTRACT_UDP_DEVICE_H
+#define SV_ABSTRACT_UDP_DEVICE_H
 
 #include <QObject>
+#include <QUdpSocket>
 
 #include "sv_abstract_device.h"
 
@@ -11,18 +12,18 @@
 
 namespace dev {
 
- class SvAbstractSerialDevice;
- class SvAbstractSerialDeviceThread;
+ class SvAbstractUdpDevice;
+ class SvAbstractUdpDeviceThread;
 
 }
 
-class dev::SvAbstractSerialDevice : public dev::SvAbstractDevice
+class dev::SvAbstractUdpDevice : public dev::SvAbstractDevice
 {
   Q_OBJECT
 
 public:
-  SvAbstractSerialDevice(dev::HardwareType type, sv::SvAbstractLogger* logger = nullptr);
-  ~SvAbstractSerialDevice();
+  SvAbstractUdpDevice(dev::HardwareType type, sv::SvAbstractLogger* logger = nullptr);
+  ~SvAbstractUdpDevice();
 
   bool open();
   void close();
@@ -44,22 +45,21 @@ private slots:
 
 };
 
-class dev::SvAbstractSerialDeviceThread: public dev::SvAbstractDeviceThread
+class dev::SvAbstractUdpDeviceThread: public dev::SvAbstractDeviceThread
 {
   Q_OBJECT
 
 public:
-  SvAbstractSerialDeviceThread(dev::SvAbstractDevice* device, sv::SvAbstractLogger *logger = nullptr);
-  virtual ~SvAbstractSerialDeviceThread();
+  SvAbstractUdpDeviceThread(dev::SvAbstractDevice* device, sv::SvAbstractLogger *logger = nullptr);
+  virtual ~SvAbstractUdpDeviceThread();
 
   virtual void open() throw(SvException&);
   virtual void stop() override;
 
 protected:
-  QSerialPort p_port;
+  QUdpSocket p_socket;
 
   dev::SvAbstractDevice *p_device;
-//  sv::SvAbstractLogger  *p_logger;
 
   bool is_active;
 
@@ -81,4 +81,4 @@ protected slots:
 
 };
 
-#endif // SVABSTRACTSERIALDEVICE_H
+#endif // SV_ABSTRACT_UDP_DEVICE_H

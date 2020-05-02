@@ -12,7 +12,7 @@
 #endif
 
 
-#include "../global/sv_abstract_serial_device.h"
+#include "../global/sv_abstract_ksuts_device.h"
 #include "../global/device_params.h"
 
 #include "../../svlib/sv_exception.h"

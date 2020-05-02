@@ -1,25 +1,25 @@
-﻿#include "sv_abstract_serial_device.h"
+﻿#include "sv_abstract_udp_device.h"
 
-dev::SvAbstractSerialDevice::SvAbstractSerialDevice(dev::HardwareType type, sv::SvAbstractLogger *logger):
+dev::SvAbstractUdpDevice::SvAbstractUdpDevice(dev::HardwareType type, sv::SvAbstractLogger *logger):
   dev::SvAbstractDevice(type, logger)
 //  p_log(log)
 {
 
 }
 
-dev::SvAbstractSerialDevice::~SvAbstractSerialDevice()
+dev::SvAbstractUdpDevice::~SvAbstractUdpDevice()
 {
   deleteThread();
   deleteLater();
 }
 
-bool dev::SvAbstractSerialDevice::setConfig(const dev::DeviceConfig& config)
+bool dev::SvAbstractUdpDevice::setConfig(const dev::DeviceConfig& config)
 {
   p_config = config;
   return true;
 }
 
-bool dev::SvAbstractSerialDevice::setParams(const QString& params)
+bool dev::SvAbstractUdpDevice::setParams(const QString& params)
 {
   try {
 
@@ -41,18 +41,13 @@ bool dev::SvAbstractSerialDevice::setParams(const QString& params)
   }
 }
 
-//void dev::SvAbstractSerialDevice::setLogger(const sv::SvAbstractLogger *logger)
-//{
-//  p_logger = *logger;
-//}
-
-bool dev::SvAbstractSerialDevice::open()
+bool dev::SvAbstractUdpDevice::open()
 {
   try {
 
     create_new_thread();
 
-    connect(p_thread, &dev::SvAbstractDeviceThread::finished, this, &dev::SvAbstractSerialDevice::deleteThread);
+    connect(p_thread, &dev::SvAbstractDeviceThread::finished, this, &dev::SvAbstractUdpDevice::deleteThread);
     connect(p_thread, &dev::SvAbstractDeviceThread::finished, p_thread, &dev::SvAbstractDeviceThread::deleteLater);
 
     p_thread->open();
@@ -72,14 +67,14 @@ bool dev::SvAbstractSerialDevice::open()
   }
 }
 
-void dev::SvAbstractSerialDevice::close()
+void dev::SvAbstractUdpDevice::close()
 {
   deleteThread();
 
   p_isOpened = false;
 }
 
-void dev::SvAbstractSerialDevice::deleteThread()
+void dev::SvAbstractUdpDevice::deleteThread()
 {
   if(p_thread) {
 
@@ -90,8 +85,8 @@ void dev::SvAbstractSerialDevice::deleteThread()
 }
 
 
-/**         SvAbstractSerialDeviceThread         **/
-dev::SvAbstractSerialDeviceThread::SvAbstractSerialDeviceThread(dev::SvAbstractDevice *device, sv::SvAbstractLogger *logger):
+/**         SvAbstractUdpDeviceThread         **/
+dev::SvAbstractUdpDeviceThread::SvAbstractUdpDeviceThread(dev::SvAbstractDevice *device, sv::SvAbstractLogger *logger):
   dev::SvAbstractDeviceThread(logger),
   p_device(device),
   is_active(false)
@@ -99,20 +94,20 @@ dev::SvAbstractSerialDeviceThread::SvAbstractSerialDeviceThread(dev::SvAbstractD
 
 }
 
-dev::SvAbstractSerialDeviceThread::~SvAbstractSerialDeviceThread()
+dev::SvAbstractUdpDeviceThread::~SvAbstractUdpDeviceThread()
 {
   stop();
 }
 
-void dev::SvAbstractSerialDeviceThread::stop()
+void dev::SvAbstractUdpDeviceThread::stop()
 {
   is_active = false;
   while(this->isRunning()) qApp->processEvents();
 }
 
-void dev::SvAbstractSerialDeviceThread::open() throw(SvException&)
+void dev::SvAbstractUdpDeviceThread::open() throw(SvException&)
 {
-  p_port.setPortName   (p_device->params()->serialParams.portname);
+  p_socket.bind(p_device->params()->udp_port);
   p_port.setBaudRate   (p_device->params()->serialParams.baudrate);
   p_port.setStopBits   (p_device->params()->serialParams.stopbits);
   p_port.setFlowControl(p_device->params()->serialParams.flowcontrol);
@@ -125,19 +120,19 @@ void dev::SvAbstractSerialDeviceThread::open() throw(SvException&)
   // с заданным интервалом сбрасываем буфер, чтобы отсекать мусор и битые пакеты
   p_reset_timer.setInterval(RESET_INTERVAL);
   connect(&p_port, SIGNAL(readyRead()), &p_reset_timer, SLOT(start()));
-  connect(&p_reset_timer, &QTimer::timeout, this, &dev::SvAbstractSerialDeviceThread::reset_buffer);
+  connect(&p_reset_timer, &QTimer::timeout, this, &dev::SvAbstractUdpDeviceThread::reset_buffer);
 
   // именно после open!
   p_port.moveToThread(this);
 
 }
 
-void dev::SvAbstractSerialDeviceThread::reset_buffer()
+void dev::SvAbstractUdpDeviceThread::reset_buffer()
 {
     p_buf_offset = 0;
 }
 
-void dev::SvAbstractSerialDeviceThread::run()
+void dev::SvAbstractUdpDeviceThread::run()
 {
   is_active = true;
 
@@ -159,7 +154,7 @@ void dev::SvAbstractSerialDeviceThread::run()
     }
   }
 
-  p_port.close();
+  p_socket.close();
 
 }
 

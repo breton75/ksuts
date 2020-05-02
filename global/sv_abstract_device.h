@@ -17,7 +17,7 @@
 namespace dev {
 
   enum HardwareType {
-    UNDEFINED,
+    UNDEFINED_TYPE,
     OHT,
     OPA,
     KTV,
@@ -29,13 +29,22 @@ namespace dev {
                                                       {"SKM", SKM},
                                                       {"KTV", KTV}};
 
+  enum IfcType {
+    UNDEFINED_IFC,
+    RS485,
+    UDP
+  };
+
+  const QMap<QString, IfcType> IFC_CODES = {{"RS485", RS485},
+                                            {"UDP",   UDP}};
+
   struct DeviceConfig
   {
     int index = -1;
     QString name = "";
     QString hardware_name = "";
-    HardwareType hardware_type = HardwareType::UNDEFINED;
-    int ifc_id = -1;
+    HardwareType hardware_type = HardwareType::UNDEFINED_TYPE;
+    IfcType ifc_type = IfcType::UNDEFINED_IFC;
     QString ifc_name = "";
     int protocol_id = -1;
     QString protocol_name = "";
@@ -160,8 +169,9 @@ class dev::SvAbstractDeviceThread: public QThread
   Q_OBJECT
   
 public:
-  SvAbstractDeviceThread(sv::SvAbstractLogger* logger = nullptr):
-      p_logger(logger)
+  SvAbstractDeviceThread(dev::SvAbstractDevice* device, sv::SvAbstractLogger* logger = nullptr):
+    p_device(device)
+    , p_logger(logger)
   {  }
 
 //  ~SvAbstractDeviceThread() = 0;
@@ -175,14 +185,11 @@ public:
   }
   
 protected:
-  sv::SvAbstractLogger* p_logger = nullptr;
+  sv::SvAbstractLogger  *p_logger = nullptr;
+  dev::SvAbstractDevice *p_device = nullptr;
 
+  virtual void treat_data() = 0;
 
-//signals:
-////  void finished();
-//  void logthr(const QString& str); //, svlog::MessageBuns mb, svlog::MessageTypes mt);
-//  void logthrin(const QString& str); //, svlog::MessageBuns mb, svlog::MessageTypes mt);
-  
 };
 
 

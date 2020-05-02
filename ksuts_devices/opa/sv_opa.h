@@ -12,7 +12,7 @@
 #endif
 
 
-#include "../global/sv_abstract_serial_device.h"
+#include "../global/sv_abstract_ksuts_device.h"
 #include "../global/device_params.h"
 
 #include "../../svlib/sv_exception.h"
@@ -33,7 +33,7 @@ struct OPAHeader
 
 //idev::SvIDevice* /*OHTSHARED_EXPORT*/ create_device(const QString& params_string);
 
-class /*OHTSHARED_EXPORT*/ SvOPA: public dev::SvAbstractSerialDevice
+class /*OHTSHARED_EXPORT*/ SvOPA: public dev::SvAbstractKsutsDevice
 {
     Q_OBJECT
 //    sv::SvAbstractLogger& _log;
