@@ -8,15 +8,17 @@
 /** *****************   ************************* **/
 
 SvOPA::SvOPA(sv::SvAbstractLogger *logger):
-  dev::SvAbstractSerialDevice(dev::OPA, logger)
+  dev::SvAbstractKsutsDevice(dev::OPA, logger)
 //  p_logger(logger)
 {
 
 }
 
-void SvOPA::create_new_thread()
+bool SvOPA::create_new_thread()
 {
   p_thread = new SvOPAThread(this, p_logger);
+
+  return true;
 }
 
 //SvOPA::~SvOPA()
@@ -181,7 +183,7 @@ SvOPAThread::SvOPAThread(dev::SvAbstractDevice *device, sv::SvAbstractLogger *lo
 
 }
 
-void SvOPAThread::treat_data()
+void SvOPAThread::process_data()
 {
   if(p_buf_offset >= _hSize) {
 

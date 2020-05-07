@@ -147,10 +147,41 @@ bool SvDeviceEditor::loadDevices()
   }
 }
 
-void SvDeviceEditor::loadPorts()
+void SvDeviceEditor::loadIfces()
 {
-//  for(int i = 0; i < QSerialPortInfo::availablePorts().count(); i++)
-//    ui->cbPortName->addItem(QSerialPortInfo::availablePorts().at(i).portName());
+  QSqlQuery* q = new QSqlQuery(PGDB->db);
+  QSqlError serr;
+
+  try {
+
+    serr = PGDB->execSQL(QString(SQL_SELECT_IFCES), q);
+
+    if(QSqlError::NoError != serr.type())
+      _exception.raise(serr.text());
+
+    while(q->next())
+      ui->cbIfc->addItem(q->value("ifc_name").toString(), q->value("ifc_index").toUInt());
+
+    q->finish();
+
+    ui->cbDevice->setEnabled(showMode == smNew);
+
+    connect(ui->cbDevice, SIGNAL(currentIndexChanged(int)), this, SLOT(editConnectionParams(int)));
+
+    delete q;
+
+    return true;
+
+  }
+
+  catch(SvException& e) {
+
+    delete q;
+
+    _last_error = e.error;
+    return false;
+
+  }
 }
 
 void SvDeviceEditor::accept()
@@ -237,25 +268,25 @@ void SvDeviceEditor::updateDeviceInfo(int index)
 
 }
 
-//void SvDeviceEditor::on_bnEditConnectionParams_clicked()
-//{
-//  SERIALEDITOR_UI = new SvSerialEditor(_device_connection_params, this);
-//  int result = SERIALEDITOR_UI->exec();
+void SvDeviceEditor::on_bnEditConnectionParams_clicked()
+{
+  SERIALEDITOR_UI = new SvSerialEditor(_device_connection_params, this);
+  int result = SERIALEDITOR_UI->exec();
 
-//  switch (result) {
+  switch (result) {
 
-//    case SvSerialEditor::Error:
-//      break;
+    case SvSerialEditor::Error:
+      break;
 
-//    case SvSerialEditor::Accepted:
-//      ui->editConnectionParams->setText(SERIALEDITOR_UI->stringParams());
-//      break;
+    case SvSerialEditor::Accepted:
+      ui->editConnectionParams->setText(SERIALEDITOR_UI->stringParams());
+      break;
 
-//  }
+  }
 
-//  delete SERIALEDITOR_UI;
+  delete SERIALEDITOR_UI;
 
-//}
+}
 
 
 

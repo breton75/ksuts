@@ -48,7 +48,7 @@ bool dev::SvAbstractKsutsDevice::open()
     if(!create_new_thread())
       p_exception->raise(QString("Неизвестный тип интерфейса: %1").arg(p_config.ifc_name));
 
-    connect(p_thread, &dev::SvAbstractDeviceThread::finished, this, &dev::SvAbstractKSUTSDevice::deleteThread);
+    connect(p_thread, &dev::SvAbstractDeviceThread::finished, this, &dev::SvAbstractKsutsDevice::deleteThread);
     connect(p_thread, &dev::SvAbstractDeviceThread::finished, p_thread, &dev::SvAbstractDeviceThread::deleteLater);
 
     p_thread->open();
@@ -88,23 +88,21 @@ void dev::SvAbstractKsutsDevice::deleteThread()
 
 /**         SvAbstractUdpDeviceThread         **/
 dev::SvAbstractUdpDeviceThread::SvAbstractUdpDeviceThread(dev::SvAbstractDevice *device, sv::SvAbstractLogger *logger):
-  dev::SvAbstractDeviceThread(logger)
-  ,p_device(device)
-  ,p_is_active(false)
+  dev::SvAbstractKsutsDeviceThread(device, logger)
 {
 
 }
 
-dev::SvAbstractUdpDeviceThread::~SvAbstractUdpDeviceThread()
-{
-  stop();
-}
+//dev::SvAbstractUdpDeviceThread::~SvAbstractUdpDeviceThread()
+//{
+//  stop();
+//}
 
-void dev::SvAbstractUdpDeviceThread::stop()
-{
-  p_is_active = false;
-  while(this->isRunning()) qApp->processEvents();
-}
+//void dev::SvAbstractUdpDeviceThread::stop()
+//{
+//  p_is_active = false;
+//  while(this->isRunning()) qApp->processEvents();
+//}
 
 void dev::SvAbstractUdpDeviceThread::open() throw(SvException&)
 {
@@ -113,8 +111,11 @@ void dev::SvAbstractUdpDeviceThread::open() throw(SvException&)
 
   // с заданным интервалом сбрасываем буфер, чтобы отсекать мусор и битые пакеты
   p_reset_timer.setInterval(RESET_INTERVAL);
-  connect(&p_socket, &QUdpSocket::readyRead, &p_reset_timer, &QTimer::start);
-  connect(&p_reset_timer, &QTimer::timeout, this, &dev::SvAbstractUdpDeviceThread::reset_buffer);
+  connect(&p_socket, SIGNAL(readyRead()), &p_reset_timer, SLOT(start()));
+  connect(&p_reset_timer, &QTimer::timeout, this, &dev::SvAbstractKsutsDeviceThread::reset_buffer);
+
+//  connect(&p_port, SIGNAL(readyRead()), &p_reset_timer, SLOT(start()));
+//  connect(&p_reset_timer, &QTimer::timeout, this, &dev::SvAbstractKsutsDeviceThread::reset_buffer);
 
   // именно после open!
 //  p_port.moveToThread(this);
@@ -132,13 +133,13 @@ void dev::SvAbstractUdpDeviceThread::run()
       while(p_socket.hasPendingDatagrams())
       {
 
-        if(p_buf_offset > 512)
+        if(p_buff.offset > 512)
           reset_buffer();
 
-        p_buf_offset += p_socket.read((char*)(&p_buf[0] + p_buf_offset), 512 - p_buf_offset);
+        p_buff.offset += p_socket.read((char*)(&p_buff.buf[0] + p_buff.offset), 512 - p_buff.offset);
 
 
-        treat_data();
+        process_data();
 
       }
     }
@@ -148,30 +149,28 @@ void dev::SvAbstractUdpDeviceThread::run()
 
 }
 
-void dev::SvAbstractUdpDeviceThread::reset_buffer()
-{
-  p_buf_offset = 0;
-}
+//void dev::SvAbstractUdpDeviceThread::reset_buffer()
+//{
+//  p_buf_offset = 0;
+//}
 
 /**         SvAbstractSerialDeviceThread         **/
 dev::SvAbstractSerialDeviceThread::SvAbstractSerialDeviceThread(dev::SvAbstractDevice *device, sv::SvAbstractLogger *logger):
-  dev::SvAbstractDeviceThread(logger)
-  ,p_device(device)
-  ,p_is_active(false)
+  dev::SvAbstractKsutsDeviceThread(device, logger)
 {
 
 }
 
-dev::SvAbstractSerialDeviceThread::~SvAbstractSerialDeviceThread()
-{
-  stop();
-}
+//dev::SvAbstractSerialDeviceThread::~SvAbstractSerialDeviceThread()
+//{
+//  stop();
+//}
 
-void dev::SvAbstractSerialDeviceThread::stop()
-{
-  p_is_active = false;
-  while(this->isRunning()) qApp->processEvents();
-}
+//void dev::SvAbstractSerialDeviceThread::stop()
+//{
+//  p_is_active = false;
+//  while(this->isRunning()) qApp->processEvents();
+//}
 
 void dev::SvAbstractSerialDeviceThread::open() throw(SvException&)
 {
@@ -188,7 +187,7 @@ void dev::SvAbstractSerialDeviceThread::open() throw(SvException&)
   // с заданным интервалом сбрасываем буфер, чтобы отсекать мусор и битые пакеты
   p_reset_timer.setInterval(RESET_INTERVAL);
   connect(&p_port, SIGNAL(readyRead()), &p_reset_timer, SLOT(start()));
-  connect(&p_reset_timer, &QTimer::timeout, this, &dev::SvAbstractSerialDeviceThread::reset_buffer);
+  connect(&p_reset_timer, &QTimer::timeout, this, &dev::SvAbstractKsutsDeviceThread::reset_buffer);
 
   // именно после open!
   p_port.moveToThread(this);
@@ -203,13 +202,13 @@ void dev::SvAbstractSerialDeviceThread::run()
 
     while(p_port.waitForReadyRead(1)) {
 
-      if(p_buf_offset > 512)
+      if(p_buff.offset > 512)
         reset_buffer();
 
-      p_buf_offset += p_port.read((char*)(&p_buf[0] + p_buf_offset), 512 - p_buf_offset);
+      p_buff.offset += p_port.read((char*)(&p_buff.buf[0] + p_buff.offset), 512 - p_buff.offset);
 
 
-      treat_data();
+      process_data();
 
 
     }
@@ -219,7 +218,7 @@ void dev::SvAbstractSerialDeviceThread::run()
 
 }
 
-void dev::SvAbstractSerialDeviceThread::reset_buffer()
-{
-  p_buf_offset = 0;
-}
+//void dev::SvAbstractSerialDeviceThread::reset_buffer()
+//{
+//  p_buf_offset = 0;
+//}

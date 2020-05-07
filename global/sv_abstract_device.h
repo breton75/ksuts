@@ -188,7 +188,7 @@ protected:
   sv::SvAbstractLogger  *p_logger = nullptr;
   dev::SvAbstractDevice *p_device = nullptr;
 
-  virtual void treat_data() = 0;
+  virtual void process_data() = 0;
 
 };
 

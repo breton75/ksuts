@@ -52,7 +52,7 @@ public:
 //  bool setParams(const QString& params);
   
 private:
-  void create_new_thread();
+  bool create_new_thread();
 
 //  QSerialPort _serial;
   
@@ -112,7 +112,7 @@ private:
 
   quint8  _confirm[8];
 
-  void treat_data() override;
+  void process_data() override;
 
   bool parse_data();
   void send_confirmation();

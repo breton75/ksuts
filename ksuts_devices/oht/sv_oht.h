@@ -37,7 +37,10 @@ namespace oht {
   class SvUDPThread;
   class SvSerialThread;
 
-  void func_0x19(dev::SvAbstractDevice* device, dev::DATA* DATA);
+  class DataProcessor;
+
+//  void func_0x19(dev::SvAbstractDevice* device, dev::DATA* data);
+  void func_0x19(dev::SvAbstractKsutsDeviceThread* thr);
   void func_0x13(dev::SvAbstractDevice* device, dev::DATA* DATA);
   void func_0x14(dev::SvAbstractDevice* device, dev::DATA* DATA);
 
@@ -71,6 +74,8 @@ public:
 
 private:
 
+//  oht::DataProcessor _processor;
+
   OHTHeader _header;
   size_t _hSize = sizeof(OHTHeader);
 
@@ -81,7 +86,9 @@ private:
   bool parse_data();
   void send_confirmation();
 
-  void treat_data();
+  void process_data();
+
+  friend void oht::func_0x19(dev::SvAbstractKsutsDeviceThread* thr);
 
 };
 
@@ -98,16 +105,48 @@ private:
   OHTHeader _header;
   size_t _hSize = sizeof(OHTHeader);
 
-  dev::DATA _DATA;
-
-  quint8  _confirm[8];
+//  dev::DATA _DATA;
 
   bool parse_data();
   void send_confirmation();
 
-  void treat_data();
+  void process_data();
+
+  friend void oht::func_0x19(dev::SvAbstractKsutsDeviceThread* thr);
+
+//  friend class oht::DataProcessor;
 
 };
 
+//class oht::DataProcessor
+//{
+//  Q_OBJECT
+
+//public:
+//  DataProcessor(dev::SvAbstractKsutsDeviceThread* thread):
+//    _thread(thread)
+//  {  }
+
+//  void process_data();
+
+//private:
+//  dev::SvAbstractKsutsDeviceThread* _thread;
+
+//  OHTHeader _header;
+//  size_t _hSize = sizeof(OHTHeader);
+
+//  bool parse();
+//  void send_confirmation();
+
+//};
+
+//class SvDataProcessor
+//{
+//  Q_OBJECT
+
+//  public:
+//    SvDataProcessor(dev::Sv)
+
+//}
 
 #endif // OHT_H

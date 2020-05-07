@@ -51,7 +51,7 @@ class SvDeviceEditor : public QDialog
   private slots:
     void updateDeviceInfo(int index);
 
-//    void on_bnEditConnectionParams_clicked();
+    void on_bnEditConnectionParams_clicked();
 
 public slots:
     void accept() Q_DECL_OVERRIDE;
@@ -78,7 +78,7 @@ public slots:
 
 
     bool loadDevices();
-    void loadPorts();
+    void loadIfces();
 
 
 

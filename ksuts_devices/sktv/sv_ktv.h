@@ -33,7 +33,7 @@ struct KTVHeader
 
 //idev::SvIDevice* /*OHTSHARED_EXPORT*/ create_device(const QString& params_string);
 
-class /*OHTSHARED_EXPORT*/ SvKTV: public dev::SvAbstractSerialDevice
+class /*OHTSHARED_EXPORT*/ SvKTV: public dev::SvAbstractKsutsDevice
 {
   Q_OBJECT
 
@@ -41,7 +41,7 @@ public:
   SvKTV(sv::SvAbstractLogger *logger = nullptr);
 
 private:
-  void create_new_thread();
+  bool create_new_thread();
 
 };
 

@@ -9,7 +9,7 @@ QT       += widgets network
 QT       -= gui
 CONFIG += c++11
 
-TARGET = /home/user/c++/KSUTS/global/aggmon
+TARGET = /home/user/c++/ksuts/global/aggmon
 TEMPLATE = lib
 CONFIG+= staticlib
 

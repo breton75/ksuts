@@ -9,7 +9,7 @@ QT       += widgets
 QT       -= gui
 CONFIG += c++11
 
-TARGET = /home/user/c++/KSUTS/global/ksutsmon
+TARGET = /home/user/c++/ksuts/global/ksutsmon
 TEMPLATE = lib
 CONFIG+= staticlib
 

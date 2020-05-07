@@ -13,9 +13,20 @@
 namespace dev {
 
  class SvAbstractKsutsDevice;
+ class SvAbstractKsutsDeviceThread;
 
  class SvAbstractSerialDeviceThread;
  class SvAbstractUdpDeviceThread;
+
+ struct BUFF
+ {
+   BUFF() {}
+
+   quint8  buf[512];
+   quint64 offset;
+   quint64 readed;
+
+ };
 
  struct DATA
  {
@@ -35,7 +46,7 @@ class dev::SvAbstractKsutsDevice : public dev::SvAbstractDevice
   Q_OBJECT
 
 public:
-  SvAbstractKsutsDevice(dev::HardwareType type, sv::SvAbstractLogger* logger = nullptr);
+  SvAbstractKsutsDevice(dev::HardwareType type, sv::SvAbstractLogger *logger = nullptr);
   ~SvAbstractKsutsDevice();
 
   bool open();
@@ -44,12 +55,8 @@ public:
   virtual bool setConfig(const dev::DeviceConfig& config);
   virtual bool setParams(const QString& params);
 
-//  virtual void setLogger(const sv::SvAbstractLogger* logger);
-
 protected:
   SvException* p_exception;
-
-//  sv::SvAbstractLogger& p_logger;
 
   virtual bool create_new_thread() = 0;
 
@@ -58,73 +65,97 @@ private slots:
 
 };
 
+class dev::SvAbstractKsutsDeviceThread: public dev::SvAbstractDeviceThread
+{
+  Q_OBJECT
 
-class dev::SvAbstractUdpDeviceThread: public dev::SvAbstractDeviceThread
+public:
+  SvAbstractKsutsDeviceThread(dev::SvAbstractDevice* device, sv::SvAbstractLogger *logger = nullptr):
+    dev::SvAbstractDeviceThread(device, logger)
+  ,p_is_active(false)
+  {  }
+
+  virtual ~SvAbstractKsutsDeviceThread()
+  {
+    stop();
+  }
+
+  virtual void open() throw(SvException&) = 0;
+
+  virtual void stop()
+  {
+    p_is_active = false;
+    while(this->isRunning()) qApp->processEvents();
+  }
+
+  dev::SvAbstractDevice* device() { return p_device; }
+
+  dev::DATA* data() { return &p_data; }
+
+protected:
+
+  bool p_is_active;
+
+//  quint8  p_buf[512];
+//  quint64 p_buf_offset = 0;
+//  quint64 p_bytes_readed = 0;
+
+  dev::BUFF p_buff;
+  dev::DATA p_data;
+
+  QTimer  p_reset_timer;
+
+  SvException p_exception;
+
+  virtual void process_data() = 0;
+
+public slots:
+  virtual void reset_buffer()
+  {
+    p_buff.offset = 0;
+  }
+
+};
+
+
+class dev::SvAbstractUdpDeviceThread: public dev::SvAbstractKsutsDeviceThread
 {
   Q_OBJECT
 
 public:
   SvAbstractUdpDeviceThread(dev::SvAbstractDevice* device, sv::SvAbstractLogger *logger = nullptr);
-  virtual ~SvAbstractUdpDeviceThread();
+//  virtual ~SvAbstractUdpDeviceThread();
 
   virtual void open() throw(SvException&);
-  virtual void stop() override;
+//  virtual void stop() override;
 
 protected:
   QUdpSocket p_socket;
 
-  bool p_is_active;
-
-  quint8  p_buf[512];
-  quint64 p_buf_offset = 0;
-  quint64 p_bytes_readed = 0;
-
-  QTimer  p_reset_timer;
-
-  SvException p_exception;
-
-
   virtual void run() override;
 
-  virtual void treat_data() = 0;
-
-protected slots:
-  virtual void reset_buffer();
+  virtual void process_data() = 0;
 
 };
 
 
-class dev::SvAbstractSerialDeviceThread: public dev::SvAbstractDeviceThread
+class dev::SvAbstractSerialDeviceThread: public dev::SvAbstractKsutsDeviceThread
 {
   Q_OBJECT
 
 public:
   SvAbstractSerialDeviceThread(dev::SvAbstractDevice* device, sv::SvAbstractLogger *logger = nullptr);
-  virtual ~SvAbstractSerialDeviceThread();
+//  virtual ~SvAbstractSerialDeviceThread();
 
   virtual void open() throw(SvException&);
-  virtual void stop() override;
+//  virtual void stop() override;
 
 protected:
   QSerialPort p_port;
 
-  bool p_is_active;
-
-  quint8  p_buf[512];
-  quint64 p_buf_offset = 0;
-  quint64 p_bytes_readed = 0;
-
-  QTimer  p_reset_timer;
-
-  SvException p_exception;
-
-
   virtual void run() override;
 
-  virtual void treat_data() = 0;
-
-protected slots:
-  virtual void reset_buffer();
+  virtual void process_data() = 0;
 
 };
 

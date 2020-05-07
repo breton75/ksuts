@@ -742,15 +742,15 @@ dev::SvAbstractDevice* create_device(const QSqlQuery* q)
         break;
         
       case dev::OPA:
-        newdev = new SvOPA();
+//        newdev = new SvOPA();
         break;
         
       case dev::SKM:
-        newdev = new SvSKM();
+//        newdev = new SvSKM();
         break;
 
     case dev::KTV:
-        newdev = new SvKTV();
+//        newdev = new SvKTV();
         break;
 
       default:

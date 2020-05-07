@@ -4,14 +4,16 @@
 /** *****************   ************************* **/
 
 SvKTV::SvKTV(sv::SvAbstractLogger *logger):
-  dev::SvAbstractSerialDevice(dev::KTV, logger)
+  dev::SvAbstractKsutsDevice(dev::KTV, logger)
 {
 
 }
 
-void SvKTV::create_new_thread()
+bool SvKTV::create_new_thread()
 {
   p_thread = new SvKTVThread(this, p_logger);
+
+  return true;
 }
 
 
