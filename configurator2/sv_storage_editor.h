@@ -8,7 +8,7 @@
 #include <QMessageBox>
 
 #include "../global/sql_defs.h"
-#include "../global/sv_idevice.h"
+//#include "../global/sv_idevice.h"
 
 #include "../../svlib/sv_pgdb.h"
 #include "../../svlib/sv_exception.h"

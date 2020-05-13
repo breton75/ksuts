@@ -13,7 +13,7 @@ extern SvStorageEditor* STORAGEEDITOR_UI;
 extern EditAutorunWindow *EDIT_AUTORUN_UI;
 extern SvEditConfig* EDITCONFIG_UI;
 
-MainWindow::MainWindow(const CFG &cfg, QWidget *parent) :
+MainWindow::MainWindow(const AppConfig &cfg, QWidget *parent) :
   QMainWindow(parent),
   ui(new Ui::MainWindow),
   _config(cfg)

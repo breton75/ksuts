@@ -8,6 +8,7 @@
 #include <QMessageBox>
 
 #include "../../svlib/sv_exception.h"
+#include "../../svlib/sv_serial_params.h"
 
 #include "../global/dev_defs.h"
 
@@ -25,12 +26,12 @@ namespace sv {
     Q_OBJECT
     
     
-    SvSerialEditor(SerialPortParams params, const QString &label, QWidget *parent = 0);
+    SvSerialEditor(dev::SerialParams params, const QString &label, QWidget *parent = 0);
     SvSerialEditor(const QString params, const QString &label, QWidget *parent = 0);
     
     Ui::SvSerialEditorDialog *ui;
     
-    SerialPortParams _params;
+    dev::SerialParams _params;
     
     void init(const QString &label = "");
     
@@ -45,11 +46,11 @@ namespace sv {
     ~SvSerialEditor();
     
     
-    static int showDialog(SerialPortParams params, const QString &label, QWidget *parent = 0);
+    static int showDialog(dev::SerialParams params, const QString &label, QWidget *parent = 0);
     static int showDialog(QString params, const QString &label, QWidget *parent = 0);
     static void deleteDialog();
     
-    static SerialPortParams params();
+    static dev::SerialParams params();
     static QString stringParams();
     
     /** static **/

@@ -71,6 +71,8 @@ private slots:
 
   void on_bnAddSensors_clicked();
 
+  void on_bnTestJson_clicked();
+
 private:
   Ui::MainWindow *ui;
 

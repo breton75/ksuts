@@ -4,7 +4,7 @@ SvDeviceEditor *DEVICE_UI;
 
 //extern SvSQLITE *SQLITE;
 extern SvPGDB *PGDB;
-//extern SvSerialEditor* SERIALEDITOR_UI;
+extern sv::SvSerialEditor* SERIALEDITOR_UI;
 
 SvDeviceEditor::SvDeviceEditor(QWidget *parent, int deviceIndex) :
   QDialog(parent),
@@ -42,7 +42,7 @@ SvDeviceEditor::SvDeviceEditor(QWidget *parent, int deviceIndex) :
 //    _device_index = q->value("device_index").toInt();
 //    qDebug() << "_device_index" << _device_index;
     _device_name = q->value("device_name").toString();
-    _device_ifc_id = q->value("device_ifc_id").toInt();
+    _device_ifc_index = q->value("device_ifc_index").toInt();
     _device_ifc_name = q->value("device_ifc_name").toString();
     _device_protocol_id = q->value("device_protocol_id").toInt();
     _device_protocol_name = q->value("device_protocol_name").toString();
@@ -147,7 +147,7 @@ bool SvDeviceEditor::loadDevices()
   }
 }
 
-void SvDeviceEditor::loadIfces()
+bool SvDeviceEditor::loadIfces()
 {
   QSqlQuery* q = new QSqlQuery(PGDB->db);
   QSqlError serr;
@@ -213,7 +213,7 @@ void SvDeviceEditor::accept()
 
     QSqlError serr = PGDB->execSQL(QString(SQL_CONFIGURE_DEVICE)
                                      .arg(_device_name)
-                                     .arg(_device_ifc_id)
+                                     .arg(_device_ifc_index)
                                      .arg(_device_protocol_id)
                                      .arg(_device_connection_params)
                                      .arg(_device_description)
@@ -251,14 +251,14 @@ void SvDeviceEditor::updateDeviceInfo(int index)
 
   if(q->next()) {
 
-    _device_ifc_id = q->value("device_ifc_id").toInt();
+    _device_ifc_index = q->value("device_ifc_id").toInt();
     _device_ifc_name = q->value("device_ifc_name").toString();
     _device_protocol_id = q->value("device_protocol_id").toInt();
     _device_protocol_name = q->value("device_protocol_name").toString();
     _device_driver_name = q->value("device_driver_lib_name").toString();
 
-    ui->editIfc->setText(_device_ifc_name);
-    ui->editProtocol->setText(_device_protocol_name);
+    ui->cbIfc->setCurrentIndex(ui->cbIfc->findData(_device_ifc_index));
+//    ui->editProtocol->setText(_device_protocol_name);
     ui->editDriverName->setText(_device_driver_name);
 
   }
@@ -270,21 +270,31 @@ void SvDeviceEditor::updateDeviceInfo(int index)
 
 void SvDeviceEditor::on_bnEditConnectionParams_clicked()
 {
-  SERIALEDITOR_UI = new SvSerialEditor(_device_connection_params, this);
-  int result = SERIALEDITOR_UI->exec();
+  switch (dev::IFC_CODES.value(ui->cbIfc->currentText())) {
 
-  switch (result) {
+    case dev::RS485:
 
-    case SvSerialEditor::Error:
+      SERIALEDITOR_UI = new sv::SvSerialEditor(_device_connection_params, this);
+      int result = SERIALEDITOR_UI->exec();
+
+      switch (result) {
+
+        case sv::SvSerialEditor::Error:
+          break;
+
+      case sv::SvSerialEditor::Accepted:
+          ui->editConnectionParams->setText(SERIALEDITOR_UI->stringParams());
+          break;
+
+      }
+
+      delete SERIALEDITOR_UI;
       break;
 
-    case SvSerialEditor::Accepted:
-      ui->editConnectionParams->setText(SERIALEDITOR_UI->stringParams());
+    default:
       break;
-
   }
 
-  delete SERIALEDITOR_UI;
 
 }
 

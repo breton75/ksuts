@@ -44,7 +44,7 @@
 #include "edit_autorun.h"
 #include "sv_editconfig.h"
 
-//struct CFG {
+//struct AppConfig {
 //    QString db_name;
 //    QString db_host;
 //    quint16 db_port;
@@ -65,11 +65,11 @@ class MainWindow : public QMainWindow
 {
   Q_OBJECT
 
-  sv::SvDBus& _dbus = sv::SvDBus::instance();
+//  sv::SvDBus& _dbus = sv::SvDBus::instance();
 
 
 public:
-  explicit MainWindow(const CFG& cfg, QWidget *parent = 0);
+  explicit MainWindow(const AppConfig& cfg, QWidget *parent = 0);
   ~MainWindow();
 
   sv::SvWidgetLogger log;
@@ -84,7 +84,7 @@ private:
 
   SvException _exception;
 
-  CFG _config;
+  AppConfig _config;
 
   QString p_current_path = "";
 

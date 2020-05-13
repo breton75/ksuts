@@ -21,6 +21,7 @@
 #include "../global/sql_defs.h"
 #include "../global/device_params.h"
 #include "../global/sv_serialeditor.h"
+#include "../global/sv_abstract_device.h"
 
 #include "../../svlib/sv_settings.h"
 #include "../../svlib/sv_sqlite.h"
@@ -65,7 +66,7 @@ public slots:
     int     _device_index = 0;
     QString _device_name = "";
     QString _device_connection_params = "";
-    int     _device_ifc_id = -1;
+    int     _device_ifc_index = -1;
     QString _device_ifc_name = "";
     int     _device_protocol_id = -1;
     QString _device_protocol_name = "";
@@ -78,7 +79,7 @@ public slots:
 
 
     bool loadDevices();
-    void loadIfces();
+    bool loadIfces();
 
 
 

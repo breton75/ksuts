@@ -6,7 +6,7 @@ using namespace sv;
 SvSerialEditor* SERIALEDITOR_UI = nullptr;
 SvSerialEditor* SvSerialEditor::_instance = nullptr;
 
-SvSerialEditor::SvSerialEditor(SerialPortParams params, const QString& label, QWidget *parent) :
+SvSerialEditor::SvSerialEditor(dev::SerialParams params, const QString& label, QWidget *parent) :
   QDialog(parent),
   ui(new Ui::SvSerialEditorDialog)
 {
@@ -23,7 +23,7 @@ SvSerialEditor::SvSerialEditor(const QString params, const QString& label, QWidg
 {
   ui->setupUi(this);
   
-  SerialParamsParser p(params);
+  dev::SerialParamsParser p(params);
   if(!p.parse()) {
     
     QMessageBox::critical(this, "Ошибка", QString("%1\nБудут установлены парметры по умолчанию")
@@ -35,7 +35,7 @@ SvSerialEditor::SvSerialEditor(const QString params, const QString& label, QWidg
     
   }
   else 
-    _params = p.serialParams();
+    _params = p.params();
       
   init(label);
   
@@ -62,7 +62,7 @@ void SvSerialEditor::init(const QString& label)
   for(QSerialPort::Parity p: Parities.keys())
     ui->cbParity->addItem(Parities.value(p), p);
   
-  for(QSerialPort::StopBits s: StopBits.keys())
+  for(QSerialPort::StopBits s: dev::StopBits.keys())
     ui->cbStopBits->addItem(StopBits.value(s), s);  
 
   for(QSerialPort::FlowControl f: FlowControls.keys())
@@ -92,7 +92,7 @@ SvSerialEditor::~SvSerialEditor()
 void SvSerialEditor::accept()
 {
   _params.portname = ui->cbPortName->currentData().toString();
-  _params.description = ui->cbPortName->currentText();
+//  _params.description = ui->cbPortName->currentText();
   _params.baudrate = ui->cbBaudrate->currentData().toUInt();
   _params.databits = QSerialPort::DataBits(ui->cbDataBits->currentData().toInt());
   _params.flowcontrol = QSerialPort::FlowControl(ui->cbFlowControl->currentData().toInt());
@@ -103,7 +103,7 @@ void SvSerialEditor::accept()
     
 }
 
-int SvSerialEditor::showDialog(SerialPortParams params, const QString& label, QWidget *parent)
+int SvSerialEditor::showDialog(dev::SerialParams params, const QString& label, QWidget *parent)
 {
   _instance = new SvSerialEditor(params, label, parent);
   return  _instance->exec();
@@ -124,23 +124,23 @@ void SvSerialEditor::deleteDialog()
   
 }
 
-SerialPortParams SvSerialEditor::params()
-{
-  SerialPortParams p;
+//dev::SerialParams SvSerialEditor::params()
+//{
+//  SerialPortParams p;
   
-  if(_instance)
-    p = _instance->_params;
+//  if(_instance)
+//    p = _instance->_params;
   
-  return p;
-}
+//  return p;
+//}
 
-QString SvSerialEditor::stringParams()
-{
-  SerialPortParams p;
+//QString SvSerialEditor::stringParams()
+//{
+//  SerialPortParams p;
   
-  if(_instance)
-    p = _instance->_params;
+//  if(_instance)
+//    p = _instance->_params;
   
-  return SerialParamsParser::getSring(p);
+//  return SerialParamsParser::getSring(p);
   
-}
+//}

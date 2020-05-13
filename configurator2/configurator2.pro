@@ -61,8 +61,6 @@ HEADERS += \
     ../global/sql_defs.h \
     treeitem.h \
     treemodel.h \
-    sv_oht.h \
-    sv_idevice.h \
     sv_device_editor.h \
     ../../svlib/sv_pgdb.h \
     sv_logon.h \
@@ -82,7 +80,10 @@ HEADERS += \
     ../../svlib/sv_dbus.h \
     ../../svlib/sv_clog.h \
     ../../svlib/sv_abstract_logger.h \
-    ../../svlib/sv_fnt.h
+    ../../svlib/sv_fnt.h \
+    ../global/device_params.h \
+    ../global/sv_abstract_device.h \
+    ../../svlib/sv_serial_params.h
 
 FORMS += \
         mainwindow.ui \
