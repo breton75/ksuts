@@ -9,6 +9,7 @@
 #include <QFileDialog>
 #include <QSerialPort>
 #include <QSerialPortInfo>
+#include <QJsonObject>
 
 #include "ui_sv_device_editor.h"
 
@@ -20,9 +21,9 @@
 
 #include "../global/sql_defs.h"
 #include "../global/device_params.h"
-#include "../global/sv_serialeditor.h"
 #include "../global/sv_abstract_device.h"
 
+#include "../../svlib/sv_serial_editor.h"
 #include "../../svlib/sv_settings.h"
 #include "../../svlib/sv_sqlite.h"
 #include "../../svlib/sv_exception.h"
@@ -52,7 +53,7 @@ class SvDeviceEditor : public QDialog
   private slots:
     void updateDeviceInfo(int index);
 
-    void on_bnEditConnectionParams_clicked();
+    void editConnectionParams();
 
 public slots:
     void accept() Q_DECL_OVERRIDE;
@@ -72,7 +73,7 @@ public slots:
     QString _device_protocol_name = "";
     QString _device_driver_name = "";
     QString _device_description = "";
-    bool    _device_is_configured = false;
+    bool    _device_is_involved = false;
     bool    _device_debug = false;
 
     QString _last_error = "";

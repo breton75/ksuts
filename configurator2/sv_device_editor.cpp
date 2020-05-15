@@ -4,7 +4,7 @@ SvDeviceEditor *DEVICE_UI;
 
 //extern SvSQLITE *SQLITE;
 extern SvPGDB *PGDB;
-extern sv::SvSerialEditor* SERIALEDITOR_UI;
+//extern sv::SvSerialEditor* SERIALEDITOR_UI;
 
 SvDeviceEditor::SvDeviceEditor(QWidget *parent, int deviceIndex) :
   QDialog(parent),
@@ -19,6 +19,8 @@ SvDeviceEditor::SvDeviceEditor(QWidget *parent, int deviceIndex) :
   if(!loadDevices())
     QMessageBox::critical(this, "Ошибка", _last_error, QMessageBox::Ok);
 
+  if(!loadIfces())
+    QMessageBox::critical(this, "Ошибка", _last_error, QMessageBox::Ok);
 
 //  loadPorts();
 
@@ -49,7 +51,7 @@ SvDeviceEditor::SvDeviceEditor(QWidget *parent, int deviceIndex) :
     _device_connection_params = q->value("device_connection_params").toString();
     _device_driver_name = q->value("device_driver_lib_name").toString();
     _device_description = q->value("device_description").toString();
-    _device_is_configured = q->value("device_is_configured").toBool();
+    _device_is_involved = q->value("device_is_involved").toBool();
     _device_debug = q->value("device_debug").toBool();
 
     q->finish();
@@ -76,7 +78,7 @@ SvDeviceEditor::SvDeviceEditor(QWidget *parent, int deviceIndex) :
 //                                .arg(P_SERIAL_BAUDRATE)
 //                                .arg(P_SERIAL_STOPBITS);
 
-  ui->editConnectionParams->setText(_device_connection_params);
+  ui->textConnectionParams->setText(_device_connection_params);
 //  ui->editIfc->setText(_device_ifc_name);
 //  ui->editProtocol->setText(_device_protocol_name);
 //  ui->editDriverName->setText(_device_driver_name);
@@ -87,11 +89,13 @@ SvDeviceEditor::SvDeviceEditor(QWidget *parent, int deviceIndex) :
   connect(ui->bnCancel, &QPushButton::clicked, this, &QDialog::reject);
 //  connect(ui->bnConfig, SIGNAL(clicked()), this, SLOT(config()));
 
-  connect(ui->bnEditConnectionParams, &QPushButton::clicked, [=](){
-                                if(sv::SvSerialEditor::showDialog(ui->editConnectionParams->text(), _device_name, this) == QDialog::Accepted)
-                                  ui->editConnectionParams->setText(sv::SvSerialEditor::stringParams());
-                                sv::SvSerialEditor::deleteDialog();
-                              });
+  connect(ui->bnEditConnectionParams, &QPushButton::clicked, this, &SvDeviceEditor::editConnectionParams);
+
+//  connect(ui->bnEditConnectionParams, &QPushButton::clicked, [=](){
+//                                if(sv::SvSerialEditor::showDialog(ui->editConnectionParams->text(), _device_name, this) == QDialog::Accepted)
+//                                  ui->editConnectionParams->setText(sv::SvSerialEditor::stringParams());
+//                                sv::SvSerialEditor::deleteDialog();
+//                              });
 
   this->setModal(true);
   this->show();
@@ -164,9 +168,7 @@ bool SvDeviceEditor::loadIfces()
 
     q->finish();
 
-    ui->cbDevice->setEnabled(showMode == smNew);
-
-    connect(ui->cbDevice, SIGNAL(currentIndexChanged(int)), this, SLOT(editConnectionParams(int)));
+//    connect(ui->cbDevice, SIGNAL(currentIndexChanged(int)), this, SLOT(editConnectionParams(int)));
 
     delete q;
 
@@ -196,10 +198,10 @@ void SvDeviceEditor::accept()
       return;
     }
 
-  if(ui-> editConnectionParams->text().isEmpty()) {
+  if(ui->textConnectionParams->toPlainText().isEmpty()) {
 
     QMessageBox::critical(0, "Ошибка", "Необходимо указать параметры подключения");
-    ui->editConnectionParams->setFocus();
+    ui->textConnectionParams->setFocus();
     return;
   }
 
@@ -207,9 +209,10 @@ void SvDeviceEditor::accept()
 
     _device_name = ui->cbDevice->currentText();
     _device_index = ui->cbDevice->currentData().toUInt();
-    _device_connection_params = ui->editConnectionParams->text();
+    _device_connection_params = ui->textConnectionParams->toPlainText();
     _device_description = ui->textDescription->toPlainText();
     _device_debug = ui->checkDebugMode->isChecked();
+    _device_ifc_index = ui->cbIfc->currentData().toUInt();
 
     QSqlError serr = PGDB->execSQL(QString(SQL_CONFIGURE_DEVICE)
                                      .arg(_device_name)
@@ -251,13 +254,15 @@ void SvDeviceEditor::updateDeviceInfo(int index)
 
   if(q->next()) {
 
-    _device_ifc_index = q->value("device_ifc_id").toInt();
+    _device_ifc_index = q->value("device_ifc_index").toInt();
     _device_ifc_name = q->value("device_ifc_name").toString();
     _device_protocol_id = q->value("device_protocol_id").toInt();
     _device_protocol_name = q->value("device_protocol_name").toString();
     _device_driver_name = q->value("device_driver_lib_name").toString();
+    _device_connection_params = q->value("device_connection_params").toString();
 
     ui->cbIfc->setCurrentIndex(ui->cbIfc->findData(_device_ifc_index));
+    ui->textConnectionParams->setText(_device_connection_params);
 //    ui->editProtocol->setText(_device_protocol_name);
     ui->editDriverName->setText(_device_driver_name);
 
@@ -268,35 +273,50 @@ void SvDeviceEditor::updateDeviceInfo(int index)
 
 }
 
-void SvDeviceEditor::on_bnEditConnectionParams_clicked()
+void SvDeviceEditor::editConnectionParams()
 {
+  QJsonDocument jd = QJsonDocument::fromJson(_device_connection_params.toUtf8());
+  QJsonObject json_obj;
+  QString obj_name = "";
+
   switch (dev::IFC_CODES.value(ui->cbIfc->currentText())) {
 
     case dev::RS485:
+    {
+      obj_name = dev::IFC_CODES.key(dev::RS485);
+      json_obj = jd[obj_name].toObject();
 
-      SERIALEDITOR_UI = new sv::SvSerialEditor(_device_connection_params, this);
-      int result = SERIALEDITOR_UI->exec();
+      sv::SerialParams params_485 = sv::SerialParams::fromJsonObject(json_obj);
 
-      switch (result) {
-
-        case sv::SvSerialEditor::Error:
-          break;
-
-      case sv::SvSerialEditor::Accepted:
-          ui->editConnectionParams->setText(SERIALEDITOR_UI->stringParams());
-          break;
-
+      if(sv::SerialEditor::showDialog(params_485, ui->cbIfc->currentText(), this) == sv::SerialEditor::Accepted)
+      {
+        json_obj = sv::SerialEditor::params().toJsonObject();
       }
 
-      delete SERIALEDITOR_UI;
+      sv::SerialEditor::deleteDialog();
+
       break;
+    }
+
+    case dev::UDP:
+    {
+
+      break;
+    }
 
     default:
       break;
   }
 
+  if(!obj_name.isEmpty()) {
 
+    QJsonObject newjo = jd.object();
+    newjo[obj_name] = json_obj;
+    jd.setObject(newjo);
+
+    _device_connection_params = jd.toJson(QJsonDocument::Indented);
+    ui->textConnectionParams->setText(_device_connection_params);
+
+  }
 }
-
-
 

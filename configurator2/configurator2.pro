@@ -48,7 +48,7 @@ SOURCES += \
     ../../svlib/sv_config.cpp \
     edit_autorun.cpp \
     sv_editconfig.cpp \
-    ../global/sv_serialeditor.cpp \
+    ../../svlib/sv_serial_editor.cpp \
     ../../svlib/sv_dbus.cpp \
     ../../svlib/sv_clog.cpp \
     ../../svlib/sv_abstract_logger.cpp \
@@ -64,7 +64,6 @@ HEADERS += \
     sv_device_editor.h \
     ../../svlib/sv_pgdb.h \
     sv_logon.h \
-    ../global/dev_defs.h \
     sv_signal_list.h \
     sv_storage_list.h \
     sv_storage_editor.h \
@@ -76,14 +75,15 @@ HEADERS += \
     sv_editconfig.h \
     ../../svlib/sv_busy_window.h \
     ../global/gen_defs.h \
-    ../global/sv_serialeditor.h \
     ../../svlib/sv_dbus.h \
     ../../svlib/sv_clog.h \
     ../../svlib/sv_abstract_logger.h \
     ../../svlib/sv_fnt.h \
     ../global/device_params.h \
     ../global/sv_abstract_device.h \
-    ../../svlib/sv_serial_params.h
+    ../../svlib/sv_serial_editor.h \
+    ../../svlib/sv_serial_params.h \
+    ../../svlib/sv_crc.h
 
 FORMS += \
         mainwindow.ui \
@@ -96,7 +96,7 @@ FORMS += \
     sv_device_list.ui \
     edit_autorun.ui \
     sv_editconfig.ui \
-    ../global/sv_serialeditor.ui
+    ../../svlib/sv_serial_editor.ui
 
 RESOURCES += \
     res.qrc

@@ -23,7 +23,7 @@ namespace dev {
 
   struct DeviceParams {
 
-    SerialParams serialParams;
+    sv::SerialParams serialParams;
     quint32      address = 0;
     QHostAddress udp_host;
     quint16      udp_port = 5200;
@@ -45,7 +45,7 @@ namespace dev {
     {
 
       QString result = QString("%1 -%2=%3 -%4=%5 -%6=%7")
-                  .arg(dev::SerialParamsParser::getString(params.serialParams))
+                  .arg(sv::SerialParamsParser::getString(params.serialParams))
                   .arg(P_ADDRESS).arg(params.address)
                   .arg(P_UDP_HOST).arg(params.udp_host.toString())
                   .arg(P_UDP_PORT).arg(params.udp_port);
@@ -57,7 +57,7 @@ namespace dev {
     bool parse()
     {
       // сначала парсим параметры серийного порта
-      dev::SerialParamsParser serial_parser(_params_string);
+      sv::SerialParamsParser serial_parser(_params_string);
 
       if(!serial_parser.parse()) {
 

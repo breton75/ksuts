@@ -18,7 +18,7 @@ EditAutorunWindow::EditAutorunWindow(const QString &autorun_ini_file, QWidget *p
   p_autorun_ini_file = autorun_ini_file;
 
 
-  AppParams::current_format = QSettings::NativeFormat;
+//  AppParams::current_format = QSettings::NativeFormat;
 
   /// список команд для выполнения ВНАЧАЛЕ
   int i = 0;
