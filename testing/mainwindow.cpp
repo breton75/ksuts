@@ -43,3 +43,43 @@ void MainWindow::on_bnTestJson_clicked()
     qDebug() /*<< jo.value("portname") << jo.value("databits") */<< j.toJson(QJsonDocument::Compact);
 }
 
+
+void MainWindow::on_pushButton_clicked()
+{
+    QByteArray ba = QByteArray::fromHex(ui->lineCmd->text().toUtf8());
+
+    QUdpSocket u;
+
+
+    u.bind(quint16(5300));
+        u.writeDatagram(ba, QHostAddress("192.168.1.50"), quint16(ui->spinPort->value()));
+
+void* datagram = malloc(0xFFFF);
+
+        while (true) {
+
+          while(u.waitForReadyRead(1000))
+          {
+            while(u.hasPendingDatagrams())
+            {
+              qint64 datagram_size = u.pendingDatagramSize();
+
+              if(datagram_size <= 0 || datagram_size > 0xFFFF) continue;
+
+              u.readDatagram((char*)(datagram), datagram_size);
+
+              QByteArray ab((char*)datagram, datagram_size);
+
+              ui->lineResponse->setText(QString(ab.toHex()));
+            qDebug() << "got data";
+
+
+            }
+          }
+          qApp->processEvents();
+        }
+
+free(datagram);
+    qDebug() << "done";
+
+}

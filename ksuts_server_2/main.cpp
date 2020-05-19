@@ -104,8 +104,6 @@ bool parse_params(const QStringList& args, AppConfig &cfg, const QString& file_n
     if(!cfg_parser.parse(file_name))
         exception.raise(cfg_parser.lastError());
 
-
-
     /** разбираем параметры командной строки **/
     SvCommandLineParser cmd_parser(AppOptions);
 
@@ -255,7 +253,7 @@ int main(int argc, char *argv[])
             .arg(QCoreApplication::applicationDirPath())
             .arg(QDir::separator())
             .arg(QCoreApplication::applicationName());
-
+qDebug() << 1;
     if(!parse_params(a.arguments(), cfg, cfg_file_name))
         exception.raise(-1, "Ошибка разбора командной строки");
 
@@ -346,7 +344,9 @@ int main(int argc, char *argv[])
   atexit(close);
 
 
-  dbus << sv::log::llInfo << QString("Сервер сбора и обработки данных КСУТС v.%1").arg(APP_VERSION) << sv::log::endl;
+  dbus << sv::log::llInfo
+       << QString("Сервер сбора и обработки данных КСУТС v.%1").arg(APP_VERSION)
+       << sv::log::endl;
 
   int result = 0;
 
@@ -499,7 +499,6 @@ bool readDevices(const AppConfig& cfg)
       if(newdev) {
 
         DEVICES.insert(newdev->config()->index, newdev);
-
 
         if(cfg.log_options.logging) {
 

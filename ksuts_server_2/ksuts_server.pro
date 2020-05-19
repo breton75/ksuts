@@ -4,7 +4,7 @@ QT += serialport sql network dbus
 CONFIG += c++11 console
 CONFIG -= app_bundle
 
-TARGET = /home/user/ksuts_server/ksuts_server2
+TARGET = /home/user/ksuts_server/ksuts_server
 
 DEFINES += APP_DEBUG=1
 DEFINES += TEST_VALUES

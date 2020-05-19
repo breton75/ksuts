@@ -6,6 +6,7 @@
 #include <QJsonArray>
 #include <QJsonObject>
 #include <QDebug>
+#include <QUdpSocket>
 
 namespace Ui {
 class MainWindow;
@@ -21,6 +22,8 @@ public:
 
 private slots:
   void on_bnTestJson_clicked();
+
+  void on_pushButton_clicked();
 
 private:
   Ui::MainWindow *ui;
