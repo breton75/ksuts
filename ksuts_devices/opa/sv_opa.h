@@ -93,7 +93,7 @@ private:
     
 };
 
-class SvOPAThread: public dev::SvAbstractSerialDeviceThread
+class SvOPAThread: public dev::SvAbstractSerialThread
 {
   Q_OBJECT
 
@@ -112,7 +112,7 @@ private:
 
   quint8  _confirm[8];
 
-  void process_data() override;
+  void process_data();
 
   bool parse_data();
   void send_confirmation();

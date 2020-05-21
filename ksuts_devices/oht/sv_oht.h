@@ -37,12 +37,15 @@ namespace oht {
   class SvUDPThread;
   class SvSerialThread;
 
-  class DataProcessor;
+//  class DataProcessor;
 
-//  void func_0x19(dev::SvAbstractDevice* device, dev::DATA* data);
-  void func_0x19(dev::SvAbstractKsutsDeviceThread* thr);
-  void func_0x13(dev::SvAbstractDevice* device, dev::DATA* DATA);
-  void func_0x14(dev::SvAbstractDevice* device, dev::DATA* DATA);
+  quint16 parse_data(dev::BUFF* buff, dev::DATA* data, OHTHeader* header);
+  QByteArray confirmation(const OHTHeader* header);
+
+  void func_0x19(dev::SvAbstractDevice* device, dev::DATA* data);
+//  void func_0x19(dev::SvAbstractKsutsDeviceThread* thr);
+  void func_0x13(dev::SvAbstractDevice* device, dev::DATA* data);
+  void func_0x14(dev::SvAbstractDevice* device, dev::DATA* data);
 
 }
 
@@ -59,13 +62,14 @@ public:
 
 private:
   bool create_new_thread();
+
     
 };
 
 #define RESET_INTERVAL 10
 
 
-class oht::SvUDPThread: public dev::SvAbstractUdpDeviceThread
+class oht::SvUDPThread: public dev::SvAbstractUdpThread
 {
   Q_OBJECT
 
@@ -79,21 +83,17 @@ private:
   OHTHeader _header;
   size_t _hSize = sizeof(OHTHeader);
 
-  dev::DATA _DATA;
-
   quint8  _confirm[8];
 
-  bool parse_data();
-  void send_confirmation();
+//  bool parse_data();
+//  void send_confirmation();
 
   void process_data();
-
-  friend void oht::func_0x19(dev::SvAbstractKsutsDeviceThread* thr);
 
 };
 
 
-class oht::SvSerialThread: public dev::SvAbstractSerialDeviceThread
+class oht::SvSerialThread: public dev::SvAbstractSerialThread
 {
   Q_OBJECT
 
@@ -105,16 +105,10 @@ private:
   OHTHeader _header;
   size_t _hSize = sizeof(OHTHeader);
 
-//  dev::DATA _DATA;
-
-  bool parse_data();
-  void send_confirmation();
+//  bool parse_data();
+//  void send_confirmation();
 
   void process_data();
-
-  friend void oht::func_0x19(dev::SvAbstractKsutsDeviceThread* thr);
-
-//  friend class oht::DataProcessor;
 
 };
 

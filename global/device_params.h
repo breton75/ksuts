@@ -1,20 +1,17 @@
 ﻿#ifndef DEVICE_PARAMS_H
 #define DEVICE_PARAMS_H
 
-#include <QtWidgets/QDialog>
-#include <QtSerialPort/QSerialPort>
-#include <QtSerialPort/QSerialPortInfo>
-#include <QHostAddress>
 #include <QMap>
-#include <QtCore/QCommandLineParser>
+#include <QString>
+#include <QtCore>
+
+#include <QJsonDocument>
+#include <QJsonObject>
 
 #include "../../svlib/sv_exception.h"
-#include "../../svlib/sv_serial_params.h"
 
 // имена параметров устройств
-#define P_ADDRESS   "address"
-#define P_UDP_HOST  "udp_host"
-#define P_UDP_PORT  "udp_port"
+#define P_DEVICE_ADDRESS   "address"
 
 namespace dev {
 
@@ -23,94 +20,46 @@ namespace dev {
 
   struct DeviceParams {
 
-    sv::SerialParams serialParams;
-    quint32      address = 0;
-    QHostAddress udp_host;
-    quint16      udp_port = 5200;
+    quint16      address = 0;
 
-  };
-
-  class DeviceParamsParser
-  {
-  public:
-    DeviceParamsParser(const QString params_string):
-      _params_string(params_string)
-    {  }
-
-    QString lastError() { return _last_error; }
-
-    DeviceParams params() { return _params; }
-
-    static QString getString(DeviceParams params)
+    static DeviceParams fromJson(const QString& json_string)
     {
+      QJsonDocument jd = QJsonDocument::fromJson(json_string.toUtf8());
+      return fromJsonObject(jd.object());
+    }
 
-      QString result = QString("%1 -%2=%3 -%4=%5 -%6=%7")
-                  .arg(sv::SerialParamsParser::getString(params.serialParams))
-                  .arg(P_ADDRESS).arg(params.address)
-                  .arg(P_UDP_HOST).arg(params.udp_host.toString())
-                  .arg(P_UDP_PORT).arg(params.udp_port);
+    static DeviceParams fromJsonObject(const QJsonObject &object)
+    {
+      DeviceParams p;
+      QString s = "";
 
-      return result;
+      if(object.contains(P_DEVICE_ADDRESS))
+        s = object.value(P_DEVICE_ADDRESS).toString();
+
+      bool ok = false;
+      p.address = s.toUInt(&ok, 16);
+
+      return p;
 
     }
 
-    bool parse()
+    QString toString() const
     {
-      // сначала парсим параметры серийного порта
-      sv::SerialParamsParser serial_parser(_params_string);
+      QJsonDocument jd;
+      jd.setObject(toJsonObject());
 
-      if(!serial_parser.parse()) {
-
-        _last_error = serial_parser.lastError();
-        return false;
-
-      }
-
-      _params.serialParams = serial_parser.params();
-
-      // парсим остальные параметры
-      //! обязателен первый аргумент!! парсер считает, что там находится путь к программе
-      QStringList params_list;
-      params_list << "dumb_path_to_app" << _params_string.split(" ");
-
-      QCommandLineParser parser;
-      parser.setSingleDashWordOptionMode(QCommandLineParser::ParseAsLongOptions);
-
-      parser.addOption(QCommandLineOption(P_ADDRESS,         "ADDRESS",  "0", "0"));
-      parser.addOption(QCommandLineOption(P_UDP_PORT,        "UDP_PORT", "5200", "5200"));
-
-      bool ok;
-
-      try {
-
-//        if(!parser.parse(params_list)) _exception.raise(QString("Неверное значение параметра: %1").arg(_params_string));
-
-        parser.parse(params_list);
-
-        _params.address = QString(parser.isSet(P_ADDRESS) ? parser.value(P_ADDRESS) : "0").toUInt(&ok);
-        if(!ok) _exception.raise(QString("Неверное значение параметра: %1").arg(P_ADDRESS));
-
-        _params.udp_port = QString(parser.isSet(P_UDP_PORT) ? parser.value(P_UDP_PORT) : "5200").toUInt(&ok);
-        if(!ok) _exception.raise(QString("Неверное значение параметра: %1").arg(P_UDP_PORT));
-
-        return true;
-
-      }
-
-      catch(SvException& e) {
-        _last_error = e.error;
-        return false;
-      }
+      return QString(jd.toJson(QJsonDocument::Indented));
     }
 
-  private:
-    QString _params_string = "";
+    QJsonObject toJsonObject() const
+    {
+      QJsonObject j;
 
-    DeviceParams _params;
+      j.insert(P_DEVICE_ADDRESS, QJsonValue(QString::number(address, 16)).toString());
 
-    QString _last_error = "";
+      return j;
 
-    SvException _exception;
+    }
 
   };
 

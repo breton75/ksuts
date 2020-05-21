@@ -45,7 +45,7 @@ private:
 
 };
 
-class SvKTVThread: public dev::SvAbstractSerialDeviceThread
+class SvKTVThread: public dev::SvAbstractSerialThread
 {
   Q_OBJECT
 

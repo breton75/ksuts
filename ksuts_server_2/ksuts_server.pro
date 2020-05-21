@@ -62,4 +62,5 @@ HEADERS += \
     ../ksuts_devices/sktv/ktv_defs.h \
     ../../svlib/sv_abstract_logger.h \
     ../../svlib/sv_serial_params.h \
-    ../global/sv_abstract_ksuts_device.h
+    ../global/sv_abstract_ksuts_device.h \
+    ../../svlib/sv_udp_params.h

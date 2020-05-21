@@ -13,22 +13,13 @@ dev::SvAbstractKsutsDevice::~SvAbstractKsutsDevice()
   deleteLater();
 }
 
-bool dev::SvAbstractKsutsDevice::setConfig(const dev::DeviceConfig& config)
+bool dev::SvAbstractKsutsDevice::setup(const dev::DeviceInfo& info)
 {
-  p_config = config;
-  return true;
-}
+  p_info = info;
 
-bool dev::SvAbstractKsutsDevice::setParams(const QString& params)
-{
   try {
 
-    dev::DeviceParamsParser p(params);
-
-    if(!p.parse())
-      p_exception->raise(p.lastError());
-
-    p_params = p.params();
+    p_params = dev::DeviceParams::fromJson(p_info.device_params);
 
     return true;
 
@@ -46,7 +37,9 @@ bool dev::SvAbstractKsutsDevice::open()
   try {
 
     if(!create_new_thread())
-      p_exception->raise(QString("Неизвестный тип интерфейса: %1").arg(p_config.ifc_name));
+      p_exception->raise(QString("Неизвестный тип интерфейса: %1").arg(p_info.ifc_name));
+
+    p_thread->setIfcParams(p_info.ifc_params);
 
     connect(p_thread, &dev::SvAbstractDeviceThread::finished, this, &dev::SvAbstractKsutsDevice::deleteThread);
     connect(p_thread, &dev::SvAbstractDeviceThread::finished, p_thread, &dev::SvAbstractDeviceThread::deleteLater);
@@ -87,10 +80,23 @@ void dev::SvAbstractKsutsDevice::deleteThread()
 
 
 /**         SvAbstractUdpDeviceThread         **/
-dev::SvAbstractUdpDeviceThread::SvAbstractUdpDeviceThread(dev::SvAbstractDevice *device, sv::SvAbstractLogger *logger):
-  dev::SvAbstractKsutsDeviceThread(device, logger)
+dev::SvAbstractUdpThread::SvAbstractUdpThread(dev::SvAbstractDevice *device, sv::SvAbstractLogger *logger):
+  dev::SvAbstractKsutsThread(device, logger)
 {
 
+}
+
+void dev::SvAbstractUdpThread::setIfcParams(const QString& params) throw(SvException&)
+{
+  try {
+
+    p_params = sv::UdpParams::fromJson(params);
+
+  }
+  catch(SvException& e) {
+
+    throw e;
+  }
 }
 
 //dev::SvAbstractUdpDeviceThread::~SvAbstractUdpDeviceThread()
@@ -104,15 +110,15 @@ dev::SvAbstractUdpDeviceThread::SvAbstractUdpDeviceThread(dev::SvAbstractDevice 
 //  while(this->isRunning()) qApp->processEvents();
 //}
 
-void dev::SvAbstractUdpDeviceThread::open() throw(SvException&)
+void dev::SvAbstractUdpThread::open() throw(SvException&)
 {
-  if(!p_socket.bind(p_device->params()->udp_port, QAbstractSocket::DontShareAddress))
+  if(!p_socket.bind(p_params.listen_port, QAbstractSocket::DontShareAddress))
     throw p_exception.assign(p_socket.errorString());
 
   // с заданным интервалом сбрасываем буфер, чтобы отсекать мусор и битые пакеты
   p_reset_timer.setInterval(RESET_INTERVAL);
   connect(&p_socket, SIGNAL(readyRead()), &p_reset_timer, SLOT(start()));
-  connect(&p_reset_timer, &QTimer::timeout, this, &dev::SvAbstractKsutsDeviceThread::reset_buffer);
+  connect(&p_reset_timer, &QTimer::timeout, this, &dev::SvAbstractKsutsThread::reset_buffer);
 
 //  connect(&p_port, SIGNAL(readyRead()), &p_reset_timer, SLOT(start()));
 //  connect(&p_reset_timer, &QTimer::timeout, this, &dev::SvAbstractKsutsDeviceThread::reset_buffer);
@@ -122,7 +128,20 @@ void dev::SvAbstractUdpDeviceThread::open() throw(SvException&)
 
 }
 
-void dev::SvAbstractUdpDeviceThread::run()
+quint64 dev::SvAbstractUdpThread::write(const QByteArray& data)
+{
+  if(p_logger && p_device->info()->debug_mode)
+    *p_logger << sv::log::mtDebug
+              << sv::log::llDebug
+              << sv::log::TimeZZZ << sv::log::out
+              << QString(data.toHex())
+              << sv::log::endl;
+
+  return p_socket.writeDatagram(data, QHostAddress(p_params.host), p_params.remote_port);
+
+}
+
+void dev::SvAbstractUdpThread::run()
 {
   p_is_active = true;
 
@@ -133,10 +152,11 @@ void dev::SvAbstractUdpDeviceThread::run()
       while(p_socket.hasPendingDatagrams())
       {
 
-        if(p_buff.offset > 512)
+        if(p_buff.offset > MAX_PACKET_SIZE)
           reset_buffer();
 
-        p_buff.offset += p_socket.read((char*)(&p_buff.buf[0] + p_buff.offset), 512 - p_buff.offset);
+        /* ... the rest of the datagram will be lost ... */
+        p_buff.offset += p_socket.readDatagram((char*)(&p_buff.buf[0] + p_buff.offset), MAX_PACKET_SIZE - p_buff.offset);
 
 
         process_data();
@@ -149,16 +169,24 @@ void dev::SvAbstractUdpDeviceThread::run()
 
 }
 
-//void dev::SvAbstractUdpDeviceThread::reset_buffer()
-//{
-//  p_buf_offset = 0;
-//}
-
-/**         SvAbstractSerialDeviceThread         **/
-dev::SvAbstractSerialDeviceThread::SvAbstractSerialDeviceThread(dev::SvAbstractDevice *device, sv::SvAbstractLogger *logger):
-  dev::SvAbstractKsutsDeviceThread(device, logger)
+/**         SvAbstractSerialThread         **/
+dev::SvAbstractSerialThread::SvAbstractSerialThread(dev::SvAbstractDevice *device, sv::SvAbstractLogger *logger):
+  dev::SvAbstractKsutsThread(device, logger)
 {
 
+}
+
+void dev::SvAbstractSerialThread::setIfcParams(const QString& params) throw(SvException&)
+{
+  try {
+
+    p_params = sv::SerialParams::fromJson(params);
+
+  }
+  catch(SvException& e) {
+
+    throw e;
+  }
 }
 
 //dev::SvAbstractSerialDeviceThread::~SvAbstractSerialDeviceThread()
@@ -172,14 +200,14 @@ dev::SvAbstractSerialDeviceThread::SvAbstractSerialDeviceThread(dev::SvAbstractD
 //  while(this->isRunning()) qApp->processEvents();
 //}
 
-void dev::SvAbstractSerialDeviceThread::open() throw(SvException&)
+void dev::SvAbstractSerialThread::open() throw(SvException&)
 {
-  p_port.setPortName   (p_device->params()->serialParams.portname);
-  p_port.setBaudRate   (p_device->params()->serialParams.baudrate);
-  p_port.setStopBits   (p_device->params()->serialParams.stopbits);
-  p_port.setFlowControl(p_device->params()->serialParams.flowcontrol);
-  p_port.setDataBits   (p_device->params()->serialParams.databits);
-  p_port.setParity     (p_device->params()->serialParams.parity);
+  p_port.setPortName   (p_params.portname);
+  p_port.setBaudRate   (p_params.baudrate);
+  p_port.setStopBits   (p_params.stopbits);
+  p_port.setFlowControl(p_params.flowcontrol);
+  p_port.setDataBits   (p_params.databits);
+  p_port.setParity     (p_params.parity);
 
   if(!p_port.open(QIODevice::ReadWrite))
     throw p_exception.assign(p_port.errorString());
@@ -187,14 +215,27 @@ void dev::SvAbstractSerialDeviceThread::open() throw(SvException&)
   // с заданным интервалом сбрасываем буфер, чтобы отсекать мусор и битые пакеты
   p_reset_timer.setInterval(RESET_INTERVAL);
   connect(&p_port, SIGNAL(readyRead()), &p_reset_timer, SLOT(start()));
-  connect(&p_reset_timer, &QTimer::timeout, this, &dev::SvAbstractKsutsDeviceThread::reset_buffer);
+  connect(&p_reset_timer, &QTimer::timeout, this, &dev::SvAbstractKsutsThread::reset_buffer);
 
   // именно после open!
   p_port.moveToThread(this);
 
 }
 
-void dev::SvAbstractSerialDeviceThread::run()
+quint64 dev::SvAbstractSerialThread::write(const QByteArray& data)
+{
+  if(p_logger && p_device->info()->debug_mode)
+    *p_logger << sv::log::mtDebug
+              << sv::log::llDebug
+              << sv::log::TimeZZZ << sv::log::out
+              << QString(data.toHex())
+              << sv::log::endl;
+
+  return p_port.write(data);
+
+}
+
+void dev::SvAbstractSerialThread::run()
 {
   p_is_active = true;
 
@@ -202,10 +243,10 @@ void dev::SvAbstractSerialDeviceThread::run()
 
     while(p_port.waitForReadyRead(1)) {
 
-      if(p_buff.offset > 512)
+      if(p_buff.offset > MAX_PACKET_SIZE)
         reset_buffer();
 
-      p_buff.offset += p_port.read((char*)(&p_buff.buf[0] + p_buff.offset), 512 - p_buff.offset);
+      p_buff.offset += p_port.read((char*)(&p_buff.buf[0] + p_buff.offset), MAX_PACKET_SIZE - p_buff.offset);
 
 
       process_data();
@@ -217,8 +258,3 @@ void dev::SvAbstractSerialDeviceThread::run()
   p_port.close();
 
 }
-
-//void dev::SvAbstractSerialDeviceThread::reset_buffer()
-//{
-//  p_buf_offset = 0;
-//}

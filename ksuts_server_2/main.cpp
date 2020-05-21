@@ -253,7 +253,7 @@ int main(int argc, char *argv[])
             .arg(QCoreApplication::applicationDirPath())
             .arg(QDir::separator())
             .arg(QCoreApplication::applicationName());
-qDebug() << 1;
+
     if(!parse_params(a.arguments(), cfg, cfg_file_name))
         exception.raise(-1, "Ошибка разбора командной строки");
 
@@ -498,14 +498,14 @@ bool readDevices(const AppConfig& cfg)
       
       if(newdev) {
 
-        DEVICES.insert(newdev->config()->index, newdev);
+        DEVICES.insert(newdev->info()->index, newdev);
 
         if(cfg.log_options.logging) {
 
             sv::SvAbstractLogger* logger = create_logger(cfg.log_options,
                                                                QString("%1%2")
-                                                                    .arg(newdev->config()->hardware_name)
-                                                                    .arg(newdev->config()->index));
+                                                                    .arg(newdev->info()->hardware_name)
+                                                                    .arg(newdev->info()->index));
             LOGGERS.append(logger);
 
             newdev->setLogger(logger);
@@ -514,9 +514,9 @@ bool readDevices(const AppConfig& cfg)
 
 
         dbus << sv::log::llDebug << QString("  %1 [Индекс %2] %3").
-                arg(newdev->config()->name).
-                arg(newdev->config()->index).
-                arg(newdev->config()->device_params_string)
+                arg(newdev->info()->name).
+                arg(newdev->info()->index).
+                arg(newdev->info()->device_params)
              << sv::log::endl;
 
         counter++;
@@ -648,7 +648,7 @@ bool readSignals(const AppConfig &cfg)
 
           DEVICES.value(newsig->params()->device_index)->addSignal(newsig);
 
-          dbus << lvl << QString("%1 %2").arg(QString(31 - newsig->params()->name.length(), QChar('-'))).arg(DEVICES.value(newsig->params()->device_index)->config()->name);
+          dbus << lvl << QString("%1 %2").arg(QString(31 - newsig->params()->name.length(), QChar('-'))).arg(DEVICES.value(newsig->params()->device_index)->info()->name);
 
           counter++;
 
@@ -716,25 +716,25 @@ dev::SvAbstractDevice* create_device(const QSqlQuery* q)
 {  
   dev::SvAbstractDevice* newdev = nullptr;
   
-  dev::DeviceConfig config;
+  dev::DeviceInfo info;
 
-  config.index = q->value("device_index").toInt();
-  config.name = q->value("device_name").toString();
-  config.hardware_type = dev::HARDWARE_CODES.value(q->value("device_hardware_code").toString());
-  config.ifc_type = dev::IFC_CODES.value(q->value("device_ifc_name").toString());
-  config.ifc_name = q->value("device_ifc_name").toString();
-  config.protocol_id = q->value("device_protocol_id").toInt();
-  config.protocol_name = q->value("device_protocol_name").toString();
-  config.driver_lib_name = q->value("device_driver_lib_name").toString(); 
-  config.is_involved = q->value("device_is_involved").toBool();
-  config.debug_mode = q->value("device_debug").toBool();
-  config.timeout = q->value("device_timeout").toUInt();
-  config.device_params_string = q->value("device_params").toString();
+  info.index = q->value("device_index").toInt();
+  info.name = q->value("device_name").toString();
+  info.hardware_type = dev::HARDWARE_CODES.value(q->value("device_hardware_code").toString());
+  info.ifc_type = dev::IFC_CODES.value(q->value("device_ifc_name").toString());
+  info.ifc_name = q->value("device_ifc_name").toString();
+  info.protocol_id = q->value("device_protocol_id").toInt();
+  info.protocol_name = q->value("device_protocol_name").toString();
+  info.driver_lib_name = q->value("device_driver_lib_name").toString();
+  info.is_involved = q->value("device_is_involved").toBool();
+  info.debug_mode = q->value("device_debug").toBool();
+  info.timeout = q->value("device_timeout").toUInt();
+  info.device_params = q->value("device_params").toString();
   QString params = q->value("device_params").toString();
   
   try {
     
-    switch (config.hardware_type) {
+    switch (info.hardware_type) {
       
       case dev::OHT:
         newdev = new SvOHT();
@@ -753,13 +753,13 @@ dev::SvAbstractDevice* create_device(const QSqlQuery* q)
         break;
 
       default:
-        exception.raise(QString("Неизвестное устройство: %1 [Индекс %2]").arg(config.name).arg(config.index));
+        exception.raise(QString("Неизвестное устройство: %1 [Индекс %2]").arg(info.name).arg(info.index));
         break;
         
     }
     
-    if(!newdev->setConfig(config)) exception.raise(newdev->lastError());
-    if(!newdev->setParams(params)) exception.raise(newdev->lastError());
+    if(!newdev->setup(info)) exception.raise(newdev->lastError());
+//    if(!newdev->setParams(params)) exception.raise(newdev->lastError());
 
     return newdev;
     
@@ -857,11 +857,11 @@ bool openDevices()
       dev::SvAbstractDevice* device = DEVICES.value(key);
 
       if(!device->open()) exception.raise(QString("%1 [Индекс %2]: %3")
-                                          .arg(device->config()->name)
-                                          .arg(device->config()->index)
+                                          .arg(device->info()->name)
+                                          .arg(device->info()->index)
                                           .arg(device->lastError()));
 
-      dbus << sv::log::llDebug << QString("  %1: OK").arg(device->config()->name) << sv::log::endl;
+      dbus << sv::log::llDebug << QString("  %1: OK").arg(device->info()->name) << sv::log::endl;
         
     }
     
@@ -933,7 +933,7 @@ void closeDevices()
 
       dev::SvAbstractDevice* device = DEVICES.value(key);
 
-      dbus << sv::log::llDebug << QString("  %1 (%2):").arg(device->config()->name).arg(device->config()->ifc_name) << sv::log::endi;
+      dbus << sv::log::llDebug << QString("  %1 (%2):").arg(device->info()->name).arg(device->info()->ifc_name) << sv::log::endi;
 
       device->close();
       delete DEVICES.take(key);

@@ -16,33 +16,24 @@ SvSKM::~SvSKM()
   deleteLater();
 }
 
-bool SvSKM::setConfig(const dev::DeviceConfig& config)
-{
-  p_config = config;
-  return true;
-}
+//bool SvSKM::setup(const dev::DeviceInfo& info)
+//{
+//  p_info = info;
 
-bool SvSKM::setParams(const QString& params)
-{
-  try {
+//  try {
     
-    dev::DeviceParamsParser p(params);
+//    p_params = dev::DeviceParams::fromJson(info.device_params);
 
-    if(!p.parse())
-      _exception->raise(p.lastError());
-    
-    p_params = p.params();
-
-    return true;
+//    return true;
       
-  }
+//  }
   
-  catch(SvException& e) {
+//  catch(SvException& e) {
 
-    setLastError(e.error);
-    return false;
-  }
-}
+//    setLastError(e.error);
+//    return false;
+//  }
+//}
 
 bool SvSKM::open()
 {

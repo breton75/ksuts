@@ -38,7 +38,7 @@ namespace dev {
   const QMap<QString, IfcType> IFC_CODES = {{"RS485", RS485},
                                             {"UDP",   UDP}};
 
-  struct DeviceConfig
+  struct DeviceInfo
   {
     int index = -1;
     QString name = "";
@@ -54,7 +54,8 @@ namespace dev {
     bool debug_mode = false;
     bool debug2_mode = false;
     quint64 timeout = 0;
-    QString device_params_string = "";
+    QString device_params = "";
+    QString ifc_params = "";
   };
 
   typedef QMap<QString, SvSignal*> SignalMap;
@@ -83,8 +84,7 @@ public:
   
   virtual dev::SvAbstractDeviceThread* thread() const { return p_thread; }
 
-  virtual bool setConfig(const dev::DeviceConfig& config) = 0;
-  virtual bool setParams(const QString& params) = 0;
+  virtual bool setup(const dev::DeviceInfo& info) = 0;
 
   virtual void setLogger(sv::SvAbstractLogger* logger)
   {
@@ -96,7 +96,7 @@ public:
 
   virtual const sv::SvAbstractLogger* logger() const { return p_logger; }
 
-  virtual const dev::DeviceConfig* config() const { return &p_config; }
+  virtual const dev::DeviceInfo* info() const { return &p_info; }
   virtual const dev::DeviceParams* params() const { return &p_params; }
 
   virtual bool open() = 0;
@@ -135,7 +135,7 @@ public:
 
   inline void setNewLostEpoch()
   {
-      p_lost_epoch = QDateTime::currentMSecsSinceEpoch() + p_config.timeout;
+      p_lost_epoch = QDateTime::currentMSecsSinceEpoch() + p_info.timeout;
 
       foreach (SvSignal* s, p_signals.values())
         s->setDeviceLostEpoch(p_lost_epoch);
@@ -147,7 +147,7 @@ protected:
 
   dev::SvAbstractDeviceThread* p_thread = nullptr;
 
-  dev::DeviceConfig  p_config;
+  dev::DeviceInfo    p_info;
   dev::DeviceParams  p_params;
 
   sv::SvAbstractLogger* p_logger = nullptr;
@@ -175,6 +175,8 @@ public:
   {  }
 
 //  ~SvAbstractDeviceThread() = 0;
+
+  virtual void setIfcParams(const QString& params) throw(SvException&) = 0;
 
   virtual void open() throw(SvException&) = 0;
   virtual void stop() = 0;

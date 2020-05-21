@@ -44,8 +44,8 @@ public:
   bool open();
   void close();
   
-  bool setConfig(const dev::DeviceConfig& config);
-  bool setParams(const QString& params);
+//  bool setup(const dev::DeviceInfo& info);
+//  bool setParams(const QString& params);
   
 private:
   SvException* _exception;  
