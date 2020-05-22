@@ -10,7 +10,7 @@
 #include <QProcess>
 
 #include "../../svlib/sv_pgdb.h"
-#include "../../svlib/sv_clog.h"
+#include "../../svlib/sv_widget_log.h"
 
 namespace Ui {
   class SvLogonDialog;

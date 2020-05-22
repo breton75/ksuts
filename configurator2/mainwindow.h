@@ -15,7 +15,7 @@
 #include <QApplication>
 
 #include "../../svlib/sv_exception.h"
-//#include "../../svlib/sv_log.h"
+#include "../../svlib/sv_widget_log.h"
 #include "../../svlib/sv_settings.h"
 #include "../../svlib/sv_pgdb.h"
 #include "../../svlib/sv_config.h"

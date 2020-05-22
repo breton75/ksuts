@@ -90,7 +90,7 @@ void dev::SvAbstractUdpThread::setIfcParams(const QString& params) throw(SvExcep
 {
   try {
 
-    p_params = sv::UdpParams::fromJson(params);
+    p_params = sv::UdpParams::fromJsonString(params);
 
   }
   catch(SvException& e) {
@@ -180,7 +180,7 @@ void dev::SvAbstractSerialThread::setIfcParams(const QString& params) throw(SvEx
 {
   try {
 
-    p_params = sv::SerialParams::fromJson(params);
+    p_params = sv::SerialParams::fromJsonString(params);
 
   }
   catch(SvException& e) {

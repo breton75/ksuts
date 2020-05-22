@@ -91,6 +91,8 @@ SvDeviceEditor::SvDeviceEditor(QWidget *parent, int deviceIndex) :
 
   connect(ui->bnEditConnectionParams, &QPushButton::clicked, this, &SvDeviceEditor::editConnectionParams);
 
+  connect(ui->cbIfc, SIGNAL(currentIndexChanged(int)), this, SLOT(editConnectionParams(int)));
+
 //  connect(ui->bnEditConnectionParams, &QPushButton::clicked, [=](){
 //                                if(sv::SvSerialEditor::showDialog(ui->editConnectionParams->text(), _device_name, this) == QDialog::Accepted)
 //                                  ui->editConnectionParams->setText(sv::SvSerialEditor::stringParams());
@@ -167,8 +169,6 @@ bool SvDeviceEditor::loadIfces()
       ui->cbIfc->addItem(q->value("ifc_name").toString(), q->value("ifc_index").toUInt());
 
     q->finish();
-
-//    connect(ui->cbDevice, SIGNAL(currentIndexChanged(int)), this, SLOT(editConnectionParams(int)));
 
     delete q;
 
@@ -273,24 +273,24 @@ void SvDeviceEditor::updateDeviceInfo(int index)
 
 }
 
-void SvDeviceEditor::editConnectionParams()
+void SvDeviceEditor::editConnectionParams(int index)
 {
-  QJsonDocument jd = QJsonDocument::fromJson(_device_connection_params.toUtf8());
-  QJsonObject json_obj;
-  QString obj_name = "";
+//  QJsonDocument jd = QJsonDocument::fromJson(_device_connection_params.toUtf8());
+//  QJsonObject json_obj;
+  QString json = "";
 
-  switch (dev::IFC_CODES.value(ui->cbIfc->currentText())) {
+  switch (dev::IFC_CODES.value(ui->cbIfc->itemText(index))) {
 
     case dev::RS485:
     {
-      obj_name = dev::IFC_CODES.key(dev::RS485);
-      json_obj = jd[obj_name].toObject();
+//      obj_name = dev::IFC_CODES.key(dev::RS485);
+//      json_obj = jd[obj_name].toObject();
 
-      sv::SerialParams params_485 = sv::SerialParams::fromJsonObject(json_obj);
+      sv::SerialParams params_485 = sv::SerialParams::fromJsonString(_device_connection_params);
 
       if(sv::SerialEditor::showDialog(params_485, ui->cbIfc->currentText(), this) == sv::SerialEditor::Accepted)
       {
-        json_obj = sv::SerialEditor::params().toJsonObject();
+        json = sv::SerialEditor::params().toJsonString();
       }
 
       sv::SerialEditor::deleteDialog();
@@ -300,6 +300,14 @@ void SvDeviceEditor::editConnectionParams()
 
     case dev::UDP:
     {
+      sv::UdpParams params_udp = sv::UdpParams::fromJsonString(_device_connection_params);
+
+      if(sv::UdpEditor::showDialog(params_udp, ui->cbIfc->currentText(), this) == sv::UdpEditor::Accepted)
+      {
+        json = sv::UdpEditor::params().toJsonString();
+      }
+
+      sv::UdpEditor::deleteDialog();
 
       break;
     }
@@ -308,15 +316,15 @@ void SvDeviceEditor::editConnectionParams()
       break;
   }
 
-  if(!obj_name.isEmpty()) {
+  if(!json.isEmpty()) {
 
-    QJsonObject newjo = jd.object();
-    newjo[obj_name] = json_obj;
-    jd.setObject(newjo);
+//    QJsonDocument jd;
+//    jd.setObject(json_obj);
 
-    _device_connection_params = jd.toJson(QJsonDocument::Indented);
-    ui->textConnectionParams->setText(_device_connection_params);
+//    _device_connection_params = jd.toJson(QJsonDocument::Indented);
+    ui->textConnectionParams->setText(json);
 
   }
+
 }
 

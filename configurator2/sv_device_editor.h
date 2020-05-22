@@ -24,6 +24,7 @@
 #include "../global/sv_abstract_device.h"
 
 #include "../../svlib/sv_serial_editor.h"
+#include "../../svlib/sv_udp_editor.h"
 #include "../../svlib/sv_settings.h"
 #include "../../svlib/sv_sqlite.h"
 #include "../../svlib/sv_exception.h"
@@ -53,7 +54,7 @@ class SvDeviceEditor : public QDialog
   private slots:
     void updateDeviceInfo(int index);
 
-    void editConnectionParams();
+    void editConnectionParams(int index);
 
 public slots:
     void accept() Q_DECL_OVERRIDE;
