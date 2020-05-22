@@ -51,35 +51,35 @@ void MainWindow::on_pushButton_clicked()
     QUdpSocket u;
 
 
-    u.bind(quint16(5300));
+    u.bind(quint16(ui->spinPort->value()));
         u.writeDatagram(ba, QHostAddress("192.168.1.50"), quint16(ui->spinPort->value()));
 
-void* datagram = malloc(0xFFFF);
+//void* datagram = malloc(0xFFFF);
 
-        while (true) {
+//        while (true) {
 
-          while(u.waitForReadyRead(1000))
-          {
-            while(u.hasPendingDatagrams())
-            {
-              qint64 datagram_size = u.pendingDatagramSize();
+//          while(u.waitForReadyRead(1000))
+//          {
+//            while(u.hasPendingDatagrams())
+//            {
+//              qint64 datagram_size = u.pendingDatagramSize();
 
-              if(datagram_size <= 0 || datagram_size > 0xFFFF) continue;
+//              if(datagram_size <= 0 || datagram_size > 0xFFFF) continue;
 
-              u.readDatagram((char*)(datagram), datagram_size);
+//              u.readDatagram((char*)(datagram), datagram_size);
 
-              QByteArray ab((char*)datagram, datagram_size);
+//              QByteArray ab((char*)datagram, datagram_size);
 
-              ui->lineResponse->setText(QString(ab.toHex()));
-            qDebug() << "got data";
+//              ui->lineResponse->setText(QString(ab.toHex()));
+//            qDebug() << "got data";
 
 
-            }
-          }
-          qApp->processEvents();
-        }
+//            }
+//          }
+//          qApp->processEvents();
+//        }
 
-free(datagram);
+//free(datagram);
     qDebug() << "done";
 
 }

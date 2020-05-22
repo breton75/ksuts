@@ -230,12 +230,9 @@ bool parse_params(const QStringList& args, AppConfig &cfg, const QString& file_n
 
 int main(int argc, char *argv[])
 {
-  dbus = sv::SvDBus();
-
   // запрос версии для монитора
   if((argc > 1) && (QString(argv[1]).trimmed() == "-v")) {
     std::cout << QString(APP_VERSION).toStdString().c_str() << std::endl;
-//    dbus.sendmsg("mon", QString(APP_VERSION), sv::log::typeToString(sv::log::mtAttention));
     return 0;
   }
 
@@ -247,6 +244,28 @@ int main(int argc, char *argv[])
 
 
   QCoreApplication a(argc, argv);
+
+  // создаем потомка
+  switch (fork()) {
+
+    case -1:   // если не удалось запустить потомка выведем на экран ошибку и её описание
+
+      printf("Ошибка при запуске службы сервера (%s)\n", strerror(errno));
+      return -1;
+      break;
+
+    case 0:
+      break;
+
+    default:
+
+      return 0;
+      break;
+
+  }
+
+  // инициализируем логгер ПОСЛЕ запуска потомка
+  dbus.init();
 
   AppConfig cfg;
 
@@ -263,11 +282,7 @@ int main(int argc, char *argv[])
     dbus.setOptions(cfg.log_options);
     dbus.setSender("main");
 
-//    if(cfg.single_device_mode)
-//      lout.setFileNamePrefix(QString("dev%1").arg(cfg.single_device_index));
-
-
-    dbus << sv::log::llDebug
+    dbus << sv::log::llDebug2
          << "db_host=" << cfg.db_host << "\ndb_port=" << cfg.db_port
          << "\ndb_name=" << cfg.db_name << "\ndb_user=" << cfg.db_user << "\ndb_pass=" << cfg.db_pass
          << "\nlogging=" << (cfg.log_options.logging ? "on" : "off")
@@ -293,7 +308,6 @@ int main(int argc, char *argv[])
     return e.code;
   }
 
-  dbus << sv::log::llDebug << 111 << sv::log::endl;
   // если не задан режим 'одного устройства', то должна быть запущена только одна копия ksuts_server
   if(!cfg.single_device_mode) {
 
@@ -318,38 +332,36 @@ int main(int argc, char *argv[])
     }
   }
 
-  // создаем потомка
-  switch (fork()) {
+//  // создаем потомка
+//  switch (fork()) {
 
-    case -1:   // если не удалось запустить потомка выведем на экран ошибку и её описание
+//    case -1:   // если не удалось запустить потомка выведем на экран ошибку и её описание
 
-      printf("Ошибка при запуске службы сервера (%s)\n", strerror(errno));
-      return -1;
-      break;
+//      printf("Ошибка при запуске службы сервера (%s)\n", strerror(errno));
+//      return -1;
+//      break;
 
-    case 0:
-      break;
+//    case 0:
+//      break;
 
-    default:
+//    default:
 
-      /* Функция  _exit()  подобна  exit(3),  но  не  вызывает никаких функций,
-       * зарегистрированных с помощью  atexit(3)  или  on_exit(3)...
-       * читай man _Exit */
-      return 0;
-//      _Exit(0);
-      break;
+//      /* Функция  _exit()  подобна  exit(3),  но  не  вызывает никаких функций,
+//       * зарегистрированных с помощью  atexit(3)  или  on_exit(3)...
+//       * читай man _Exit */
+//      return 0;
+////      _Exit(0);
+//      break;
 
-  }
-
-//dbus << sv::log::llDebug << 333 << sv::log::endl;
+//  }
 
   /// перехватываем момент закрытия программы, чтобы корректно завершить
   atexit(close);
 
 
-//  dbus << sv::log::llInfo
-//       << QString("Сервер сбора и обработки данных КСУТС v.%1").arg(APP_VERSION)
-//       << sv::log::endl;
+  dbus << sv::log::llInfo << sv::log::mtInfo
+       << QString("Сервер сбора и обработки данных КСУТС v.%1").arg(APP_VERSION)
+       << sv::log::endl;
 
   int result = 0;
 
@@ -388,13 +400,17 @@ int main(int argc, char *argv[])
 
       setsid(); // отцепляемся от родителя
 
-      if(!cfg.log_options.logging || cfg.log_options.log_devices.isEmpty()) {
+      close(STDIN_FILENO);
+      close(STDOUT_FILENO);
+      close(STDERR_FILENO);
 
-        close(STDIN_FILENO);
-        close(STDOUT_FILENO);
-        close(STDERR_FILENO);
+//      if(!cfg.log_options.logging || cfg.log_options.log_devices.isEmpty()) {
 
-      }
+//        close(STDIN_FILENO);
+//        close(STDOUT_FILENO);
+//        close(STDERR_FILENO);
+
+//      }
 
       return a.exec();
 
@@ -456,13 +472,13 @@ bool initConfig(const AppConfig& cfg)
 
     QString db_version = q.value("db_version").toString();
 
-    dbus << sv::log::llInfo << QString("Версия БД: %1").arg(db_version) << sv::log::endl;
+    dbus << sv::log::llInfo << sv::log::mtSuccess << QString("Версия БД: %1").arg(db_version) << sv::log::endl;
     
     if(QString(ACTUAL_DB_VERSION) != db_version)
       exception.raise(1, QString("Версия БД не соответствует версии программы. Требуется версия БД %1\n")
                       .arg(ACTUAL_DB_VERSION));
 
-    dbus << sv::log::llInfo << "OK\n" << sv::log::endl;
+    dbus << sv::log::llInfo << sv::log::mtSuccess << "OK\n" << sv::log::endl;
 
     return true;
     
@@ -470,7 +486,7 @@ bool initConfig(const AppConfig& cfg)
   
   catch(SvException& e) {
     
-    dbus << sv::log::llError << QString("Ошибка: %1\n").arg(e.error) << sv::log::endl;
+    dbus << sv::log::llError << sv::log::mtError << QString("Ошибка: %1\n").arg(e.error) << sv::log::endl;
     return false;
   }
 }
@@ -478,9 +494,8 @@ bool initConfig(const AppConfig& cfg)
 
 bool readDevices(const AppConfig& cfg)
 {
-  sv::SvDBus dbus1;
 
-  dbus1 << sv::log::mtDebug << sv::log::llInfo << QString("Читаем устройства:") << sv::log::endl;
+  dbus << sv::log::mtInfo << sv::log::llInfo << QString("Читаем устройства:") << sv::log::endl;
   
   QSqlQuery q(PG->db);
   
@@ -518,7 +533,7 @@ bool readDevices(const AppConfig& cfg)
         }
 
 
-        dbus1 << sv::log::llDebug << QString("  %1 [Индекс %2] %3").
+        dbus << sv::log::llDebug << sv::log::mtSimple << QString("  %1 [Индекс %2] %3").
                 arg(newdev->info()->name).
                 arg(newdev->info()->index).
                 arg(newdev->info()->device_params)
@@ -529,7 +544,7 @@ bool readDevices(const AppConfig& cfg)
       }
 
       else
-         dbus1 << sv::log::mtError << sv::log::llError << QString("Не удалось добавить устройство %1 [Индекс %2]\n")
+         dbus << sv::log::mtError << sv::log::llError << QString("Не удалось добавить устройство %1 [Индекс %2]\n")
                                         .arg(q.value("device_name").toString())
                                         .arg(q.value("device_index").toInt())
              << sv::log::endl;
@@ -543,7 +558,7 @@ bool readDevices(const AppConfig& cfg)
     if(counter == 0)
       exception.raise("Устройства в конфигурации не найдены");
 
-    dbus1 << sv::log::mtSuccess << sv::log::llInfo << QString("OK [прочитано %1]\n").arg(counter) << sv::log::endl;
+    dbus << sv::log::mtSuccess << sv::log::llInfo << QString("OK [прочитано %1]\n").arg(counter) << sv::log::endl;
     
     return true;
     

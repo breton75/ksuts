@@ -121,7 +121,7 @@ class dev::SvAbstractUdpThread: public dev::SvAbstractKsutsThread
 
 public:
   SvAbstractUdpThread(dev::SvAbstractDevice* device, sv::SvAbstractLogger *logger = nullptr);
-//  virtual ~SvAbstractUdpDeviceThread();
+  virtual ~SvAbstractUdpThread();
 
   virtual void setIfcParams(const QString& params) throw(SvException&);
 
