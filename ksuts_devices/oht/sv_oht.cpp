@@ -68,7 +68,8 @@ void oht::SvUDPThread::process_data()
     if(p_buff.offset >= _hSize + _header.byte_count + 2) {
 
         if(p_logger && p_device->info()->debug_mode)
-          *p_logger << sv::log::mtDebug
+          *p_logger /*<< sv::log::sender("oht")*/
+                    << sv::log::mtDebug
                     << sv::log::llDebug
                     << sv::log::TimeZZZ << sv::log::in
                     << QString(QByteArray((const char*)&p_buff.buf[0], p_buff.offset).toHex())

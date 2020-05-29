@@ -48,38 +48,32 @@ void MainWindow::on_pushButton_clicked()
 {
     QByteArray ba = QByteArray::fromHex(ui->lineCmd->text().toUtf8());
 
-    QUdpSocket u;
+    QUdpSocket u5800;
 
+    u5800.bind(5800);
 
-    u.bind(quint16(ui->spinPort->value()));
-        u.writeDatagram(ba, QHostAddress("192.168.1.50"), quint16(ui->spinPort->value()));
+    QUdpSocket u5301;
+    u5301.writeDatagram(ba, QHostAddress("192.168.1.50"), 5301);
+    u5301.close();
 
-//void* datagram = malloc(0xFFFF);
+    qDebug() << u5301.errorString();
+//u.bind(5300);
+    qDebug() << 1;
+    while(u5800.waitForReadyRead(1000))
+    {
+        qDebug() << 2;
+        while(u5800.hasPendingDatagrams())
+        {
+            qDebug() << 3;
 
-//        while (true) {
+            void* datagram = malloc(0xFFFF);
+            quint64 g = u5800.readDatagram((char*)datagram, 0xFFFF);
 
-//          while(u.waitForReadyRead(1000))
-//          {
-//            while(u.hasPendingDatagrams())
-//            {
-//              qint64 datagram_size = u.pendingDatagramSize();
+            QByteArray b((const char*)datagram, g);
 
-//              if(datagram_size <= 0 || datagram_size > 0xFFFF) continue;
-
-//              u.readDatagram((char*)(datagram), datagram_size);
-
-//              QByteArray ab((char*)datagram, datagram_size);
-
-//              ui->lineResponse->setText(QString(ab.toHex()));
-//            qDebug() << "got data";
-
-
-//            }
-//          }
-//          qApp->processEvents();
-//        }
-
-//free(datagram);
-    qDebug() << "done";
-
+            qDebug() << b.toHex();
+        }
+    }
+    qDebug() << u5800.errorString();
+    u5800.close();
 }

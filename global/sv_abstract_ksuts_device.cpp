@@ -102,8 +102,6 @@ void dev::SvAbstractUdpThread::setIfcParams(const QString& params) throw(SvExcep
 dev::SvAbstractUdpThread::~SvAbstractUdpThread()
 {
   p_socket.close();
-
-  ~SvAbstractKsutsThread();
 }
 
 //void dev::SvAbstractUdpDeviceThread::stop()
@@ -118,7 +116,7 @@ void dev::SvAbstractUdpThread::open() throw(SvException&)
   if(!p_socket.bind(p_params.listen_port, QAbstractSocket::DontShareAddress))
     throw p_exception.assign(p_socket.errorString());
 
-  *p_logger << 222 << sv::log::endl;
+  *p_logger << "listen_port:" << p_params.listen_port << sv::log::endl;
 
   // с заданным интервалом сбрасываем буфер, чтобы отсекать мусор и битые пакеты
   p_reset_timer.setInterval(RESET_INTERVAL);

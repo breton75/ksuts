@@ -528,7 +528,7 @@ bool readDevices(const AppConfig& cfg)
                                                                     .arg(newdev->info()->index));
             LOGGERS.append(logger);
 
-            newdev->setLogger(logger);
+            newdev->setLogger(&dbus);
 
         }
 
@@ -861,6 +861,7 @@ sv::SvAbstractLogger* create_logger(const sv::log::Options& options, const QStri
 {
   sv::SvAbstractLogger* l = new sv::SvDBus(options);
   l->setSender(sender);
+  ((sv::SvDBus*)l)->init();
 
   return l;
 }
