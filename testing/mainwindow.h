@@ -1,4 +1,4 @@
-#ifndef MAINWINDOW_H
+﻿#ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
 #include <QMainWindow>
@@ -7,6 +7,8 @@
 #include <QJsonObject>
 #include <QDebug>
 #include <QUdpSocket>
+
+#include "../../svlib/sv_settings.h"
 
 namespace Ui {
 class MainWindow;
@@ -24,6 +26,8 @@ private slots:
   void on_bnTestJson_clicked();
 
   void on_pushButton_clicked();
+
+  void on_bnRecvOnly_clicked();
 
 private:
   Ui::MainWindow *ui;

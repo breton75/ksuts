@@ -25,10 +25,12 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 SOURCES += \
         main.cpp \
-        mainwindow.cpp
+        mainwindow.cpp \
+    ../../svlib/sv_settings.cpp
 
 HEADERS += \
-        mainwindow.h
+        mainwindow.h \
+    ../../svlib/sv_settings.h
 
 FORMS += \
         mainwindow.ui
