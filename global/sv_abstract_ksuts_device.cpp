@@ -134,7 +134,8 @@ void dev::SvAbstractUdpThread::open() throw(SvException&)
 quint64 dev::SvAbstractUdpThread::write(const QByteArray& data)
 {
   if(p_logger && p_device->info()->debug_mode)
-    *p_logger << sv::log::mtDebug
+    *p_logger << sv::log::sender(QString("device%1").arg(p_device->info()->index))
+              << sv::log::mtDebug
               << sv::log::llDebug
               << sv::log::TimeZZZ << sv::log::out
               << QString(data.toHex())
@@ -228,7 +229,8 @@ void dev::SvAbstractSerialThread::open() throw(SvException&)
 quint64 dev::SvAbstractSerialThread::write(const QByteArray& data)
 {
   if(p_logger && p_device->info()->debug_mode)
-    *p_logger << sv::log::mtDebug
+    *p_logger << sv::log::sender(QString("device%1").arg(p_device->info()->index))
+              << sv::log::mtDebug
               << sv::log::llDebug
               << sv::log::TimeZZZ << sv::log::out
               << QString(data.toHex())

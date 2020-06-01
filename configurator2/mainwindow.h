@@ -22,6 +22,7 @@
 #include "../../svlib/sv_clog.h"
 #include "../../svlib/sv_busy_window.h"
 #include "../../svlib/sv_dbus.h"
+#include "../../svlib/sv_abstract_logger.h"
 
 #include "../global/sql_defs.h"
 #include "../global/autorun_defs.h"
@@ -43,6 +44,7 @@
 
 #include "edit_autorun.h"
 #include "sv_editconfig.h"
+#include "sv_device_log.h"
 
 //struct AppConfig {
 //    QString db_name;
@@ -72,7 +74,11 @@ public:
   explicit MainWindow(const AppConfig& cfg, QWidget *parent = 0);
   ~MainWindow();
 
-  sv::SvWidgetLogger log;
+
+  QMap<QString, SvDeviceLog*> DEVICE_LOGS;
+  QMap<QString, sv::SvAbstractLogger*> LOGGERS;
+
+  sv::SvWidgetLogger* mainlog = nullptr;
 
   bool init();
 

@@ -54,7 +54,8 @@ SOURCES += \
     ../../svlib/sv_abstract_logger.cpp \
     ../../svlib/sv_fnt.cpp \
     ../../svlib/sv_udp_editor.cpp \
-    ../../svlib/sv_widget_log.cpp
+    ../../svlib/sv_widget_log.cpp \
+    sv_device_log.cpp
 
 HEADERS += \
         mainwindow.h \
@@ -87,7 +88,8 @@ HEADERS += \
     ../../svlib/sv_serial_params.h \
     ../../svlib/sv_crc.h \
     ../../svlib/sv_udp_editor.h \
-    ../../svlib/sv_widget_log.h
+    ../../svlib/sv_widget_log.h \
+    sv_device_log.h
 
 FORMS += \
         mainwindow.ui \
@@ -101,7 +103,8 @@ FORMS += \
     edit_autorun.ui \
     sv_editconfig.ui \
     ../../svlib/sv_serial_editor.ui \
-    ../../svlib/sv_udp_editor.ui
+    ../../svlib/sv_udp_editor.ui \
+    sv_device_log.ui
 
 RESOURCES += \
     res.qrc

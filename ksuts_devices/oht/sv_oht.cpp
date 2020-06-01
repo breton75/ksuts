@@ -68,7 +68,7 @@ void oht::SvUDPThread::process_data()
     if(p_buff.offset >= _hSize + _header.byte_count + 2) {
 
         if(p_logger && p_device->info()->debug_mode)
-          *p_logger /*<< sv::log::sender("oht")*/
+          *p_logger << sv::log::sender(QString("device%1").arg(p_device->info()->index))
                     << sv::log::mtDebug
                     << sv::log::llDebug
                     << sv::log::TimeZZZ << sv::log::in
@@ -79,6 +79,7 @@ void oht::SvUDPThread::process_data()
         // считаем, что линия передачи в порядке и задаем новую контрольную точку времени
         p_device->setNewLostEpoch();
 
+
         switch (_header.OFFSET)
         {
           case 0x00:
@@ -87,6 +88,8 @@ void oht::SvUDPThread::process_data()
           case 0x10:
           case 0x50:
           case 0x90:
+
+                msleep(10); // небольшая задержка перед отправкой подтверждения
 
                 // здесь просто отправляем ответ-квитирование
                 write(oht::confirmation(&_header));
@@ -104,7 +107,8 @@ void oht::SvUDPThread::process_data()
               {
                 // если crc не совпадает, то выходим без обработки и ответа
                 if(p_logger)
-                    *p_logger << sv::log::mtError
+                    *p_logger << sv::log::sender("main")
+                              << sv::log::mtError
                               << sv::log::llError
                               << sv::log::TimeZZZ
                               << QString("Ошибка crc! Ожидалось %1, получено %2").arg(calc_crc, 0, 16).arg(p_data.crc, 0, 16)
@@ -165,7 +169,8 @@ void oht::SvSerialThread::process_data()
     if(p_buff.offset >= _hSize + _header.byte_count + 2) {
 
         if(p_logger && p_device->info()->debug_mode)
-          *p_logger << sv::log::mtDebug
+          *p_logger << sv::log::sender(QString("device%1").arg(p_device->info()->index))
+                    << sv::log::mtDebug
                     << sv::log::llDebug
                     << sv::log::TimeZZZ << sv::log::in
                     << QString(QByteArray((const char*)&p_buff.buf[0], p_buff.offset).toHex())
@@ -201,7 +206,8 @@ void oht::SvSerialThread::process_data()
             {
               // если crc не совпадает, то выходим без обработки и ответа
               if(p_logger)
-                  *p_logger << sv::log::mtError
+                  *p_logger << sv::log::sender(QString("device%1").arg(p_device->info()->index))
+                            << sv::log::mtError
                             << sv::log::llError
                             << sv::log::TimeZZZ
                             << QString("Ошибка crc! Ожидалось %1, получено %2").arg(calc_crc, 0, 16).arg(p_data.crc, 0, 16)
@@ -294,7 +300,7 @@ void oht::SvSerialThread::process_data()
 /** oht general functions **/
 quint16 oht::parse_data(dev::BUFF* buff, dev::DATA* data, OHTHeader* header)
 {
-  size_t hSize = sizeof(header);
+  size_t hSize = sizeof(OHTHeader);
 
   // тип данных
   memcpy(&data->data_type, &buff->buf[0] + hSize, 1);
