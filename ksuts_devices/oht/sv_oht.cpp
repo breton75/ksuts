@@ -68,7 +68,7 @@ void oht::SvUDPThread::process_data()
     if(p_buff.offset >= _hSize + _header.byte_count + 2) {
 
         if(p_logger && p_device->info()->debug_mode)
-          *p_logger << sv::log::sender(QString("device%1").arg(p_device->info()->index))
+          *p_logger << sv::sender(QString("device%1").arg(p_device->info()->index))
                     << sv::log::mtDebug
                     << sv::log::llDebug
                     << sv::log::TimeZZZ << sv::log::in
@@ -107,7 +107,7 @@ void oht::SvUDPThread::process_data()
               {
                 // если crc не совпадает, то выходим без обработки и ответа
                 if(p_logger)
-                    *p_logger << sv::log::sender("main")
+                    *p_logger << sv::sender("main")
                               << sv::log::mtError
                               << sv::log::llError
                               << sv::log::TimeZZZ
@@ -169,7 +169,7 @@ void oht::SvSerialThread::process_data()
     if(p_buff.offset >= _hSize + _header.byte_count + 2) {
 
         if(p_logger && p_device->info()->debug_mode)
-          *p_logger << sv::log::sender(QString("device%1").arg(p_device->info()->index))
+          *p_logger << sv::sender(QString("device%1").arg(p_device->info()->index))
                     << sv::log::mtDebug
                     << sv::log::llDebug
                     << sv::log::TimeZZZ << sv::log::in
@@ -206,7 +206,7 @@ void oht::SvSerialThread::process_data()
             {
               // если crc не совпадает, то выходим без обработки и ответа
               if(p_logger)
-                  *p_logger << sv::log::sender(QString("device%1").arg(p_device->info()->index))
+                  *p_logger << sv::sender(QString("device%1").arg(p_device->info()->index))
                             << sv::log::mtError
                             << sv::log::llError
                             << sv::log::TimeZZZ

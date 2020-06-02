@@ -217,7 +217,7 @@ private slots:
 
   void on_treeView_doubleClicked(const QModelIndex &index);
 
-  void messageSlot(const QString& sender, const QString& message, const QString &type);
+  void messageSlot(const sv::sender& sender, const QString& message, const QString &type);
 
 public slots:
   void loadConfig();

@@ -131,7 +131,7 @@ MainWindow::MainWindow(const AppConfig &cfg, QWidget *parent) :
 
   AppParams::loadLayout(this);
 
-  QDBusConnection::sessionBus().connect(QString(), QString(), DBUS_SERVER_NAME, "message", this, SLOT(messageSlot(const QString&,const QString&,const QString&)));
+  QDBusConnection::sessionBus().connect(QString(), QString(), DBUS_SERVER_NAME, "message", this, SLOT(messageSlot(const sv::sender&,const QString&,const QString&)));
 
 //  connect(ui->treeView, &QTreeView::entered)
 
@@ -144,12 +144,12 @@ MainWindow::MainWindow(const AppConfig &cfg, QWidget *parent) :
 
 }
 
-void MainWindow::messageSlot(const QString& sender, const QString& message, const QString& type)
+void MainWindow::messageSlot(const sv::sender& sender, const QString& message, const QString& type)
 {
-  if(!LOGGERS.contains(sender))
+  if(!LOGGERS.contains(sender.name))
     return;
 
-  *(LOGGERS.value(sender)) << sv::log::stringToType(type) << QString("%1").arg(message) << sv::log::endl;
+  *(LOGGERS.value(sender.name)) << sv::log::stringToType(type) << QString("%1").arg(message) << sv::log::endl;
 
 }
 

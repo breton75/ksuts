@@ -280,9 +280,10 @@ int main(int argc, char *argv[])
         exception.raise(-1, "Ошибка разбора командной строки");
 
     dbus.setOptions(cfg.log_options);
-    dbus.setSender("main");
+//    dbus.setSender("main");
 
-    dbus << sv::log::llDebug2
+    dbus << sv::sender("main")
+         << sv::log::llDebug2
          << "db_host=" << cfg.db_host << "\ndb_port=" << cfg.db_port
          << "\ndb_name=" << cfg.db_name << "\ndb_user=" << cfg.db_user << "\ndb_pass=" << cfg.db_pass
          << "\nlogging=" << (cfg.log_options.logging ? "on" : "off")
@@ -520,20 +521,23 @@ bool readDevices(const AppConfig& cfg)
 
         DEVICES.insert(newdev->info()->index, newdev);
 
-        if(cfg.log_options.logging) {
+        newdev->setLogger(&dbus);
 
-            sv::SvAbstractLogger* logger = create_logger(cfg.log_options,
-                                                               QString("%1%2")
-                                                                    .arg(newdev->info()->hardware_name)
-                                                                    .arg(newdev->info()->index));
-            LOGGERS.append(logger);
+//        if(cfg.log_options.logging) {
 
-            newdev->setLogger(&dbus);
+//            sv::SvAbstractLogger* logger = create_logger(cfg.log_options,
+//                                                               QString("%1%2")
+//                                                                    .arg(newdev->info()->hardware_name)
+//                                                                    .arg(newdev->info()->index));
+//            LOGGERS.append(logger);
 
-        }
+//            newdev->setLogger(&dbus);
+
+//        }
 
 
-        dbus << sv::log::llDebug << sv::log::mtSimple << QString("  %1 [Индекс %2] %3").
+        dbus << sv::sender("main")
+             << sv::log::llDebug << sv::log::mtSimple << QString("  %1 [Индекс %2] %3").
                 arg(newdev->info()->name).
                 arg(newdev->info()->index).
                 arg(newdev->info()->device_params)
@@ -544,7 +548,8 @@ bool readDevices(const AppConfig& cfg)
       }
 
       else
-         dbus << sv::log::mtError << sv::log::llError << QString("Не удалось добавить устройство %1 [Индекс %2]\n")
+         dbus << sv::sender("main")
+              << sv::log::mtError << sv::log::llError << QString("Не удалось добавить устройство %1 [Индекс %2]\n")
                                         .arg(q.value("device_name").toString())
                                         .arg(q.value("device_index").toInt())
              << sv::log::endl;
@@ -558,15 +563,17 @@ bool readDevices(const AppConfig& cfg)
     if(counter == 0)
       exception.raise("Устройства в конфигурации не найдены");
 
-    dbus << sv::log::mtSuccess << sv::log::llInfo << QString("OK [прочитано %1]\n").arg(counter) << sv::log::endl;
+    dbus << sv::sender("main")
+         << sv::log::mtSuccess << sv::log::llInfo << QString("OK [прочитано %1]\n").arg(counter) << sv::log::endl;
     
     return true;
     
   }
   
   catch(SvException& e) {
-    
-    dbus << sv::log::mtError << sv::log::llError << QString("Ошибка: %1\n").arg(e.error) << sv::log::endl;
+
+    dbus << sv::sender("main")
+         << sv::log::mtError << sv::log::llError << QString("Ошибка: %1\n").arg(e.error) << sv::log::endl;
     return false;
     
   }
@@ -860,7 +867,7 @@ SvSignal* create_signal(const QSqlQuery* q)
 sv::SvAbstractLogger* create_logger(const sv::log::Options& options, const QString& sender)
 {
   sv::SvAbstractLogger* l = new sv::SvDBus(options);
-  l->setSender(sender);
+//  l->setSender(sender);
   ((sv::SvDBus*)l)->init();
 
   return l;
