@@ -11,7 +11,8 @@
 #include "../../svlib/sv_exception.h"
 
 // имена параметров устройств
-#define P_DEVICE_ADDRESS   "address"
+#define P_START_REGISTER  "start_register"
+#define P_RESET_TIMEOUT   "reset_timeout"
 
 namespace dev {
 
@@ -20,7 +21,10 @@ namespace dev {
 
   struct DeviceParams {
 
-    quint16      address = 0;
+    quint16   start_register = 0;
+    quint16   reset_timeout = 10;
+
+    bool isValid = true;
 
     static DeviceParams fromJson(const QString& json_string)
     {
@@ -33,11 +37,27 @@ namespace dev {
       DeviceParams p;
       QString s = "";
 
-      if(object.contains(P_DEVICE_ADDRESS))
-        s = object.value(P_DEVICE_ADDRESS).toString();
+      if(object.contains(P_START_REGISTER)) {
 
-      bool ok = false;
-      p.address = s.toUInt(&ok, 16);
+        s = object.value(P_START_REGISTER).toString();
+
+        bool ok = false;
+        p.start_register = s.toUInt(&ok, 16);
+
+        p.isValid = p.isValid && ok;
+
+      }
+
+      if(object.contains(P_RESET_TIMEOUT)) {
+
+        s = object.value(P_RESET_TIMEOUT).toString();
+
+        bool ok = false;
+        p.reset_timeout = s.toUInt(&ok, 16);
+
+        p.isValid = p.isValid && ok;
+
+      }
 
       return p;
 
@@ -55,7 +75,8 @@ namespace dev {
     {
       QJsonObject j;
 
-      j.insert(P_DEVICE_ADDRESS, QJsonValue(QString::number(address, 16)).toString());
+      j.insert(P_START_REGISTER, QJsonValue(QString::number(start_register, 16)).toString());
+      j.insert(P_RESET_TIMEOUT, QJsonValue(QString::number(reset_timeout, 16)).toString());
 
       return j;
 

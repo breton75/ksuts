@@ -1,5 +1,8 @@
 ﻿#include "sv_oht.h"
 
+#include "QJsonObject"
+#include "QJsonDocument"
+
 #include "oht_defs.h"
 
 /** *****************   ************************* **/
@@ -16,14 +19,14 @@ bool SvOHT::create_new_thread()
 {
   try {
 
-    switch (info()->ifc_type) {
+    switch (oht::ifcesMap.value(info()->ifc_name)) {
 
-      case dev::IfcType::RS485:
+      case oht::Ifces::RS485:
 
         p_thread = new oht::SvSerialThread(this, p_logger);
         break;
 
-      case dev::IfcType::UDP:
+      case oht::Ifces::UDP:
 
         p_thread = new oht::SvUDPThread(this, p_logger);
         break;
@@ -68,7 +71,7 @@ void oht::SvUDPThread::process_data()
     if(p_buff.offset >= _hSize + _header.byte_count + 2) {
 
         if(p_logger && p_device->info()->debug_mode)
-          *p_logger << sv::sender(QString("device%1").arg(p_device->info()->index))
+          *p_logger << sv::log::sender(p_logger->options().log_sender_name.arg(p_device->info()->index))
                     << sv::log::mtDebug
                     << sv::log::llDebug
                     << sv::log::TimeZZZ << sv::log::in
@@ -107,7 +110,7 @@ void oht::SvUDPThread::process_data()
               {
                 // если crc не совпадает, то выходим без обработки и ответа
                 if(p_logger)
-                    *p_logger << sv::sender("main")
+                    *p_logger << sv::log::sender(p_logger->options().log_sender_name.arg(p_device->info()->index))
                               << sv::log::mtError
                               << sv::log::llError
                               << sv::log::TimeZZZ
@@ -169,7 +172,7 @@ void oht::SvSerialThread::process_data()
     if(p_buff.offset >= _hSize + _header.byte_count + 2) {
 
         if(p_logger && p_device->info()->debug_mode)
-          *p_logger << sv::sender(QString("device%1").arg(p_device->info()->index))
+          *p_logger << sv::log::sender(p_logger->options().log_sender_name.arg(p_device->info()->index))
                     << sv::log::mtDebug
                     << sv::log::llDebug
                     << sv::log::TimeZZZ << sv::log::in
@@ -206,7 +209,7 @@ void oht::SvSerialThread::process_data()
             {
               // если crc не совпадает, то выходим без обработки и ответа
               if(p_logger)
-                  *p_logger << sv::sender(QString("device%1").arg(p_device->info()->index))
+                  *p_logger << sv::log::sender(p_logger->options().log_sender_name.arg(p_device->info()->index))
                             << sv::log::mtError
                             << sv::log::llError
                             << sv::log::TimeZZZ
@@ -298,9 +301,9 @@ void oht::SvSerialThread::process_data()
 
 
 /** oht general functions **/
-quint16 oht::parse_data(dev::BUFF* buff, dev::DATA* data, OHTHeader* header)
+quint16 oht::parse_data(dev::BUFF* buff, dev::DATA* data, oht::Header* header)
 {
-  size_t hSize = sizeof(OHTHeader);
+  size_t hSize = sizeof(oht::Header);
 
   // тип данных
   memcpy(&data->data_type, &buff->buf[0] + hSize, 1);
@@ -321,7 +324,7 @@ quint16 oht::parse_data(dev::BUFF* buff, dev::DATA* data, OHTHeader* header)
 
 }
 
-QByteArray oht::confirmation(const OHTHeader* header)
+QByteArray oht::confirmation(const oht::Header* header)
 {
   QByteArray confirm;
   confirm.append((const char*)header, 6);

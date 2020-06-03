@@ -1,9 +1,10 @@
 ﻿#ifndef GEN_DEFS_H
 #define GEN_DEFS_H
 
-#include <QCommandLineParser>
-
-#include "../../svlib/sv_clog.h"
+#include "../ksuts_devices/oht/sv_oht.h"
+#include "../ksuts_devices/opa/sv_opa.h"
+#include "../ksuts_devices/skm/sv_skm.h"
+#include "../ksuts_devices/sktv/sv_ktv.h"
 
 #define ACTUAL_DB_VERSION "1.1.0"
 

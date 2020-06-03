@@ -29,23 +29,15 @@ namespace dev {
                                                       {"SKM", SKM},
                                                       {"KTV", KTV}};
 
-  enum IfcType {
-    UNDEFINED_IFC,
-    RS485,
-    UDP
-  };
-
-  const QMap<QString, IfcType> IFC_CODES = {{"RS485", RS485},
-                                            {"UDP",   UDP}};
-
   struct DeviceInfo
   {
     int index = -1;
     QString name = "";
     QString hardware_name = "";
     HardwareType hardware_type = HardwareType::UNDEFINED_TYPE;
-    IfcType ifc_type = IfcType::UNDEFINED_IFC;
+//    IfcType ifc_type = IfcType::UNDEFINED_IFC;
     QString ifc_name = "";
+    QString ifc_params = "";
     int protocol_id = -1;
     QString protocol_name = "";
     QString driver_lib_name = "";
@@ -55,7 +47,6 @@ namespace dev {
     bool debug2_mode = false;
     quint64 timeout = 0;
     QString device_params = "";
-    QString ifc_params = "";
   };
 
   typedef QMap<QString, SvSignal*> SignalMap;
@@ -102,7 +93,6 @@ public:
   virtual bool open() = 0;
   virtual void close() = 0;
   virtual void stop() { }
-
 
   void setLastError(const QString& lastError) { p_last_error = lastError; }
   const QString &lastError() const            { return p_last_error; }

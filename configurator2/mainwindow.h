@@ -26,7 +26,7 @@
 
 #include "../global/sql_defs.h"
 #include "../global/autorun_defs.h"
-#include "../global/gen_defs.h"
+#include "../global/global_defs.h"
 
 #include "../libs/ksutsmon/ksutsmon.h"
 #include "../libs/netmon/netmon.h"
@@ -217,7 +217,7 @@ private slots:
 
   void on_treeView_doubleClicked(const QModelIndex &index);
 
-  void messageSlot(const sv::sender& sender, const QString& message, const QString &type);
+  void messageSlot(const QString& sender, const QString& message, const QString &type);
 
 public slots:
   void loadConfig();

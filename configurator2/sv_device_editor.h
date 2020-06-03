@@ -21,7 +21,7 @@
 
 #include "../global/sql_defs.h"
 #include "../global/device_params.h"
-#include "../global/sv_abstract_device.h"
+#include "../global/global_defs.h"
 
 #include "../../svlib/sv_serial_editor.h"
 #include "../../svlib/sv_udp_editor.h"
@@ -52,9 +52,17 @@ class SvDeviceEditor : public QDialog
 
 
   private slots:
-    void updateDeviceInfo(int index);
+//    void updateDeviceInfo();
 
-    void editConnectionParams(int index);
+//    void editIfcParams(int index);
+
+    void on_bnUnlockIfcParams_clicked();
+
+    void on_bnUnlockDeviceParams_clicked();
+
+    void on_bnDefaultDeviceParams_clicked();
+
+    void on_bnDefaultIfcParams_clicked();
 
 public slots:
     void accept() Q_DECL_OVERRIDE;
@@ -66,10 +74,11 @@ public slots:
     SvException _exception;
 
     int     _device_index = 0;
+    QString _device_hardware_code = "";
     QString _device_name = "";
-    QString _device_connection_params = "";
-    int     _device_ifc_index = -1;
+    QString _device_params = "";
     QString _device_ifc_name = "";
+    QString _device_ifc_params = "";
     int     _device_protocol_id = -1;
     QString _device_protocol_name = "";
     QString _device_driver_name = "";
@@ -80,7 +89,7 @@ public slots:
     QString _last_error = "";
 
 
-    bool loadDevices();
+//    bool loadDevices();
     bool loadIfces();
 
 

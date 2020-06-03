@@ -40,7 +40,7 @@ SvDeviceList::~SvDeviceList()
 }
 
 
-bool SvDeviceList::readDevices(TreeModel* model, QString queryString)
+bool SvDeviceList::readDevices(TreeModel* model)
 {
 
   QSqlQuery* q;
@@ -94,8 +94,8 @@ bool SvDeviceList::readDevices(TreeModel* model, QString queryString)
       root->child(child_count)->setData(2, q->value("device_ifc_name"));
       root->child(child_count)->setInfo(2, ItemInfo(itDeviceIfcName, "device_ifc_name"));
 
-      root->child(child_count)->setData(3, q->value("device_connection_params"));
-      root->child(child_count)->setInfo(3, ItemInfo(itDeviceParams, "device_connection_params"));
+      root->child(child_count)->setData(3, q->value("device_ifc_params"));
+      root->child(child_count)->setInfo(3, ItemInfo(itDeviceParams, "device_ifc_params"));
 
       root->child(child_count)->setData(4, q->value("device_description"));
       root->child(child_count)->setInfo(4, ItemInfo(itDeviceDescription, "device_description"));

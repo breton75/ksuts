@@ -1,4 +1,4 @@
-#ifndef SV_DEVICELIST_H
+﻿#ifndef SV_DEVICELIST_H
 #define SV_DEVICELIST_H
 
 #include <QDialog>
@@ -55,7 +55,7 @@ private:
   SvException _e;
   QString _last_error = "";
 
-  bool readDevices(TreeModel* model, QString queryString = "");
+  bool readDevices(TreeModel* model);
 
   void updateTable(QTableView *table, TreeModel* model);
 

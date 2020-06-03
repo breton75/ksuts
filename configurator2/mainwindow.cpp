@@ -45,7 +45,7 @@ MainWindow::MainWindow(const AppConfig &cfg, QWidget *parent) :
 
   DEVICE_LOGS.clear();
   LOGGERS.clear();
-
+//qDebug() << 1;
   mainlog = new sv::SvWidgetLogger();
   mainlog->setTextEdit(ui->textLog);
 
@@ -131,7 +131,7 @@ MainWindow::MainWindow(const AppConfig &cfg, QWidget *parent) :
 
   AppParams::loadLayout(this);
 
-  QDBusConnection::sessionBus().connect(QString(), QString(), DBUS_SERVER_NAME, "message", this, SLOT(messageSlot(const sv::sender&,const QString&,const QString&)));
+  QDBusConnection::sessionBus().connect(QString(), QString(), DBUS_SERVER_NAME, "message", this, SLOT(messageSlot(const QString&,const QString&,const QString&)));
 
 //  connect(ui->treeView, &QTreeView::entered)
 
@@ -144,12 +144,15 @@ MainWindow::MainWindow(const AppConfig &cfg, QWidget *parent) :
 
 }
 
-void MainWindow::messageSlot(const sv::sender& sender, const QString& message, const QString& type)
+void MainWindow::messageSlot(const QString& sender, const QString& message, const QString& type)
 {
-  if(!LOGGERS.contains(sender.name))
-    return;
+//  qDebug() << LOGGERS.contains(sender) << sender;
+//  if(!LOGGERS.contains(sender))
+//    return;
 
-  *(LOGGERS.value(sender.name)) << sv::log::stringToType(type) << QString("%1").arg(message) << sv::log::endl;
+//  *(LOGGERS.value(sender)) << sv::log::stringToType(type) << QString("%1").arg(message) << sv::log::endl;
+
+  *mainlog << sv::log::stringToType(type) << QString("%1").arg(message) << sv::log::endl;
 
 }
 
@@ -1213,8 +1216,9 @@ QString MainWindow::get_one_device_info(int index)
 
     line.replace("%DEVICE_NAME%", q->value("device_name").toString());
     line.replace("%DEVICE_INDEX%", q->value("device_index").toString());
+    line.replace("%DEVICE_PARAMS%", q->value("device_params").toString().replace("\n", "<br>"));
     line.replace("%DEVICE_IFC%", q->value("device_ifc_name").toString());
-    line.replace("%DEVICE_PARAMS%", q->value("device_connection_params").toString());
+    line.replace("%DEVICE_IFC_PARAMS%", q->value("device_ifc_params").toString().replace("\n", "<br>"));
     line.replace("%DEVICE_DRIVER%", q->value("device_driver_lib_name").toString());
     line.replace("%DEVICE_DEBUG%", q->value("device_debug").toString());
     line.replace("%DEVICE_DESCRIPTION%", q->value("device_description").toString());
@@ -1647,7 +1651,7 @@ void MainWindow::on_treeView_doubleClicked(const QModelIndex &index)
 
     if(_ksuts_monitor->getKsutsServerInfo().is_active)
     {
-      QString n = QString("device%1").arg(item->index);
+      QString n = QString(mainlog->options().log_sender_name).arg(item->index);
 
       if(DEVICE_LOGS.contains(n))
         return;
@@ -1658,6 +1662,9 @@ void MainWindow::on_treeView_doubleClicked(const QModelIndex &index)
       LOGGERS.insert(n, newlog->logger());
 
       newlog->exec();
+
+//      delete newlog;
+
 
 
     }

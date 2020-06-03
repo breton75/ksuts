@@ -77,7 +77,6 @@ HEADERS += \
     edit_autorun.h \
     sv_editconfig.h \
     ../../svlib/sv_busy_window.h \
-    ../global/gen_defs.h \
     ../../svlib/sv_dbus.h \
     ../../svlib/sv_clog.h \
     ../../svlib/sv_abstract_logger.h \
@@ -89,7 +88,8 @@ HEADERS += \
     ../../svlib/sv_crc.h \
     ../../svlib/sv_udp_editor.h \
     ../../svlib/sv_widget_log.h \
-    sv_device_log.h
+    sv_device_log.h \
+    ../global/global_defs.h
 
 FORMS += \
         mainwindow.ui \

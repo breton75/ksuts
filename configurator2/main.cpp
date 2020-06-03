@@ -8,7 +8,7 @@
 #include "../../svlib/sv_log.h"
 #include "../../svlib/sv_abstract_logger.h"
 
-#include "../global/gen_defs.h"
+#include "../global/global_defs.h"
 
 void signal_handler(int sig);
 

@@ -104,37 +104,27 @@ dev::SvAbstractUdpThread::~SvAbstractUdpThread()
   p_socket.close();
 }
 
-//void dev::SvAbstractUdpDeviceThread::stop()
-//{
-//  p_is_active = false;
-//  while(this->isRunning()) qApp->processEvents();
-//}
-
 void dev::SvAbstractUdpThread::open() throw(SvException&)
 {
-  *p_logger << 111 << sv::log::endl;
   if(!p_socket.bind(p_params.listen_port, QAbstractSocket::DontShareAddress))
     throw p_exception.assign(p_socket.errorString());
 
   *p_logger << "listen_port:" << p_params.listen_port << sv::log::endl;
 
   // с заданным интервалом сбрасываем буфер, чтобы отсекать мусор и битые пакеты
-  p_reset_timer.setInterval(RESET_INTERVAL);
+  p_reset_timer.setInterval(p_device->params()->reset_timeout);
   connect(&p_socket, SIGNAL(readyRead()), &p_reset_timer, SLOT(start()));
   connect(&p_reset_timer, &QTimer::timeout, this, &dev::SvAbstractKsutsThread::reset_buffer);
 
-//  connect(&p_port, SIGNAL(readyRead()), &p_reset_timer, SLOT(start()));
-//  connect(&p_reset_timer, &QTimer::timeout, this, &dev::SvAbstractKsutsDeviceThread::reset_buffer);
-
   // именно после open!
-//  p_port.moveToThread(this);
+  p_socket.moveToThread(this);
 
 }
 
 quint64 dev::SvAbstractUdpThread::write(const QByteArray& data)
 {
   if(p_logger && p_device->info()->debug_mode)
-    *p_logger << sv::sender(QString("device%1").arg(p_device->info()->index))
+    *p_logger << sv::log::sender(p_logger->options().log_sender_name.arg(p_device->info()->index))
               << sv::log::mtDebug
               << sv::log::llDebug
               << sv::log::TimeZZZ << sv::log::out
@@ -193,31 +183,21 @@ void dev::SvAbstractSerialThread::setIfcParams(const QString& params) throw(SvEx
   }
 }
 
-//dev::SvAbstractSerialDeviceThread::~SvAbstractSerialDeviceThread()
-//{
-//  stop();
-//}
-
-//void dev::SvAbstractSerialDeviceThread::stop()
-//{
-//  p_is_active = false;
-//  while(this->isRunning()) qApp->processEvents();
-//}
-
 void dev::SvAbstractSerialThread::open() throw(SvException&)
 {
-  p_port.setPortName   (p_params.portname);
-  p_port.setBaudRate   (p_params.baudrate);
-  p_port.setStopBits   (p_params.stopbits);
+  p_port.setPortName   (p_params.portname   );
+  p_port.setBaudRate   (p_params.baudrate   );
+  p_port.setStopBits   (p_params.stopbits   );
   p_port.setFlowControl(p_params.flowcontrol);
-  p_port.setDataBits   (p_params.databits);
-  p_port.setParity     (p_params.parity);
+  p_port.setDataBits   (p_params.databits   );
+  p_port.setParity     (p_params.parity     );
 
   if(!p_port.open(QIODevice::ReadWrite))
     throw p_exception.assign(p_port.errorString());
 
   // с заданным интервалом сбрасываем буфер, чтобы отсекать мусор и битые пакеты
   p_reset_timer.setInterval(RESET_INTERVAL);
+
   connect(&p_port, SIGNAL(readyRead()), &p_reset_timer, SLOT(start()));
   connect(&p_reset_timer, &QTimer::timeout, this, &dev::SvAbstractKsutsThread::reset_buffer);
 
@@ -229,7 +209,7 @@ void dev::SvAbstractSerialThread::open() throw(SvException&)
 quint64 dev::SvAbstractSerialThread::write(const QByteArray& data)
 {
   if(p_logger && p_device->info()->debug_mode)
-    *p_logger << sv::sender(QString("device%1").arg(p_device->info()->index))
+    *p_logger << sv::log::sender(p_logger->options().log_sender_name.arg(p_device->info()->index))
               << sv::log::mtDebug
               << sv::log::llDebug
               << sv::log::TimeZZZ << sv::log::out

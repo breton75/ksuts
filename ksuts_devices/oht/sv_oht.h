@@ -20,27 +20,39 @@
 #include "../../svlib/sv_exception.h"
 #include "../../svlib/sv_clog.h"
 
-#pragma pack(push,1)
-struct OHTHeader
-{
-  quint8  client_addr;
-  quint8  func_code;
-  quint8  ADDRESS;
-  quint8  OFFSET;
-  quint16 register_count;
-  quint8  byte_count;
-};
-#pragma pack(pop)
+
+
+//idev::SvIDevice* /*OHTSHARED_EXPORT*/ create_device(const QString& params_string);
+
 
 namespace oht {
+
+  #pragma pack(push,1)
+  struct Header
+  {
+    quint8  client_addr;
+    quint8  func_code;
+    quint8  ADDRESS;
+    quint8  OFFSET;
+    quint16 register_count;
+    quint8  byte_count;
+  };
+  #pragma pack(pop)
 
   class SvUDPThread;
   class SvSerialThread;
 
+  enum Ifces {
+    RS485,
+    UDP
+  };
+
+  const QMap<QString, Ifces> ifcesMap = {{"RS485", Ifces::RS485}, {"UDP", Ifces::UDP}};
+
 //  class DataProcessor;
 
-  quint16 parse_data(dev::BUFF* buff, dev::DATA* data, OHTHeader* header);
-  QByteArray confirmation(const OHTHeader* header);
+  quint16 parse_data(dev::BUFF* buff, dev::DATA* data, oht::Header* header);
+  QByteArray confirmation(const oht::Header* header);
 
   void func_0x19(dev::SvAbstractDevice* device, dev::DATA* data);
 //  void func_0x19(dev::SvAbstractKsutsDeviceThread* thr);
@@ -50,8 +62,6 @@ namespace oht {
 }
 
 
-//idev::SvIDevice* /*OHTSHARED_EXPORT*/ create_device(const QString& params_string);
-
 class /*OHTSHARED_EXPORT*/ SvOHT: public dev::SvAbstractKsutsDevice
 {
 
@@ -59,6 +69,58 @@ class /*OHTSHARED_EXPORT*/ SvOHT: public dev::SvAbstractKsutsDevice
 
 public:
   SvOHT(sv::SvAbstractLogger* logger = nullptr);
+
+  static QString defaultIfcParams(const QString& ifc)
+  {
+    if(!oht::ifcesMap.contains(ifc))
+      return QString("");
+
+    switch (oht::ifcesMap.value(ifc)) {
+
+    case oht::Ifces::RS485:
+
+      QString("{\n"
+              "  \"portname\": \"ttyS0\",\n"
+              "  \"baudrate\": 19200,\n"
+              "  \"databits\": 8,\n"
+              "  \"flowcontrol\": 0,\n"
+              "  \"parity\": 0,\n"
+              "  \"stopbits\": 1\n"
+              "}");
+
+      break;
+
+
+    case oht::Ifces::UDP:
+
+      return QString("{\n"
+                     "  \"host\": \"192.168.1.1\",\n"
+                     "  \"recv_port\": 5300,\n"
+                     "  \"send_port\": 5800\n"
+                     "}");
+
+      break;
+    }
+
+  }
+
+  static QList<QString> availableInterfaces()
+  {
+    return oht::ifcesMap.keys();
+  }
+
+  static QString defaultDeviceParams()
+  {
+    QJsonObject j;
+
+    j.insert(P_START_REGISTER, QJsonValue(QString("0x0000"))); // ::number(0, 16)).toString());
+    j.insert(P_RESET_TIMEOUT, QJsonValue(10));
+
+    QJsonDocument jd;
+    jd.setObject(j);
+
+    return QString(jd.toJson(QJsonDocument::Indented));
+  }
 
 private:
   bool create_new_thread();
@@ -80,8 +142,8 @@ private:
 
 //  oht::DataProcessor _processor;
 
-  OHTHeader _header;
-  size_t _hSize = sizeof(OHTHeader);
+  oht::Header _header;
+  size_t _hSize = sizeof(oht::Header);
 
   quint8  _confirm[8];
 
@@ -102,8 +164,8 @@ public:
 
 private:
 
-  OHTHeader _header;
-  size_t _hSize = sizeof(OHTHeader);
+  oht::Header _header;
+  size_t _hSize = sizeof(oht::Header);
 
 //  bool parse_data();
 //  void send_confirmation();
@@ -126,8 +188,8 @@ private:
 //private:
 //  dev::SvAbstractKsutsDeviceThread* _thread;
 
-//  OHTHeader _header;
-//  size_t _hSize = sizeof(OHTHeader);
+//  oht::Header _header;
+//  size_t _hSize = sizeof(oht::Header);
 
 //  bool parse();
 //  void send_confirmation();

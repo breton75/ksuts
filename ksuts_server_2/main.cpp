@@ -16,14 +16,14 @@
 
 #include "../global/sv_abstract_device.h"
 #include "../global/sql_defs.h"
-#include "../global/gen_defs.h"
+#include "../global/global_defs.h"
 //#include "../global/dev_defs.h"
 #include "../global/sv_signal.h"
 
-#include "../ksuts_devices/oht/sv_oht.h"
-#include "../ksuts_devices/opa/sv_opa.h"
-#include "../ksuts_devices/skm/sv_skm.h"
-#include "../ksuts_devices/sktv/sv_ktv.h"
+//#include "../ksuts_devices/oht/sv_oht.h"
+//#include "../ksuts_devices/opa/sv_opa.h"
+//#include "../ksuts_devices/skm/sv_skm.h"
+//#include "../ksuts_devices/sktv/sv_ktv.h"
 
 #include "../../svlib/sv_sqlite.h"
 #include "../../svlib/sv_exception.h"
@@ -282,7 +282,7 @@ int main(int argc, char *argv[])
     dbus.setOptions(cfg.log_options);
 //    dbus.setSender("main");
 
-    dbus << sv::sender("main")
+    dbus << sv::log::sender("main")
          << sv::log::llDebug2
          << "db_host=" << cfg.db_host << "\ndb_port=" << cfg.db_port
          << "\ndb_name=" << cfg.db_name << "\ndb_user=" << cfg.db_user << "\ndb_pass=" << cfg.db_pass
@@ -523,20 +523,7 @@ bool readDevices(const AppConfig& cfg)
 
         newdev->setLogger(&dbus);
 
-//        if(cfg.log_options.logging) {
-
-//            sv::SvAbstractLogger* logger = create_logger(cfg.log_options,
-//                                                               QString("%1%2")
-//                                                                    .arg(newdev->info()->hardware_name)
-//                                                                    .arg(newdev->info()->index));
-//            LOGGERS.append(logger);
-
-//            newdev->setLogger(&dbus);
-
-//        }
-
-
-        dbus << sv::sender("main")
+        dbus << sv::log::sender("main")
              << sv::log::llDebug << sv::log::mtSimple << QString("  %1 [Индекс %2] %3").
                 arg(newdev->info()->name).
                 arg(newdev->info()->index).
@@ -548,7 +535,7 @@ bool readDevices(const AppConfig& cfg)
       }
 
       else
-         dbus << sv::sender("main")
+         dbus << sv::log::sender("main")
               << sv::log::mtError << sv::log::llError << QString("Не удалось добавить устройство %1 [Индекс %2]\n")
                                         .arg(q.value("device_name").toString())
                                         .arg(q.value("device_index").toInt())
@@ -563,7 +550,7 @@ bool readDevices(const AppConfig& cfg)
     if(counter == 0)
       exception.raise("Устройства в конфигурации не найдены");
 
-    dbus << sv::sender("main")
+    dbus << sv::log::sender("main")
          << sv::log::mtSuccess << sv::log::llInfo << QString("OK [прочитано %1]\n").arg(counter) << sv::log::endl;
     
     return true;
@@ -572,7 +559,7 @@ bool readDevices(const AppConfig& cfg)
   
   catch(SvException& e) {
 
-    dbus << sv::sender("main")
+    dbus << sv::log::sender("main")
          << sv::log::mtError << sv::log::llError << QString("Ошибка: %1\n").arg(e.error) << sv::log::endl;
     return false;
     
@@ -746,16 +733,16 @@ dev::SvAbstractDevice* create_device(const QSqlQuery* q)
   info.index = q->value("device_index").toInt();
   info.name = q->value("device_name").toString();
   info.hardware_type = dev::HARDWARE_CODES.value(q->value("device_hardware_code").toString());
-  info.ifc_type = dev::IFC_CODES.value(q->value("device_ifc_name").toString());
+//  info.ifc_type = dev::IFC_CODES.value(q->value("device_ifc_name").toString());
   info.ifc_name = q->value("device_ifc_name").toString();
+  info.ifc_params = q->value("device_ifc_params").toString();
+  info.device_params = q->value("device_params").toString();
   info.protocol_id = q->value("device_protocol_id").toInt();
   info.protocol_name = q->value("device_protocol_name").toString();
   info.driver_lib_name = q->value("device_driver_lib_name").toString();
   info.is_involved = q->value("device_is_involved").toBool();
   info.debug_mode = q->value("device_debug").toBool();
   info.timeout = q->value("device_timeout").toUInt();
-  info.device_params = q->value("device_params").toString();
-  info.ifc_params = q->value("device_connection_params").toString();
 //  QString params = q->value("device_params").toString();
   
   try {
