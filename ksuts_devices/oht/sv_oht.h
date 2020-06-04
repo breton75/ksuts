@@ -13,106 +13,196 @@
 
 
 //#include "../global/sv_idevice.h"
-#include "../global/sv_abstract_serial_device.h"
+#include "../global/sv_abstract_ksuts_device.h"
 #include "../global/device_params.h"
 
 #include "../../svlib/sv_crc.h"
 #include "../../svlib/sv_exception.h"
 #include "../../svlib/sv_clog.h"
 
-#pragma pack(push,1)
-struct OHTHeader
-{
-  quint8  client_addr;
-  quint8  func_code;
-  quint8  ADDRESS;
-  quint8  OFFSET;
-  quint16 register_count;
-  quint8  byte_count;
-};
-#pragma pack(pop)
+
 
 //idev::SvIDevice* /*OHTSHARED_EXPORT*/ create_device(const QString& params_string);
 
-class /*OHTSHARED_EXPORT*/ SvOHT: public dev::SvAbstractSerialDevice
+
+namespace oht {
+
+  #pragma pack(push,1)
+  struct Header
+  {
+    quint8  client_addr;
+    quint8  func_code;
+    quint8  ADDRESS;
+    quint8  OFFSET;
+    quint16 register_count;
+    quint8  byte_count;
+  };
+  #pragma pack(pop)
+
+  class SvUDPThread;
+  class SvSerialThread;
+
+  enum Ifces {
+    RS485,
+    UDP
+  };
+
+  const QMap<QString, Ifces> ifcesMap = {{"RS485", Ifces::RS485}, {"UDP", Ifces::UDP}};
+
+//  class DataProcessor;
+
+  quint16 parse_data(dev::BUFF* buff, dev::DATA* data, oht::Header* header);
+  QByteArray confirmation(const oht::Header* header);
+
+  void func_0x19(dev::SvAbstractDevice* device, dev::DATA* data);
+//  void func_0x19(dev::SvAbstractKsutsDeviceThread* thr);
+  void func_0x13(dev::SvAbstractDevice* device, dev::DATA* data);
+  void func_0x14(dev::SvAbstractDevice* device, dev::DATA* data);
+
+}
+
+
+class /*OHTSHARED_EXPORT*/ SvOHT: public dev::SvAbstractKsutsDevice
 {
 
   Q_OBJECT
-  
-//  sv::SvAbstarctLogger& _log;
 
 public:
-  SvOHT(sv::SvAbstarctLogger &log);
-//  ~SvOHT();
-  
-//  bool open()  override;
-//  void close() override;
-  
-//  bool setConfig(const dev::DeviceConfig& config);
-//  bool setParams(const QString& params);
-  
-//private:
-//  SvException* _exception;
+  SvOHT(sv::SvAbstractLogger* logger = nullptr);
 
-//private slots:
-//  void deleteThread();
+  static QString defaultIfcParams(const QString& ifc)
+  {
+    if(!oht::ifcesMap.contains(ifc))
+      return QString("");
+
+    switch (oht::ifcesMap.value(ifc)) {
+
+    case oht::Ifces::RS485:
+
+      QString("{\n"
+              "  \"portname\": \"ttyS0\",\n"
+              "  \"baudrate\": 19200,\n"
+              "  \"databits\": 8,\n"
+              "  \"flowcontrol\": 0,\n"
+              "  \"parity\": 0,\n"
+              "  \"stopbits\": 1\n"
+              "}");
+
+      break;
+
+
+    case oht::Ifces::UDP:
+
+      return QString("{\n"
+                     "  \"host\": \"192.168.1.1\",\n"
+                     "  \"recv_port\": 5300,\n"
+                     "  \"send_port\": 5800\n"
+                     "}");
+
+      break;
+    }
+
+  }
+
+  static QList<QString> availableInterfaces()
+  {
+    return oht::ifcesMap.keys();
+  }
+
+  static QString defaultDeviceParams()
+  {
+    QJsonObject j;
+
+    j.insert(P_START_REGISTER, QJsonValue(QString("0x0000"))); // ::number(0, 16)).toString());
+    j.insert(P_RESET_TIMEOUT, QJsonValue(10));
+
+    QJsonDocument jd;
+    jd.setObject(j);
+
+    return QString(jd.toJson(QJsonDocument::Indented));
+  }
 
 private:
-  void create_new_thread();
+  bool create_new_thread();
+
     
 };
 
 #define RESET_INTERVAL 10
 
-class SvOHTThread: public dev::SvAbstractSerialDeviceThread
+
+class oht::SvUDPThread: public dev::SvAbstractUdpThread
 {
   Q_OBJECT
 
 public:
-  SvOHTThread(dev::SvAbstractDevice* device, sv::SvAbstarctLogger &log);
-//  ~SvOHTThread();
-
-//  void open() throw(SvException&) override;
-//  void stop() override;
+  SvUDPThread(dev::SvAbstractDevice* device, sv::SvAbstractLogger *logger = nullptr);
 
 private:
-//  QSerialPort _port;
 
-//  dev::SvAbstractDevice* _device;
+//  oht::DataProcessor _processor;
 
-//  bool is_active;
-
-  OHTHeader _header;
-  size_t _hSize = sizeof(OHTHeader);
-
-//  quint8  _buf[512];
-//  quint64 _buf_offset = 0;
-
-  quint8  _data_type;
-  quint8  _data_length;
-  quint8  _data[512];
-  quint16 _crc;
+  oht::Header _header;
+  size_t _hSize = sizeof(oht::Header);
 
   quint8  _confirm[8];
 
-//  QTimer  _reset_timer;
+//  bool parse_data();
+//  void send_confirmation();
 
-//  SvException _exception;
-
-
-//  void run() override;
-  void treat_data();
-
-  bool parse_data();
-  void send_confirmation();
-
-  void func_0x19();
-  void func_0x13();
-  void func_0x14();
-
-//private slots:
-//  void reset_buffer();
+  void process_data();
 
 };
+
+
+class oht::SvSerialThread: public dev::SvAbstractSerialThread
+{
+  Q_OBJECT
+
+public:
+  SvSerialThread(dev::SvAbstractDevice* device, sv::SvAbstractLogger *logger = nullptr);
+
+private:
+
+  oht::Header _header;
+  size_t _hSize = sizeof(oht::Header);
+
+//  bool parse_data();
+//  void send_confirmation();
+
+  void process_data();
+
+};
+
+//class oht::DataProcessor
+//{
+//  Q_OBJECT
+
+//public:
+//  DataProcessor(dev::SvAbstractKsutsDeviceThread* thread):
+//    _thread(thread)
+//  {  }
+
+//  void process_data();
+
+//private:
+//  dev::SvAbstractKsutsDeviceThread* _thread;
+
+//  oht::Header _header;
+//  size_t _hSize = sizeof(oht::Header);
+
+//  bool parse();
+//  void send_confirmation();
+
+//};
+
+//class SvDataProcessor
+//{
+//  Q_OBJECT
+
+//  public:
+//    SvDataProcessor(dev::Sv)
+
+//}
 
 #endif // OHT_H

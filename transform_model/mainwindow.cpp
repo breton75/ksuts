@@ -2462,3 +2462,4 @@ void MainWindow::on_bnAddSensors_clicked()
 qDebug() << "finished";
 
 }
+

@@ -2,19 +2,19 @@
 #define OPA_H
 
 #include <QtCore/QCommandLineParser>
-#include <QAbstractEventDispatcher>
 
 #include <QtCore/qglobal.h>
 
-#if defined(OHT_LIBRARY)
-#  define OHTSHARED_EXPORT Q_DECL_EXPORT
+#if defined(OPA_LIBRARY)
+#  define OPASHARED_EXPORT Q_DECL_EXPORT
 #else
-#  define OHTSHARED_EXPORT Q_DECL_IMPORT
+#  define OPASHARED_EXPORT Q_DECL_IMPORT
 #endif
 
 
-#include "../global/sv_abstract_device.h"
+#include "../global/sv_abstract_ksuts_device.h"
 #include "../global/device_params.h"
+
 #include "../../svlib/sv_exception.h"
 #include "../../svlib/sv_clog.h"
 #include "../../svlib/sv_crc.h"
@@ -33,54 +33,89 @@ struct OPAHeader
 
 //idev::SvIDevice* /*OHTSHARED_EXPORT*/ create_device(const QString& params_string);
 
-class /*OHTSHARED_EXPORT*/ SvOPA: public dev::SvAbstractDevice
+class /*OHTSHARED_EXPORT*/ SvOPA: public dev::SvAbstractKsutsDevice
 {
-
-    sv::SvAbstarctLogger& _log;
+    Q_OBJECT
+//    sv::SvAbstractLogger& _log;
 
 public:
-  SvOPA(sv::SvAbstarctLogger &log);
-  ~SvOPA();
+  SvOPA(sv::SvAbstractLogger *logger = nullptr);
+//  ~SvOPA();
+
+//  bool open();
+//  void close();
   
-//  virtual idev::DeviceTypes type() { return deviceType(); }
+//  void write(const QByteArray* data);
+//  void read();
   
-  bool readyRead() { return _ready_read; }
-  
-  bool open();
-  void close();
-  
-  void write(const QByteArray* data);
-  void read();
-  
-//  DeviceParams* serialParams() const { return &_device_params; }
-  bool setParams(const QString& params);
+////  DeviceParams* serialParams() const { return &_device_params; }
+//  bool setParams(const QString& params);
   
 private:
-  QSerialPort _serial;
-  
-  bool _ready_read = false;
-  
-  OPAHeader _header;
+  bool create_new_thread();
 
-  quint8 _data_type;
-  quint8 _data_length;
-  quint16 _crc;
-  quint8 _crc1;
-  quint8 _crc2;
-  quint8 _data[512];
+//  QSerialPort _serial;
+  
+//  bool _ready_read = false;
+  
+//  OPAHeader _header;
 
-  SvException* _exception;  
+//  quint8 _data_type;
+//  quint8 _data_length;
+//  quint16 _crc;
+//  quint8 _crc1;
+//  quint8 _crc2;
+//  quint8 _data[512];
+
+//  SvException* _exception;
   
-  size_t _hSize = sizeof(OPAHeader);
+//  size_t _hSize = sizeof(OPAHeader);
   
-  QTimer _t;
-  quint8 _buf[512];
-  quint64 _buf_offset = 0;
-  quint8 _confirm[8];
+//  QTimer _t;
+//  quint8 _buf[512];
+//  quint64 _buf_offset = 0;
+//  quint8 _confirm[8];
 
 //  quint16 crc16(uchar* buf, int length);
-  void analizeData();
-  void sendConfirmation();
+//  void analizeData();
+//  void sendConfirmation();
+
+//  void func_0x77();
+//  void func_0x19();
+//  void func_0x02();
+//  void func_0x03();
+//  void func_0x04();
+
+//  void setLineStatus();
+
+//private slots:
+//  void packetTimeout();
+    
+};
+
+class SvOPAThread: public dev::SvAbstractSerialThread
+{
+  Q_OBJECT
+
+public:
+  SvOPAThread(dev::SvAbstractDevice* device, sv::SvAbstractLogger *logger = nullptr);
+
+private:
+
+  OPAHeader _header;
+  size_t _hSize = sizeof(OPAHeader);
+
+  quint8  _data_type;
+  quint8  _data_length;
+  quint8  _data[512];
+  quint16 _crc;
+
+  quint8  _confirm[8];
+
+  void process_data();
+
+  bool parse_data();
+  void send_confirmation();
 
   void func_0x77();
   void func_0x19();
@@ -90,9 +125,7 @@ private:
 
   void setLineStatus();
 
-private slots:
-  void packetTimeout();
-    
+
 };
 
 #endif // OPA_H

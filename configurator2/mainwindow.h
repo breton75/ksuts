@@ -15,17 +15,18 @@
 #include <QApplication>
 
 #include "../../svlib/sv_exception.h"
-//#include "../../svlib/sv_log.h"
+#include "../../svlib/sv_widget_log.h"
 #include "../../svlib/sv_settings.h"
 #include "../../svlib/sv_pgdb.h"
 #include "../../svlib/sv_config.h"
 #include "../../svlib/sv_clog.h"
 #include "../../svlib/sv_busy_window.h"
 #include "../../svlib/sv_dbus.h"
+#include "../../svlib/sv_abstract_logger.h"
 
 #include "../global/sql_defs.h"
 #include "../global/autorun_defs.h"
-#include "../global/gen_defs.h"
+#include "../global/global_defs.h"
 
 #include "../libs/ksutsmon/ksutsmon.h"
 #include "../libs/netmon/netmon.h"
@@ -43,8 +44,9 @@
 
 #include "edit_autorun.h"
 #include "sv_editconfig.h"
+#include "sv_device_log.h"
 
-//struct CFG {
+//struct AppConfig {
 //    QString db_name;
 //    QString db_host;
 //    quint16 db_port;
@@ -65,14 +67,18 @@ class MainWindow : public QMainWindow
 {
   Q_OBJECT
 
-  sv::SvDBus& _dbus = sv::SvDBus::instance();
+//  sv::SvDBus& _dbus = sv::SvDBus::instance();
 
 
 public:
-  explicit MainWindow(const CFG& cfg, QWidget *parent = 0);
+  explicit MainWindow(const AppConfig& cfg, QWidget *parent = 0);
   ~MainWindow();
 
-  sv::SvWidgetLogger log;
+
+  QMap<QString, SvDeviceLog*> DEVICE_LOGS;
+  QMap<QString, sv::SvAbstractLogger*> LOGGERS;
+
+  sv::SvWidgetLogger* mainlog = nullptr;
 
   bool init();
 
@@ -84,7 +90,7 @@ private:
 
   SvException _exception;
 
-  CFG _config;
+  AppConfig _config;
 
   QString p_current_path = "";
 

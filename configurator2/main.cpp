@@ -8,7 +8,7 @@
 #include "../../svlib/sv_log.h"
 #include "../../svlib/sv_abstract_logger.h"
 
-#include "../global/gen_defs.h"
+#include "../global/global_defs.h"
 
 void signal_handler(int sig);
 
@@ -40,9 +40,9 @@ const OptionStructList AppOptions = {
 
 bool hide_on_run = false;
 
-bool parse_params(const QStringList &args, CFG& cfg, const QString& file_name);
+bool parse_params(const QStringList &args, AppConfig& cfg, const QString& file_name);
 
-bool parse_params(const QStringList& args, CFG& cfg, const QString& file_name)
+bool parse_params(const QStringList& args, AppConfig& cfg, const QString& file_name)
 {
   try {
 
@@ -233,7 +233,7 @@ int main(int argc, char *argv[])
 
   QApplication a(argc, argv);
 
-  CFG cfg;
+  AppConfig cfg;
 
   // берем параметры конфигурации сервера!
   QString cfg_file_name = QString("%1%2%3.cfg")

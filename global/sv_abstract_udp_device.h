@@ -1,7 +1,8 @@
-﻿#ifndef SVABSTRACTSERIALDEVICE_H
-#define SVABSTRACTSERIALDEVICE_H
+﻿#ifndef SV_ABSTRACT_UDP_DEVICE_H
+#define SV_ABSTRACT_UDP_DEVICE_H
 
 #include <QObject>
+#include <QUdpSocket>
 
 #include "sv_abstract_device.h"
 
@@ -11,30 +12,31 @@
 
 namespace dev {
 
- class SvAbstractSerialDevice;
- class SvAbstractSerialDeviceThread;
+ class SvAbstractUdpDevice;
+ class SvAbstractUdpDeviceThread;
 
 }
 
-class dev::SvAbstractSerialDevice : public dev::SvAbstractDevice
+class dev::SvAbstractUdpDevice : public dev::SvAbstractDevice
 {
   Q_OBJECT
 
 public:
-  SvAbstractSerialDevice(dev::HardwareType type);
-  ~SvAbstractSerialDevice();
+  SvAbstractUdpDevice(dev::HardwareType type, sv::SvAbstractLogger* logger = nullptr);
+  ~SvAbstractUdpDevice();
 
   bool open();
   void close();
 
   virtual bool setConfig(const dev::DeviceConfig& config);
   virtual bool setParams(const QString& params);
-  virtual void setLogger(const sv::SvAbstarctLogger& logger);
+
+//  virtual void setLogger(const sv::SvAbstractLogger* logger);
 
 protected:
   SvException* p_exception;
 
-  sv::SvAbstarctLogger& p_logger;
+//  sv::SvAbstractLogger& p_logger;
 
   virtual void create_new_thread() = 0;
 
@@ -43,21 +45,21 @@ private slots:
 
 };
 
-class dev::SvAbstractSerialDeviceThread: public dev::SvAbstractDeviceThread
+class dev::SvAbstractUdpDeviceThread: public dev::SvAbstractDeviceThread
 {
   Q_OBJECT
 
 public:
-  SvAbstractSerialDeviceThread(dev::SvAbstractDevice* device);
-  virtual ~SvAbstractSerialDeviceThread();
+  SvAbstractUdpDeviceThread(dev::SvAbstractDevice* device, sv::SvAbstractLogger *logger = nullptr);
+  virtual ~SvAbstractUdpDeviceThread();
 
   virtual void open() throw(SvException&);
   virtual void stop() override;
 
 protected:
-  QSerialPort p_port;
+  QUdpSocket p_socket;
 
-  dev::SvAbstractDevice* p_device;
+  dev::SvAbstractDevice *p_device;
 
   bool is_active;
 
@@ -72,11 +74,11 @@ protected:
 
   virtual void run() override;
 
-  virtual void parse() = 0;
+  virtual void treat_data() = 0;
 
 protected slots:
   virtual void reset_buffer();
 
 };
 
-#endif // SVABSTRACTSERIALDEVICE_H
+#endif // SV_ABSTRACT_UDP_DEVICE_H

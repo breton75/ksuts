@@ -16,14 +16,14 @@
 
 #include "../global/sv_abstract_device.h"
 #include "../global/sql_defs.h"
-#include "../global/gen_defs.h"
+#include "../global/global_defs.h"
 //#include "../global/dev_defs.h"
 #include "../global/sv_signal.h"
 
-#include "../ksuts_devices/oht/sv_oht.h"
-#include "../ksuts_devices/opa/sv_opa.h"
-#include "../ksuts_devices/skm/sv_skm.h"
-#include "../ksuts_devices/sktv/sv_ktv.h"
+//#include "../ksuts_devices/oht/sv_oht.h"
+//#include "../ksuts_devices/opa/sv_opa.h"
+//#include "../ksuts_devices/skm/sv_skm.h"
+//#include "../ksuts_devices/sktv/sv_ktv.h"
 
 #include "../../svlib/sv_sqlite.h"
 #include "../../svlib/sv_exception.h"
@@ -40,7 +40,7 @@ QMap<int, SvStorage*> STORAGES;
 //QMap<int, SvCOB*> COBS;
 QMap<int, SvSignal*> SIGNALS;
 
-QList<sv::SvAbstarctLogger*> LOGGERS;
+QList<sv::SvAbstractLogger*> LOGGERS;
 
 SvException exception;
 
@@ -81,7 +81,7 @@ SvStorage* create_storage(QSqlQuery *q);
 //SvCOB* create_cob(const QSqlQuery* q);
 SvSignal* create_signal(const QSqlQuery* q);
 
-sv::SvAbstarctLogger* create_logger(const sv::log::Options& options, const QString& sender);
+sv::SvAbstractLogger* create_logger(const sv::log::Options& options, const QString& sender);
 
 bool openDevices();
 bool initStorages();
@@ -92,6 +92,7 @@ void close();
 void closeDevices();
 void deinitStorages();
 void deleteSignals();
+void deleteLoggers();
 
 //bool create_tcp_server(const CFG &cfg);
 
@@ -103,8 +104,6 @@ bool parse_params(const QStringList& args, AppConfig &cfg, const QString& file_n
     SvConfigFileParser cfg_parser(AppOptions);
     if(!cfg_parser.parse(file_name))
         exception.raise(cfg_parser.lastError());
-
-
 
     /** разбираем параметры командной строки **/
     SvCommandLineParser cmd_parser(AppOptions);
@@ -234,7 +233,6 @@ int main(int argc, char *argv[])
   // запрос версии для монитора
   if((argc > 1) && (QString(argv[1]).trimmed() == "-v")) {
     std::cout << QString(APP_VERSION).toStdString().c_str() << std::endl;
-//    dbus.sendmsg("mon", QString(APP_VERSION), sv::log::typeToString(sv::log::mtAttention));
     return 0;
   }
 
@@ -246,6 +244,28 @@ int main(int argc, char *argv[])
 
 
   QCoreApplication a(argc, argv);
+
+  // создаем потомка
+  switch (fork()) {
+
+    case -1:   // если не удалось запустить потомка выведем на экран ошибку и её описание
+
+      printf("Ошибка при запуске службы сервера (%s)\n", strerror(errno));
+      return -1;
+      break;
+
+    case 0:
+      break;
+
+    default:
+
+      return 0;
+      break;
+
+  }
+
+  // инициализируем логгер ПОСЛЕ запуска потомка
+  dbus.init();
 
   AppConfig cfg;
 
@@ -260,13 +280,10 @@ int main(int argc, char *argv[])
         exception.raise(-1, "Ошибка разбора командной строки");
 
     dbus.setOptions(cfg.log_options);
-    dbus.setSender("main");
+//    dbus.setSender("main");
 
-//    if(cfg.single_device_mode)
-//      lout.setFileNamePrefix(QString("dev%1").arg(cfg.single_device_index));
-
-
-    dbus << sv::log::llDebug
+    dbus << sv::log::sender("main")
+         << sv::log::llDebug2
          << "db_host=" << cfg.db_host << "\ndb_port=" << cfg.db_port
          << "\ndb_name=" << cfg.db_name << "\ndb_user=" << cfg.db_user << "\ndb_pass=" << cfg.db_pass
          << "\nlogging=" << (cfg.log_options.logging ? "on" : "off")
@@ -292,7 +309,6 @@ int main(int argc, char *argv[])
     return e.code;
   }
 
-
   // если не задан режим 'одного устройства', то должна быть запущена только одна копия ksuts_server
   if(!cfg.single_device_mode) {
 
@@ -317,36 +333,36 @@ int main(int argc, char *argv[])
     }
   }
 
-  
-  // создаем потомка
-  switch (fork()) {
+//  // создаем потомка
+//  switch (fork()) {
 
-    case -1:   // если не удалось запустить потомка выведем на экран ошибку и её описание
+//    case -1:   // если не удалось запустить потомка выведем на экран ошибку и её описание
 
-      printf("Ошибка при запуске службы сервера (%s)\n", strerror(errno));
-      return -1;
-      break;
+//      printf("Ошибка при запуске службы сервера (%s)\n", strerror(errno));
+//      return -1;
+//      break;
 
-    case 0:
-      break;
+//    case 0:
+//      break;
 
-    default:
+//    default:
 
-      /* Функция  _exit()  подобна  exit(3),  но  не  вызывает никаких функций,
-       * зарегистрированных с помощью  atexit(3)  или  on_exit(3)...
-       * читай man _Exit */
-      return 0;
-//      _Exit(0);
-      break;
+//      /* Функция  _exit()  подобна  exit(3),  но  не  вызывает никаких функций,
+//       * зарегистрированных с помощью  atexit(3)  или  on_exit(3)...
+//       * читай man _Exit */
+//      return 0;
+////      _Exit(0);
+//      break;
 
-  }
-
+//  }
 
   /// перехватываем момент закрытия программы, чтобы корректно завершить
   atexit(close);
 
 
-  dbus << sv::log::llInfo << QString("Сервер сбора и обработки данных КСУТС v.%1").arg(APP_VERSION) << sv::log::endl;
+  dbus << sv::log::llInfo << sv::log::mtInfo
+       << QString("Сервер сбора и обработки данных КСУТС v.%1").arg(APP_VERSION)
+       << sv::log::endl;
 
   int result = 0;
 
@@ -361,7 +377,7 @@ int main(int argc, char *argv[])
     if(!readStorages()) exception.raise(-30);
 
     if(!readSignals(cfg)) exception.raise(-40);
-    
+
     close_db();
 
     /** подключаемся к устройствам и к репозиториям и начинаем работу **/
@@ -385,13 +401,17 @@ int main(int argc, char *argv[])
 
       setsid(); // отцепляемся от родителя
 
-      if(!cfg.log_options.logging || cfg.log_options.log_devices.isEmpty()) {
+      close(STDIN_FILENO);
+      close(STDOUT_FILENO);
+      close(STDERR_FILENO);
 
-        close(STDIN_FILENO);
-        close(STDOUT_FILENO);
-        close(STDERR_FILENO);
+//      if(!cfg.log_options.logging || cfg.log_options.log_devices.isEmpty()) {
 
-      }
+//        close(STDIN_FILENO);
+//        close(STDOUT_FILENO);
+//        close(STDERR_FILENO);
+
+//      }
 
       return a.exec();
 
@@ -422,6 +442,7 @@ void close()
   closeDevices();
   deinitStorages();
   deleteSignals();
+  deleteLoggers();
 }
 
 bool initConfig(const AppConfig& cfg)
@@ -452,13 +473,13 @@ bool initConfig(const AppConfig& cfg)
 
     QString db_version = q.value("db_version").toString();
 
-    dbus << sv::log::llInfo << QString("Версия БД: %1").arg(db_version) << sv::log::endl;
+    dbus << sv::log::llInfo << sv::log::mtSuccess << QString("Версия БД: %1").arg(db_version) << sv::log::endl;
     
     if(QString(ACTUAL_DB_VERSION) != db_version)
       exception.raise(1, QString("Версия БД не соответствует версии программы. Требуется версия БД %1\n")
                       .arg(ACTUAL_DB_VERSION));
 
-    dbus << sv::log::llInfo << "OK\n" << sv::log::endl;
+    dbus << sv::log::llInfo << sv::log::mtSuccess << "OK\n" << sv::log::endl;
 
     return true;
     
@@ -466,7 +487,7 @@ bool initConfig(const AppConfig& cfg)
   
   catch(SvException& e) {
     
-    dbus << sv::log::llError << QString("Ошибка: %1\n").arg(e.error) << sv::log::endl;
+    dbus << sv::log::llError << sv::log::mtError << QString("Ошибка: %1\n").arg(e.error) << sv::log::endl;
     return false;
   }
 }
@@ -474,8 +495,8 @@ bool initConfig(const AppConfig& cfg)
 
 bool readDevices(const AppConfig& cfg)
 {
-  
-  dbus << sv::log::mtDebug << sv::log::llInfo << QString("Читаем устройства:") << sv::log::endl;
+
+  dbus << sv::log::mtInfo << sv::log::llInfo << QString("Читаем устройства:") << sv::log::endl;
   
   QSqlQuery q(PG->db);
   
@@ -498,21 +519,15 @@ bool readDevices(const AppConfig& cfg)
       
       if(newdev) {
 
-        DEVICES.insert(newdev->config()->index, newdev);
+        DEVICES.insert(newdev->info()->index, newdev);
 
+        newdev->setLogger(&dbus);
 
-        sv::SvAbstarctLogger* logger = create_logger(cfg.log_options,
-                                                           QString("%1%2").arg(newdev->config()->hardware_name)
-                                                           .arg(newdev->config()->index));
-        LOGGERS.append(logger);
-
-        newdev->setLogger(*logger);
-
-
-        dbus << sv::log::llDebug << QString("  %1 [Индекс %2] %3").
-                arg(newdev->config()->name).
-                arg(newdev->config()->index).
-                arg(newdev->config()->device_params_string)
+        dbus << sv::log::sender("main")
+             << sv::log::llDebug << sv::log::mtSimple << QString("  %1 [Индекс %2] %3").
+                arg(newdev->info()->name).
+                arg(newdev->info()->index).
+                arg(newdev->info()->device_params)
              << sv::log::endl;
 
         counter++;
@@ -520,7 +535,8 @@ bool readDevices(const AppConfig& cfg)
       }
 
       else
-         dbus << sv::log::mtError << sv::log::llError << QString("Не удалось добавить устройство %1 [Индекс %2]\n")
+         dbus << sv::log::sender("main")
+              << sv::log::mtError << sv::log::llError << QString("Не удалось добавить устройство %1 [Индекс %2]\n")
                                         .arg(q.value("device_name").toString())
                                         .arg(q.value("device_index").toInt())
              << sv::log::endl;
@@ -534,15 +550,17 @@ bool readDevices(const AppConfig& cfg)
     if(counter == 0)
       exception.raise("Устройства в конфигурации не найдены");
 
-    dbus << sv::log::mtSuccess << sv::log::llInfo << QString("OK [прочитано %1]\n").arg(counter) << sv::log::endl;
+    dbus << sv::log::sender("main")
+         << sv::log::mtSuccess << sv::log::llInfo << QString("OK [прочитано %1]\n").arg(counter) << sv::log::endl;
     
     return true;
     
   }
   
   catch(SvException& e) {
-    
-    dbus << sv::log::mtError << sv::log::llError << QString("Ошибка: %1\n").arg(e.error) << sv::log::endl;
+
+    dbus << sv::log::sender("main")
+         << sv::log::mtError << sv::log::llError << QString("Ошибка: %1\n").arg(e.error) << sv::log::endl;
     return false;
     
   }
@@ -598,7 +616,6 @@ bool readStorages()
   }
 }
 
-
 bool readSignals(const AppConfig &cfg)
 {
   dbus << sv::log::llInfo << QString("Читаем сигналы:") << sv::log::endl;
@@ -644,7 +661,7 @@ bool readSignals(const AppConfig &cfg)
 
           DEVICES.value(newsig->params()->device_index)->addSignal(newsig);
 
-          dbus << lvl << QString("%1 %2").arg(QString(31 - newsig->params()->name.length(), QChar('-'))).arg(DEVICES.value(newsig->params()->device_index)->config()->name);
+          dbus << lvl << QString("%1 %2").arg(QString(31 - newsig->params()->name.length(), QChar('-'))).arg(DEVICES.value(newsig->params()->device_index)->info()->name);
 
           counter++;
 
@@ -707,55 +724,55 @@ bool readSignals(const AppConfig &cfg)
   
 }
 
-
 dev::SvAbstractDevice* create_device(const QSqlQuery* q)
 {  
   dev::SvAbstractDevice* newdev = nullptr;
   
-  dev::DeviceConfig config;
+  dev::DeviceInfo info;
 
-  config.index = q->value("device_index").toInt();
-  config.name = q->value("device_name").toString();
-  config.hardware_type = dev::HARDWARE_CODES.value(q->value("device_hardware_code").toString());
-  config.ifc_id = q->value("device_ifc_id").toInt();
-  config.ifc_name = q->value("device_ifc_name").toString();
-  config.protocol_id = q->value("device_protocol_id").toInt();
-  config.protocol_name = q->value("device_protocol_name").toString();
-  config.driver_lib_name = q->value("device_driver_lib_name").toString(); 
-  config.is_involved = q->value("device_is_involved").toBool();
-  config.debug_mode = q->value("device_debug").toBool();
-  config.timeout = q->value("device_timeout").toUInt();
-  config.device_params_string = q->value("device_params").toString();
-  QString params = q->value("device_params").toString();
+  info.index = q->value("device_index").toInt();
+  info.name = q->value("device_name").toString();
+  info.hardware_type = dev::HARDWARE_CODES.value(q->value("device_hardware_code").toString());
+//  info.ifc_type = dev::IFC_CODES.value(q->value("device_ifc_name").toString());
+  info.ifc_name = q->value("device_ifc_name").toString();
+  info.ifc_params = q->value("device_ifc_params").toString();
+  info.device_params = q->value("device_params").toString();
+  info.protocol_id = q->value("device_protocol_id").toInt();
+  info.protocol_name = q->value("device_protocol_name").toString();
+  info.driver_lib_name = q->value("device_driver_lib_name").toString();
+  info.is_involved = q->value("device_is_involved").toBool();
+  info.debug_mode = q->value("device_debug").toBool();
+  info.timeout = q->value("device_timeout").toUInt();
+//  QString params = q->value("device_params").toString();
   
   try {
     
-    switch (config.hardware_type) {
+    switch (info.hardware_type) {
       
       case dev::OHT:
         newdev = new SvOHT();
         break;
         
       case dev::OPA:
-        newdev = new SvOPA();
+//        newdev = new SvOPA();
         break;
         
       case dev::SKM:
-        newdev = new SvSKM();
+//        newdev = new SvSKM();
         break;
 
     case dev::KTV:
-        newdev = new SvKTV();
+//        newdev = new SvKTV();
         break;
 
       default:
-        exception.raise(QString("Неизвестное устройство: %1 [Индекс %2]").arg(config.name).arg(config.index));
+        exception.raise(QString("Неизвестное устройство: %1 [Индекс %2]").arg(info.name).arg(info.index));
         break;
         
     }
     
-    if(!newdev->setConfig(config)) exception.raise(newdev->lastError());
-    if(!newdev->setParams(params)) exception.raise(newdev->lastError());
+    if(!newdev->setup(info)) exception.raise(newdev->lastError());
+//    if(!newdev->setParams(params)) exception.raise(newdev->lastError());
 
     return newdev;
     
@@ -834,10 +851,11 @@ SvSignal* create_signal(const QSqlQuery* q)
     
 }
 
-sv::SvAbstarctLogger* create_logger(const sv::log::Options& options, const QString& sender)
+sv::SvAbstractLogger* create_logger(const sv::log::Options& options, const QString& sender)
 {
-  sv::SvAbstarctLogger* l = new sv::SvDBus(options);
-  l->setSender(sender);
+  sv::SvAbstractLogger* l = new sv::SvDBus(options);
+//  l->setSender(sender);
+  ((sv::SvDBus*)l)->init();
 
   return l;
 }
@@ -853,11 +871,11 @@ bool openDevices()
       dev::SvAbstractDevice* device = DEVICES.value(key);
 
       if(!device->open()) exception.raise(QString("%1 [Индекс %2]: %3")
-                                          .arg(device->config()->name)
-                                          .arg(device->config()->index)
+                                          .arg(device->info()->name)
+                                          .arg(device->info()->index)
                                           .arg(device->lastError()));
 
-      dbus << sv::log::llDebug << QString("  %1: OK").arg(device->config()->name) << sv::log::endl;
+      dbus << sv::log::llDebug << QString("  %1: OK").arg(device->info()->name) << sv::log::endl;
         
     }
     
@@ -929,7 +947,7 @@ void closeDevices()
 
       dev::SvAbstractDevice* device = DEVICES.value(key);
 
-      dbus << sv::log::llDebug << QString("  %1 (%2):").arg(device->config()->name).arg(device->config()->ifc_name) << sv::log::endi;
+      dbus << sv::log::llDebug << QString("  %1 (%2):").arg(device->info()->name).arg(device->info()->ifc_name) << sv::log::endi;
 
       device->close();
       delete DEVICES.take(key);
@@ -1006,7 +1024,7 @@ void deleteLoggers()
 {
   dbus << sv::log::llInfo << "Удаляем логгеры:" << sv::log::endl;
 
-  for(sv::SvAbstarctLogger* logger: LOGGERS)
+  for(sv::SvAbstractLogger* logger: LOGGERS)
     delete logger;
 
   dbus << sv::log::llInfo << QString("OK\n")  << sv::log::endl;

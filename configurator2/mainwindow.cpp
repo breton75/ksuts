@@ -13,7 +13,7 @@ extern SvStorageEditor* STORAGEEDITOR_UI;
 extern EditAutorunWindow *EDIT_AUTORUN_UI;
 extern SvEditConfig* EDITCONFIG_UI;
 
-MainWindow::MainWindow(const CFG &cfg, QWidget *parent) :
+MainWindow::MainWindow(const AppConfig &cfg, QWidget *parent) :
   QMainWindow(parent),
   ui(new Ui::MainWindow),
   _config(cfg)
@@ -43,7 +43,13 @@ MainWindow::MainWindow(const CFG &cfg, QWidget *parent) :
   setWindowTitle(QString("Конфигуратор пульта v.%1").arg(APP_VERSION));
   setWindowIcon(QIcon(":/signals/icons/application-default-icon_37713.ico"));
 
-  log.setTextEdit(ui->textLog);
+  DEVICE_LOGS.clear();
+  LOGGERS.clear();
+//qDebug() << 1;
+  mainlog = new sv::SvWidgetLogger();
+  mainlog->setTextEdit(ui->textLog);
+
+  LOGGERS.insert("main", mainlog);
 
 //  ui->treeView->header()->setSectionResizeMode(QHeaderView::Stretch);
   ui->treeView->setSelectionBehavior(QAbstractItemView::SelectRows);
@@ -140,8 +146,14 @@ MainWindow::MainWindow(const CFG &cfg, QWidget *parent) :
 
 void MainWindow::messageSlot(const QString& sender, const QString& message, const QString& type)
 {
-//  ui->textLog->append(QString("%1: %2: %3").arg(sender, type, message));
-  log << sv::log::stringToType(type) << QString("%1: %2").arg(sender, message) << sv::log::endl;
+//  qDebug() << LOGGERS.contains(sender) << sender;
+//  if(!LOGGERS.contains(sender))
+//    return;
+
+//  *(LOGGERS.value(sender)) << sv::log::stringToType(type) << QString("%1").arg(message) << sv::log::endl;
+
+  *mainlog << sv::log::stringToType(type) << QString("%1").arg(message) << sv::log::endl;
+
 }
 
 void MainWindow::closeEvent(QCloseEvent *event)
@@ -277,7 +289,7 @@ bool MainWindow::init()
     PGDB = nullptr;
     QSqlDatabase::removeDatabase(p_connection_name);
 
-    log << sv::log::mtCritical << e.error << sv::log::endl;
+    *mainlog << sv::log::mtCritical << e.error << sv::log::endl;
 
     return false;
 
@@ -402,7 +414,7 @@ bool MainWindow::makeTree()
     q->finish();
     delete q;
 
-    log << sv::log::Time << sv::log::mtCritical << e.error << sv::log::endl;
+    *mainlog << sv::log::Time << sv::log::mtCritical << e.error << sv::log::endl;
 
     return false;
 
@@ -613,7 +625,7 @@ bool MainWindow::pourDevicesToStorages(TreeItem* rootItem)
 
         q->finish();
         delete q;
-        log << sv::log::Time << sv::log::mtCritical << e.error << sv::log::endl;
+        *mainlog << sv::log::Time << sv::log::mtCritical << e.error << sv::log::endl;
         throw;
         return false;
 
@@ -674,7 +686,7 @@ bool MainWindow::pourSignalsToStorages(TreeItem* rootItem)
 
         q->finish();
         delete q;
-        log << sv::log::Time << sv::log::mtCritical << e.error << sv::log::endl;
+        *mainlog << sv::log::Time << sv::log::mtCritical << e.error << sv::log::endl;
         throw e;
         return false;
 
@@ -1204,8 +1216,9 @@ QString MainWindow::get_one_device_info(int index)
 
     line.replace("%DEVICE_NAME%", q->value("device_name").toString());
     line.replace("%DEVICE_INDEX%", q->value("device_index").toString());
+    line.replace("%DEVICE_PARAMS%", q->value("device_params").toString().replace("\n", "<br>"));
     line.replace("%DEVICE_IFC%", q->value("device_ifc_name").toString());
-    line.replace("%DEVICE_PARAMS%", q->value("device_connection_params").toString());
+    line.replace("%DEVICE_IFC_PARAMS%", q->value("device_ifc_params").toString().replace("\n", "<br>"));
     line.replace("%DEVICE_DRIVER%", q->value("device_driver_lib_name").toString());
     line.replace("%DEVICE_DEBUG%", q->value("device_debug").toString());
     line.replace("%DEVICE_DESCRIPTION%", q->value("device_description").toString());
@@ -1361,7 +1374,7 @@ void MainWindow::make_stand_info()
     p_current_stand_info_html.replace("%SERVICES%", services_str);
 
     p_trayIcon->setToolTip(p_current_stand_info_hint);
-//    log <<  << sv::log::endl;
+//    mainlog <<  << sv::log::endl;
 
     delete q;
 
@@ -1588,7 +1601,7 @@ void MainWindow::update_stand_info()
   if(_standRoot == _model->itemFromIndex(ui->treeView->currentIndex()) &&
      old_stand_info_hint.compare(p_current_stand_info_hint)) {
 
-//    log << "browser\n"<< ui->textBrowser->toHtml() << "\n\n\nstr\n" << p_current_stand_info_html << sv::log::endl;
+//    mainlog << "browser\n"<< ui->textBrowser->toHtml() << "\n\n\nstr\n" << p_current_stand_info_html << sv::log::endl;
     ui->textBrowser->setHtml(p_current_stand_info_html);
 
   }
@@ -1636,20 +1649,43 @@ void MainWindow::on_treeView_doubleClicked(const QModelIndex &index)
   {
     if(!p_authorized) break;
 
-    DEVICE_UI = new SvDeviceEditor(this, item->index);
+    if(_ksuts_monitor->getKsutsServerInfo().is_active)
+    {
+      QString n = QString(mainlog->options().log_sender_name).arg(item->index);
 
-    int result = DEVICE_UI->exec();
+      if(DEVICE_LOGS.contains(n))
+        return;
 
-    switch (result) {
+      SvDeviceLog* newlog = new SvDeviceLog();
 
-      case SvDeviceEditor::Error:
-      {
-        QMessageBox::critical(this, "Ошибка", DEVICE_UI->lastError(), QMessageBox::Ok);
-        break;
-      }
+      DEVICE_LOGS.insert(n, newlog);
+      LOGGERS.insert(n, newlog->logger());
+
+      newlog->exec();
+
+//      delete newlog;
+
+
+
     }
+    else
+    {
+      DEVICE_UI = new SvDeviceEditor(this, item->index);
 
-    delete DEVICE_UI;
+      int result = DEVICE_UI->exec();
+
+      switch (result) {
+
+        case SvDeviceEditor::Error:
+        {
+          QMessageBox::critical(this, "Ошибка", DEVICE_UI->lastError(), QMessageBox::Ok);
+          break;
+        }
+      }
+
+      delete DEVICE_UI;
+
+    }
 
     ui->textBrowser->setHtml(get_html_page(get_one_device_info(item->index)));
 

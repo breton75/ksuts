@@ -3,21 +3,23 @@
 
 /** *****************   ************************* **/
 
-SvKTV::SvKTV(sv::SvAbstarctLogger &log):
-  dev::SvAbstractSerialDevice(dev::KTV, log)
+SvKTV::SvKTV(sv::SvAbstractLogger *logger):
+  dev::SvAbstractKsutsDevice(dev::KTV, logger)
 {
 
 }
 
-void SvKTV::create_new_thread()
+bool SvKTV::create_new_thread()
 {
-  p_thread = new SvKTVThread(this, p_log);
+  p_thread = new SvKTVThread(this, p_logger);
+
+  return true;
 }
 
 
 
 /**         SvKTVThread         **/
-SvKTVThread::SvKTVThread(dev::SvAbstractDevice *device, sv::SvAbstarctLogger &log):
+SvKTVThread::SvKTVThread(dev::SvAbstractDevice *device, sv::SvAbstractLogger *log):
   dev::SvAbstractSerialDeviceThread(device, log)
 {
 
@@ -69,7 +71,7 @@ void SvKTVThread::treat_data()
           p_buf_offset = offset_of_2f55 + 1;
 
           if(p_device->config()->debug_mode)
-              p_log << sv::log::mtDebug
+              *p_logger << sv::log::mtDebug
                     << sv::log::llDebug
                     << sv::log::TimeZZZ << sv::log::in
                     << QString(QByteArray((const char*)&p_buf[0], p_buf_offset).toHex())
@@ -84,7 +86,7 @@ void SvKTVThread::treat_data()
                 // 'грязная' длина данных вместе с crc
                 _data_length = p_buf_offset - 2 /* 2F55 в конце */ - sizeof(_header);
 
-                if(parse_packet()) {
+                if(parse_data()) {
 
 
                   /* чтобы не тратить ресурсы, убрал отправку подтверждения.
@@ -113,13 +115,13 @@ void SvKTVThread::treat_data()
   
   catch(SvException& e) {
     
-    p_log << sv::log::mtError << sv::log::llError << e.error << sv::log::endl;
+    *p_logger << sv::log::mtError << sv::log::llError << e.error << sv::log::endl;
     return;
     
   }
 }
 
-bool SvKTVThread::parse_packet()
+bool SvKTVThread::parse_data()
 {
     // вычленяем crc. учитываем, что байты 1F и 2F и 0x55 удваиваются
     // длина crc может увеличиться за счет удвоения управляющих байтов
@@ -190,7 +192,7 @@ void SvKTVThread::send_confirmation()
   p_port.write((const char*)&_confirm[0], crc_offset + crc_length + 2);
 
   if(p_device->config()->debug_mode)
-    p_log << sv::log::llDebug
+    *p_logger << sv::log::llDebug
           << sv::log::TimeZZZ << sv::log::out
           << QString(QByteArray((const char*)&_confirm[0], crc_offset + crc_length + 2).toHex()) << sv::log::endl;
 

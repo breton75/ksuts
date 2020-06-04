@@ -12,7 +12,7 @@
 #endif
 
 
-#include "../global/sv_abstract_serial_device.h"
+#include "../global/sv_abstract_ksuts_device.h"
 #include "../global/device_params.h"
 
 #include "../../svlib/sv_exception.h"
@@ -33,24 +33,24 @@ struct KTVHeader
 
 //idev::SvIDevice* /*OHTSHARED_EXPORT*/ create_device(const QString& params_string);
 
-class /*OHTSHARED_EXPORT*/ SvKTV: public dev::SvAbstractSerialDevice
+class /*OHTSHARED_EXPORT*/ SvKTV: public dev::SvAbstractKsutsDevice
 {
   Q_OBJECT
 
 public:
-  SvKTV(sv::SvAbstarctLogger& log);
+  SvKTV(sv::SvAbstractLogger *logger = nullptr);
 
 private:
-  void create_new_thread();
+  bool create_new_thread();
 
 };
 
-class SvKTVThread: public dev::SvAbstractSerialDeviceThread
+class SvKTVThread: public dev::SvAbstractSerialThread
 {
   Q_OBJECT
 
 public:
-  SvKTVThread(dev::SvAbstractDevice* device, sv::SvAbstarctLogger &log);
+  SvKTVThread(dev::SvAbstractDevice* device, sv::SvAbstractLogger *log = nullptr);
 
 private:
 
@@ -71,7 +71,8 @@ private:
 
   void treat_data();
 
-  bool parse_packet();
+  bool parse_data();
+
   void send_confirmation();
   void set_data();
 

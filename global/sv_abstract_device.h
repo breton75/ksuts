@@ -17,7 +17,7 @@
 namespace dev {
 
   enum HardwareType {
-    UNDEFINED,
+    UNDEFINED_TYPE,
     OHT,
     OPA,
     KTV,
@@ -29,14 +29,15 @@ namespace dev {
                                                       {"SKM", SKM},
                                                       {"KTV", KTV}};
 
-  struct DeviceConfig
+  struct DeviceInfo
   {
     int index = -1;
     QString name = "";
     QString hardware_name = "";
-    HardwareType hardware_type = HardwareType::UNDEFINED;
-    int ifc_id = -1;
+    HardwareType hardware_type = HardwareType::UNDEFINED_TYPE;
+//    IfcType ifc_type = IfcType::UNDEFINED_IFC;
     QString ifc_name = "";
+    QString ifc_params = "";
     int protocol_id = -1;
     QString protocol_name = "";
     QString driver_lib_name = "";
@@ -45,7 +46,7 @@ namespace dev {
     bool debug_mode = false;
     bool debug2_mode = false;
     quint64 timeout = 0;
-    QString device_params_string = "";
+    QString device_params = "";
   };
 
   typedef QMap<QString, SvSignal*> SignalMap;
@@ -60,9 +61,10 @@ class dev::SvAbstractDevice: public QObject
   Q_OBJECT
   
 public:
-  SvAbstractDevice(const dev::HardwareType hardware_type):
+  SvAbstractDevice(dev::HardwareType hardware_type, sv::SvAbstractLogger* logger = nullptr):
     p_hardware_type(hardware_type),
-    p_thread(nullptr)
+    p_thread(nullptr),
+    p_logger(logger)
   {
     clearSignals();
   }
@@ -73,17 +75,24 @@ public:
   
   virtual dev::SvAbstractDeviceThread* thread() const { return p_thread; }
 
-  virtual bool setConfig(const dev::DeviceConfig& config) = 0;
-  virtual bool setParams(const QString& params)  = 0;
-  virtual void setLogger(const sv::SvAbstarctLogger& logger)  = 0;
+  virtual bool setup(const dev::DeviceInfo& info) = 0;
 
-  virtual const dev::DeviceConfig* config() const { return &p_config; }
+  virtual void setLogger(sv::SvAbstractLogger* logger)
+  {
+      p_logger = logger;
+
+//      if(p_thread)
+//          p_thread->setLogger(logger);
+  }
+
+  virtual const sv::SvAbstractLogger* logger() const { return p_logger; }
+
+  virtual const dev::DeviceInfo* info() const { return &p_info; }
   virtual const dev::DeviceParams* params() const { return &p_params; }
 
   virtual bool open() = 0;
   virtual void close() = 0;
   virtual void stop() { }
-
 
   void setLastError(const QString& lastError) { p_last_error = lastError; }
   const QString &lastError() const            { return p_last_error; }
@@ -116,7 +125,7 @@ public:
 
   inline void setNewLostEpoch()
   {
-      p_lost_epoch = QDateTime::currentMSecsSinceEpoch() + p_config.timeout;
+      p_lost_epoch = QDateTime::currentMSecsSinceEpoch() + p_info.timeout;
 
       foreach (SvSignal* s, p_signals.values())
         s->setDeviceLostEpoch(p_lost_epoch);
@@ -126,10 +135,12 @@ public:
 protected:
   dev::HardwareType p_hardware_type;
 
-  dev::SvAbstractDeviceThread* p_thread;
+  dev::SvAbstractDeviceThread* p_thread = nullptr;
 
-  dev::DeviceConfig  p_config;
+  dev::DeviceInfo    p_info;
   dev::DeviceParams  p_params;
+
+  sv::SvAbstractLogger* p_logger = nullptr;
 
   dev::SignalMap p_signals;
 
@@ -148,23 +159,29 @@ class dev::SvAbstractDeviceThread: public QThread
   Q_OBJECT
   
 public:
-  SvAbstractDeviceThread()
+  SvAbstractDeviceThread(dev::SvAbstractDevice* device, sv::SvAbstractLogger* logger = nullptr):
+    p_device(device)
+    , p_logger(logger)
   {  }
 
 //  ~SvAbstractDeviceThread() = 0;
 
+  virtual void setIfcParams(const QString& params) throw(SvException&) = 0;
+
   virtual void open() throw(SvException&) = 0;
   virtual void stop() = 0;
+
+  virtual void setLogger(sv::SvAbstractLogger* logger)
+  {
+    p_logger = logger;
+  }
   
 protected:
-//  sv::SvAbstarctLogger& p_log;
+  sv::SvAbstractLogger  *p_logger = nullptr;
+  dev::SvAbstractDevice *p_device = nullptr;
 
+  virtual void process_data() = 0;
 
-//signals:
-////  void finished();
-//  void logthr(const QString& str); //, svlog::MessageBuns mb, svlog::MessageTypes mt);
-//  void logthrin(const QString& str); //, svlog::MessageBuns mb, svlog::MessageTypes mt);
-  
 };
 
 

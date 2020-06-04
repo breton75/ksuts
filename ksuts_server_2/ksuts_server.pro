@@ -4,7 +4,7 @@ QT += serialport sql network dbus
 CONFIG += c++11 console
 CONFIG -= app_bundle
 
-TARGET = /home/user/ksuts_server/ksuts_server2
+TARGET = /home/user/ksuts_server/ksuts_server
 
 DEFINES += APP_DEBUG=1
 DEFINES += TEST_VALUES
@@ -33,15 +33,12 @@ SOURCES += main.cpp \
     ../../svlib/sv_pgdb.cpp \
     ../../svlib/sv_clog.cpp \
     sv_storage.cpp \
-    ../ksuts_devices/opa/sv_opa.cpp \
-    ../ksuts_devices/skm/sv_skm.cpp \
     ../../svlib/sv_config.cpp \
-    ../../svlib/sv_fnt.cpp \
     sv_storagewatcher.cpp \
     ../../svlib/sv_dbus.cpp \
     ../../svlib/sv_abstract_logger.cpp \
-    ../ksuts_devices/sktv/sv_ktv.cpp \
-    ../global/sv_abstract_serial_device.cpp
+    ../../svlib/sv_fnt.cpp \
+    ../global/sv_abstract_ksuts_device.cpp
 
 HEADERS += \
     ../../svlib/sv_exception.h \
@@ -54,8 +51,6 @@ HEADERS += \
     sv_storage.h \
     ../global/gen_defs.h \
     ../ksuts_devices/opa/opa_defs.h \
-    ../ksuts_devices/opa/sv_opa.h \
-    ../ksuts_devices/skm/sv_skm.h \
     ../ksuts_devices/skm/skm_defs.h \
     ../../svlib/sv_config.h \
     ../../svlib/sv_fnt.h \
@@ -64,8 +59,8 @@ HEADERS += \
     ../global/sv_abstract_device.h \
     ../../svlib/sv_crc.h \
     ../global/device_params.h \
-    ../ksuts_devices/sktv/sv_ktv.h \
     ../ksuts_devices/sktv/ktv_defs.h \
     ../../svlib/sv_abstract_logger.h \
-    ../global/sv_abstract_serial_device.h \
-    ../../svlib/sv_serial_params.h
+    ../../svlib/sv_serial_params.h \
+    ../global/sv_abstract_ksuts_device.h \
+    ../../svlib/sv_udp_params.h

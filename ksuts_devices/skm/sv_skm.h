@@ -35,17 +35,17 @@ class /*OHTSHARED_EXPORT*/ SvSKM: public dev::SvAbstractDevice
 {
     Q_OBJECT
 
-    sv::SvAbstarctLogger& _log;
+//    sv::SvAbstractLogger& _log;
   
 public:
-  SvSKM(sv::SvAbstarctLogger &log);
+  SvSKM(sv::SvAbstractLogger *logger = nullptr);
   ~SvSKM();
   
   bool open();
   void close();
   
-  bool setConfig(const dev::DeviceConfig& config);
-  bool setParams(const QString& params);
+//  bool setup(const dev::DeviceInfo& info);
+//  bool setParams(const QString& params);
   
 private:
   SvException* _exception;  
@@ -63,7 +63,7 @@ class SvSKMThread: public dev::SvAbstractDeviceThread
   Q_OBJECT
 
 public:
-  SvSKMThread(dev::SvAbstractDevice* device, sv::SvAbstarctLogger &log);
+  SvSKMThread(dev::SvAbstractDevice* device, sv::SvAbstractLogger *logger = nullptr);
   ~SvSKMThread();
 
   void open() throw(SvException&) override;

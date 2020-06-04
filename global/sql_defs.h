@@ -20,18 +20,16 @@
   "   devices.device_name as device_name, " CR \
   "   devices.device_params as device_params, " CR \
   "   devices.hardware_code as device_hardware_code, " CR \
-  "   devices.ifc_id as device_ifc_id, " CR \
+  "   devices.ifc_name as device_ifc_name, " CR \
+  "   devices.ifc_params as device_ifc_params, " CR \
   "   devices.protocol_id as device_protocol_id, " CR \
-  "   devices.connection_params as device_connection_params, " CR \
   "   devices.description as device_description, " CR \
   "   devices.driver_lib_name as device_driver_lib_name, " CR \
   "   devices.is_involved as device_is_involved, " CR \
   "   devices.debug as device_debug, " CR \
   "   devices.timeout as device_timeout, " CR \
-  "   ifces.ifc_name as device_ifc_name, " CR \
   "   protocols.protocol_name as device_protocol_name " CR \
   "FROM devices " CR \
-  "LEFT JOIN ifces ON ifces.id = devices.ifc_id " CR \
   "LEFT JOIN protocols  ON protocols.id = devices.protocol_id "
 
 #define SQL_SELECT_DEVICES_LIST (SQL_SELECT_FROM_DEVICES CR " ORDER BY device_ifc_name ASC")
@@ -93,16 +91,16 @@
 
 
 #define SQL_NEW_DEVICE \
-  "INSERT INTO devices (device_name, device_index, ifc_id, protocol_id, connection_params, description)" CR \
+  "INSERT INTO devices (device_name, device_index, ifc_index, protocol_id, ifc_params, description)" CR \
   "VALUES ('%1', %2, %3, %4, '%5', '%6');"
 
 #define SQL_CONFIGURE_DEVICE \
-  "UPDATE devices SET device_name = '%1', is_involved = true, ifc_id = %2, protocol_id = %3, "\
-  "connection_params = '%4', description = '%5', debug = %6 " CR \
-  "WHERE device_index = %7;"
+  "UPDATE devices SET device_name = '%1', device_params = '%2', is_involved = true, ifc_name = '%3', "\
+  "ifc_params = '%4', protocol_id = %5, description = '%6', debug = %7 " CR \
+  "WHERE device_index = %8;"
 
 #define SQL_UPDATE_DEVICE \
-  "UPDATE devices SET device_name='%1', device_index=%2, ifc_id=%3, protocol_id=%4, connection_params='%5', description='%6' " CR \
+  "UPDATE devices SET device_name='%1', device_index=%2, ifc_index=%3, protocol_id=%4, ifc_params='%5', description='%6' " CR \
   "WHERE id = %5;"
 
 
@@ -160,7 +158,7 @@
 #define SQL_LINK_SELECTED_SIGNALS (SQL_SET_SIGNALS_LINKED " WHERE signals.signal_index IN (%2)")
 
 
-#define SQL_SELECT_IFCES "SELECT id, ifc_name FROM ifces ORDER BY ifc_name"
+#define SQL_SELECT_IFCES "SELECT ifc_index, ifc_name FROM ifces ORDER BY ifc_name"
 #define SQL_SELECT_PROTOCOLS "SELECT id, protocol_name FROM protocols ORDER BY protocol_name"
 
 
@@ -226,7 +224,7 @@
   "   devices.device_name as device_name, " CR \
   "   devices.ifc_id as device_ifc_id, " CR \
   "   devices.protocol_id as device_protocol_id, " CR \
-  "   devices.connection_params as device_connection_params, " CR \
+  "   devices.ifc_params as device_ifc_params, " CR \
   "   devices.description as device_description, " CR \
   "   devices.driver_lib_name as device_driver_lib_name, " CR \
   "   devices.is_configured as device_is_configured, " CR \
@@ -300,16 +298,16 @@
 
 
 #define SQL_NEW_DEVICE \
-  "INSERT INTO devices (device_name, device_index, ifc_id, protocol_id, connection_params, description)" CR \
+  "INSERT INTO devices (device_name, device_index, ifc_id, protocol_id, ifc_params, description)" CR \
   "VALUES ('%1', %2, %3, %4, '%5', '%6');"
 
 #define SQL_CONFIGURE_DEVICE \
   "UPDATE devices SET device_name='%1', is_configured=true, ifc_id=%2, protocol_id=%3, "\
-  "connection_params='%4', description='%5', debug=%6 " CR \
+  "ifc_params='%4', description='%5', debug=%6 " CR \
   "WHERE device_index = %7;"
 
 #define SQL_UPDATE_DEVICE \
-  "UPDATE devices SET device_name='%1', device_index=%2, ifc_id=%3, protocol_id=%4, connection_params='%5', description='%6' " CR \
+  "UPDATE devices SET device_name='%1', device_index=%2, ifc_id=%3, protocol_id=%4, ifc_params='%5', description='%6' " CR \
   "WHERE id = %5;"
 
 

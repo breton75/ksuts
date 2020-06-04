@@ -1,17 +1,18 @@
 ﻿#ifndef DEVICE_PARAMS_H
 #define DEVICE_PARAMS_H
 
-#include <QtWidgets/QDialog>
-#include <QtSerialPort/QSerialPort>
-#include <QtSerialPort/QSerialPortInfo>
 #include <QMap>
-#include <QtCore/QCommandLineParser>
+#include <QString>
+#include <QtCore>
+
+#include <QJsonDocument>
+#include <QJsonObject>
 
 #include "../../svlib/sv_exception.h"
-#include "../../svlib/sv_serial_params.h"
 
 // имена параметров устройств
-#define P_ADDRESS         "address"
+#define P_START_REGISTER  "start_register"
+#define P_RESET_TIMEOUT   "reset_timeout"
 
 namespace dev {
 
@@ -20,87 +21,66 @@ namespace dev {
 
   struct DeviceParams {
 
-    SerialParams serialParams;
-    quint32      address = 0;
+    quint16   start_register = 0;
+    quint16   reset_timeout = 10;
 
-  };
+    bool isValid = true;
 
-  class DeviceParamsParser
-  {
-  public:
-    DeviceParamsParser(const QString params_string):
-      _params_string(params_string)
-    {  }
-
-    QString lastError() { return _last_error; }
-
-    DeviceParams params() { return _params; }
-
-    static QString getSring(DeviceParams params)
+    static DeviceParams fromJson(const QString& json_string)
     {
+      QJsonDocument jd = QJsonDocument::fromJson(json_string.toUtf8());
+      return fromJsonObject(jd.object());
+    }
 
-      QString result = QString("%1 -%2=%3")
-//                  .arg()
-                  .arg(P_ADDRESS).arg(params.address);
+    static DeviceParams fromJsonObject(const QJsonObject &object)
+    {
+      DeviceParams p;
+      QString s = "";
 
-      return result;
+      if(object.contains(P_START_REGISTER)) {
+
+        s = object.value(P_START_REGISTER).toString();
+
+        bool ok = false;
+        p.start_register = s.toUInt(&ok, 16);
+
+        p.isValid = p.isValid && ok;
+
+      }
+
+      if(object.contains(P_RESET_TIMEOUT)) {
+
+        s = object.value(P_RESET_TIMEOUT).toString();
+
+        bool ok = false;
+        p.reset_timeout = s.toUInt(&ok, 16);
+
+        p.isValid = p.isValid && ok;
+
+      }
+
+      return p;
 
     }
 
-    bool parse()
+    QString toString() const
     {
-      // сначала парсим параметры серийного порта
-      dev::SerialParamsParser serial_parser(_params_string);
+      QJsonDocument jd;
+      jd.setObject(toJsonObject());
 
-      if(!serial_parser.parse()) {
-
-        _last_error = serial_parser.lastError();
-        return false;
-
-      }
-
-      _params.serialParams = serial_parser.params();
-
-      // парсим остальные параметры
-      //! обязателен первый аргумент!! парсер считает, что там находится путь к программе
-      QStringList params_list;
-      params_list << "dumb_path_to_app" << _params_string.split(" ");
-
-      QCommandLineParser parser;
-      parser.setSingleDashWordOptionMode(QCommandLineParser::ParseAsLongOptions);
-
-      parser.addOption(QCommandLineOption(P_ADDRESS,         "ADDRESS",  "0", "0"));
-
-
-      bool ok;
-
-      try {
-
-//        if(!parser.parse(params_list)) _exception.raise(QString("Неверное значение параметра: %1").arg(_params_string));
-
-        parser.parse(params_list);
-
-        _params.address = QString(parser.isSet(P_ADDRESS) ? parser.value(P_ADDRESS) : "0").toUInt(&ok);
-        if(!ok) _exception.raise(QString("Неверное значение параметра: %1").arg(P_ADDRESS));
-
-        return true;
-
-      }
-
-      catch(SvException& e) {
-        _last_error = e.error;
-        return false;
-      }
+      return QString(jd.toJson(QJsonDocument::Indented));
     }
 
-  private:
-    QString _params_string = "";
+    QJsonObject toJsonObject() const
+    {
+      QJsonObject j;
 
-    DeviceParams _params;
+      j.insert(P_START_REGISTER, QJsonValue(QString::number(start_register, 16)).toString());
+      j.insert(P_RESET_TIMEOUT, QJsonValue(QString::number(reset_timeout, 16)).toString());
 
-    QString _last_error = "";
+      return j;
 
-    SvException _exception;
+    }
 
   };
 
