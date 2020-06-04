@@ -119,6 +119,7 @@ private slots:
   
   void on_comboRegim_currentIndexChanged(int index);
   
+  void on_bnPortParams_clicked();
 };
 
 class SvOHTThread: public SvAbstractDeviceThread

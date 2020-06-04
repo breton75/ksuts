@@ -1202,3 +1202,8 @@ void SvOPAThread::run()
 
 
 
+
+void SvOPA::on_bnPortParams_clicked()
+{
+
+}

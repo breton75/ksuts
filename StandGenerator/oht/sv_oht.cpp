@@ -742,3 +742,8 @@ void SvOHTThread::run()
 }
 
 
+
+void SvOHT::on_bnPortParams_clicked()
+{
+
+}

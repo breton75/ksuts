@@ -165,6 +165,8 @@ private slots:
   
   void on_bnSelectLogPath_clicked();
   
+  void on_bnPortParams_clicked();
+
 signals:
   void start_stop(SvAbstractDevice*);
   
