@@ -15,11 +15,11 @@
 #include "ui_oht.h"
 #include "ui_type13values.h"
 
-#include "../../global/dev_defs.h"
+#include "../../svlib/sv_serial_params.h"
 #include "../../svlib/sv_log.h"
 #include "../../svlib/sv_settings.h"
-
-#include "../global/sv_serialeditor.h"
+#include "../../svlib/sv_serial_editor.h"
+#include "../../svlib/sv_crc.h"
 
 namespace Ui {
   class MainWidget;
@@ -78,7 +78,7 @@ private:
   QMap<QListWidgetItem*, Type_0x19_value> p_0x19_items;
   QMap<QListWidgetItem*, Type_0x14_value> p_0x14_items;
   
-  SerialPortParams p_port_params;
+  sv::SerialParams p_port_params;
   
   OHTData p_data;
   
@@ -127,7 +127,7 @@ class SvOHTThread: public SvAbstractDeviceThread
   Q_OBJECT
   
 public:
-  SvOHTThread(SerialPortParams *params, quint64 sessionTimeout, quint64 packetDelay, bool DisplayRequest, QMutex *mutex, OHTData *data);
+  SvOHTThread(sv::SerialParams *params, quint64 sessionTimeout, quint64 packetDelay, bool DisplayRequest, QMutex *mutex, OHTData *data);
   ~SvOHTThread();
   
   void open() throw(SvException&) override;
@@ -138,7 +138,7 @@ public:
 private:
   QSerialPort p_port;
   
-  SerialPortParams* p_port_params;
+  sv::SerialParams* p_port_params;
   
   quint64 p_session_timeout;
   quint64 p_packet_delay;

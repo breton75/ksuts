@@ -43,9 +43,9 @@ SvOPA::SvOPA(QTextEdit *textLog, const QString &device_params, const QString& na
   connect(ui->bnSendReset, &QPushButton::clicked, [=]() { p_data.send_reset = true; });
   
   connect(ui->bnPortParams, &QPushButton::clicked, [=](){  
-                                if(sv::SvSerialEditor::showDialog(ui->editPortParams->text(), this->name(), p_main_widget) == QDialog::Accepted)
-                                  ui->editPortParams->setText(sv::SvSerialEditor::stringParams());
-                                sv::SvSerialEditor::deleteDialog();
+                                if(sv::SerialEditor::showDialog(ui->editPortParams->text(), this->name(), p_main_widget) == QDialog::Accepted)
+                                  ui->editPortParams->setText(sv::SerialEditor::params().toJsonString());
+                                sv::SerialEditor::deleteDialog();
                               });
   
   connect(ui->comboRegim, SIGNAL(currentIndexChanged(int)), this, SLOT(on_comboRegim_currentIndexChanged(int)));
@@ -325,18 +325,18 @@ void SvOPA::on_bnStartStop_clicked()
     {
       setState(RunState::STARTING);
       
-      SerialParamsParser p(ui->editPortParams->text());
-      if(!p.parse()) {
+//      sv::SerialParamsParser p(ui->editPortParams->text());
+//      if(!p.parse()) {
         
-        opalog << svlog::Error << p.lastError() << svlog::endl;
+//        opalog << svlog::Error << p.lastError() << svlog::endl;
         
-        setState(RunState::FINISHED);
+//        setState(RunState::FINISHED);
         
-        return;
+//        return;
         
-      }
+//      }
       
-      p_port_params = p.serialParams();
+      p_port_params = sv::SerialParams::fromJsonString(ui->editPortParams->text());
       
       if(!parseDeviceParams(ui->editDeviceParams->text())) {
         
@@ -955,7 +955,7 @@ void SvOPA::on_bnSelectLogPath_clicked()
 }
 
 /**         SvOPAThread         **/
-SvOPAThread::SvOPAThread(SerialPortParams *serial_params, OPA_DeviceParams *device_params, quint64 sessionTimeout, quint64 packetDelay, bool DisplayRequest, QMutex *mutex, OPAData *data):
+SvOPAThread::SvOPAThread(sv::SerialParams *serial_params, OPA_DeviceParams *device_params, quint64 sessionTimeout, quint64 packetDelay, bool DisplayRequest, QMutex *mutex, OPAData *data):
   p_port_params(serial_params),
   p_device_params(device_params),
   p_session_timeout(sessionTimeout),

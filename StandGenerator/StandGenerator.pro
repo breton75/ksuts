@@ -41,10 +41,10 @@ SOURCES += \
     opa/sv_opa.cpp \
     select_device_dialog.cpp \
     alert_level_dialog.cpp \
-    ../global/sv_serialeditor.cpp \
     ktv/sv_ktv.cpp \
     ktv/spin_delegate.cpp \
-    ../../svlib/sv_userlogon.cpp
+    ../../svlib/sv_userlogon.cpp \
+    ../../svlib/sv_serial_editor.cpp
 
 HEADERS += \
         mainwindow.h \
@@ -69,13 +69,14 @@ HEADERS += \
     ../ksuts_devices/opa/opa_defs.h \
     select_device_dialog.h \
     alert_level_dialog.h \
-    ../global/sv_serialeditor.h \
     ktv/ktv_type_0x01.h \
     ktv/sv_ktv.h \
     ktv/spin_delegate.h \
     ktv/ktv_type_0x33.h \
     sv_abstract_device.h \
-    ../../svlib/sv_userlogon.h
+    ../../svlib/sv_userlogon.h \
+    ../../svlib/sv_crc.h \
+    ../../svlib/sv_serial_editor.h
 
 FORMS += \
         mainwindow.ui \
@@ -87,9 +88,9 @@ FORMS += \
     opa/opa_type03values.ui \
     select_device_dialog.ui \
     alert_level_dialog.ui \
-    ../global/sv_serialeditor.ui \
     ktv/ktv.ui \
-    ktv/ktv_type01values.ui
+    ktv/ktv_type01values.ui \
+    ../../svlib/sv_serial_editor.ui
 
 RESOURCES += \
     ../configurator2/res.qrc

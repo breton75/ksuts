@@ -29,9 +29,9 @@ SvKTV::SvKTV(QTextEdit *textLog, const QString& name):
   connect(ui->bnStartStop, &QPushButton::pressed, this, &SvKTV::on_bnStartStop_clicked);
   connect(ui->bnEditData, &QPushButton::clicked, this, &SvKTV::on_bnEditData_clicked);
   connect(ui->bnPortParams, &QPushButton::clicked, [=](){  
-                                if(sv::SvSerialEditor::showDialog(ui->editPortParams->text(), this->name(), p_main_widget) == QDialog::Accepted)
-                                  ui->editPortParams->setText(sv::SvSerialEditor::stringParams());
-                                sv::SvSerialEditor::deleteDialog();
+                                if(sv::SerialEditor::showDialog(ui->editPortParams->text(), this->name(), p_main_widget) == QDialog::Accepted)
+                                  ui->editPortParams->setText(sv::SerialEditor::params().toJsonString());
+                                sv::SerialEditor::deleteDialog();
                               });
   
   connect(ui->comboRegim, SIGNAL(currentIndexChanged(int)), this, SLOT(on_comboRegim_currentIndexChanged(int)));
@@ -123,18 +123,18 @@ void SvKTV::on_bnStartStop_clicked()
     {
       setState(RunState::STARTING);
       
-      SerialParamsParser p(ui->editPortParams->text());
-      if(!p.parse()) {
+//      sv::SerialParamsParser p();
+//      if(!p.parse()) {
         
-        p_log << svlog::Error << p.lastError() << svlog::endl;
+//        p_log << svlog::Error << p.lastError() << svlog::endl;
         
-        setState(RunState::FINISHED);
+//        setState(RunState::FINISHED);
         
-        return;
+//        return;
         
-      }
+//      }
       
-      p_port_params = p.serialParams();
+      p_port_params = sv::SerialParams::fromJsonString(ui->editPortParams->text());
       
       setData();
       
@@ -454,7 +454,7 @@ void SvKTV::on_comboRegim_currentIndexChanged(int index)
 }
 
 /**         SvKTVThread         **/
-SvKTVThread::SvKTVThread(SerialPortParams *params, quint64 sessionTimeout, quint64 packetDelay, bool DisplayRequest, QMutex *mutex, KTVData *data):
+SvKTVThread::SvKTVThread(sv::SerialParams *params, quint64 sessionTimeout, quint64 packetDelay, bool DisplayRequest, QMutex *mutex, KTVData *data):
   p_port_params(params),
   p_session_timeout(sessionTimeout),
   p_packet_delay(packetDelay),

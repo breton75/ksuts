@@ -21,7 +21,7 @@ MainWindow::MainWindow(QWidget *parent) :
 //  ui->tabLogs->addTab(text_log, "Основной");
   mainlog.assignLog(ui->textMainLog);
       
-  if(!SvPGDB::instance()->connected) // connectToDB("cms_db", "172.16.4.11", 5432, "postgres", "postgres");
+  if(!SvPGDB::instance()->connected()) // connectToDB("cms_db", "172.16.4.11", 5432, "postgres", "postgres");
   {
      mainlog << svlog::Error << "Нет подключения к базе данных cms_db" << svlog::endl;
      return;
@@ -75,7 +75,7 @@ bool MainWindow::readDevice(int index)
   QSqlError serr;
   QSqlQuery q = QSqlQuery(SvPGDB::instance()->db);
   
-  serr = SvPGDB::instance()->execSQL(QString("SELECT device_index, device_name, connection_params, devices.description, timeout, "
+  serr = SvPGDB::instance()->execSQL(QString("SELECT device_index, device_name, ifc_params, devices.description, timeout, "
                      " devices.hardware_code hardware_code, hardware.hardware_name hardware_name, "
                      " hardware.driver_lib driver_lib, devices.device_params as device_params "
                      "FROM devices "

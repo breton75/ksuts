@@ -21,12 +21,11 @@
 #include "ui_opa.h"
 #include "ui_opa_type03values.h"
 
-#include "../../global/dev_defs.h"
+#include "../../svlib/sv_serial_params.h"
 #include "../../svlib/sv_log.h"
 #include "../../svlib/sv_settings.h"
-
-#include "../global/sv_serialeditor.h"
-
+#include "../../svlib/sv_serial_editor.h"
+#include "../../svlib/sv_crc.h"
 
 namespace Ui {
   class OPA_MainWidget;
@@ -111,7 +110,7 @@ private:
   QMap<QListWidgetItem*, OPA_Type_0x19_value> p_0x19_items;
   QMap<QListWidgetItem*, OPA_Type_0x04_value> p_0x04_items;
   
-  SerialPortParams p_port_params;
+  sv::SerialParams p_port_params;
   OPA_DeviceParams p_device_params;
   
   OPAData p_data;
@@ -178,7 +177,7 @@ class SvOPAThread: public SvAbstractDeviceThread
   Q_OBJECT
   
 public:
-  SvOPAThread(SerialPortParams *serial_params, OPA_DeviceParams* device_params, quint64 sessionTimeout, quint64 packetDelay, bool DisplayRequest, QMutex *mutex, OPAData *data);
+  SvOPAThread(sv::SerialParams *serial_params, OPA_DeviceParams* device_params, quint64 sessionTimeout, quint64 packetDelay, bool DisplayRequest, QMutex *mutex, OPAData *data);
   ~SvOPAThread();
   
   void open() throw(SvException&) override;
@@ -187,7 +186,7 @@ public:
 private:
   QSerialPort p_port;
   
-  SerialPortParams* p_port_params;
+  sv::SerialParams* p_port_params;
   OPA_DeviceParams* p_device_params;
   
   quint64 p_session_timeout;
