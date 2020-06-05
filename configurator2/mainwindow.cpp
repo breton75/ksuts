@@ -1640,12 +1640,16 @@ void MainWindow::on_treeView_doubleClicked(const QModelIndex &index)
 
     if(_ksuts_monitor->getKsutsServerInfo().is_active)
     {
-//      QString n = QString(mainlog.options().log_sender_name).arg(item->index);
-      QProcess::startDetached("sudo /home/user/ksuts_server/device_logger -dbus_sender device_40");
-//      QProcess::execute(QString("sudo /home/user/ksuts_server/device_logger -dbus_sender 'device_40'")); //, QStringList() << QString("-dbus_sender '%1'").arg(n));
-          /*;
-      if(!p.startDetached(QString("/home/user/ksuts_server/device_logger -dbus_sender '%1'").arg(n)))
-        mainlog << sv::log::mtError << p.errorString() << sv::log::endl;*/
+      QString n = QString(_config.log_options.log_sender_name).arg(item->index);
+//      QString cmd = ;
+
+//      mainlog << "log_sender_name" << mainlog.options().log_sender_name << sv::log::endl;
+//      QProcess::startDetached("sudo /home/user/ksuts_server/device_logger -dbus_sender device_40");
+
+      QProcess p;
+
+      if(!p.startDetached(QString("./device_logger -dbus_sender %1").arg(n)))
+        mainlog << sv::log::mtError << p.errorString() << sv::log::endl;
 
     }
     else

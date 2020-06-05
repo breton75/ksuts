@@ -37,15 +37,16 @@ namespace dev {
 
     static DeviceParams fromJsonObject(const QJsonObject &object)
     {
+//      qDebug() << object.contains(P_START_REGISTER) << object.contains(P_RESET_TIMEOUT);
       DeviceParams p;
 
       if(object.contains(P_START_REGISTER)) {
 
-        QByteArray h = QByteArray::fromHex(object.value(P_START_REGISTER).toString().toUtf8());
+        QByteArray h = object.value(P_START_REGISTER).toString().toUtf8();
 
         bool ok = false;
-        p.start_register = h.toUShort(&ok);
-
+        p.start_register = h.toUShort(&ok, 0);
+//qDebug() << P_START_REGISTER << ok << QString(h) << h.replace('\"', '1') << "dddd";
         p.isValid = p.isValid && ok;
 
       }
@@ -53,7 +54,7 @@ namespace dev {
       if(object.contains(P_RESET_TIMEOUT)) {
 
         p.reset_timeout = object.value(P_RESET_TIMEOUT).toInt(RESET_INTERVAL);
-
+//qDebug() << p.isValid << P_RESET_TIMEOUT << p.reset_timeout;
         p.isValid = p.isValid && (p.reset_timeout > 0);
 
       }
@@ -74,8 +75,15 @@ namespace dev {
     {
       QJsonObject j;
 
-      j.insert(P_START_REGISTER, QJsonValue(QString::number(start_register, 16)).toString());
-      j.insert(P_RESET_TIMEOUT, QJsonValue(QString::number(reset_timeout)));
+      QString r = QString::number(start_register, 16);
+
+      if(r.length() < 4)
+        r.push_front(QString(4 - r.length(), QChar('0')));
+
+      QString v = QString("0x%1").arg(r.length() % 2 ? "0" + r : r);
+
+      j.insert(P_START_REGISTER, QJsonValue(v));
+      j.insert(P_RESET_TIMEOUT, QJsonValue(reset_timeout));
 
       return j;
 

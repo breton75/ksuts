@@ -62,13 +62,14 @@ SvDeviceEditor::SvDeviceEditor(QWidget *parent, int deviceIndex) :
     ui->editIndex->setText("<Новый>");
   }
 
-  ui->lineDeviceName  ->setText ( _device_name          );
-  ui->lineHwCode      ->setText ( _device_hardware_code );
-  ui->editDriverName  ->setText ( _device_driver_name   );
-  ui->textDescription ->setText ( _device_description   );
-  ui->textDeviceParams->setText ( _device_params        );
-  ui->textIfcParams   ->setText ( _device_ifc_params    );
-
+  ui->lineDeviceName  ->setText    ( _device_name          );
+  ui->lineHwCode      ->setText    ( _device_hardware_code );
+  ui->checkDebugMode  ->setChecked (_device_debug);
+  ui->editDriverName  ->setText    ( _device_driver_name   );
+  ui->textDescription ->setText    ( _device_description   );
+  ui->textDeviceParams->setText    ( _device_params        );
+  ui->textIfcParams   ->setText    ( _device_ifc_params    );
+  ui->cbIfc->setCurrentIndex(ui->cbIfc->findText(_device_ifc_name));
 
   connect(ui->bnSave, &QPushButton::clicked, this, &QDialog::accept);
   connect(ui->bnCancel, &QPushButton::clicked, this, &QDialog::reject);
@@ -140,6 +141,12 @@ bool SvDeviceEditor::loadIfces()
       case dev::OHT:
 
         ui->cbIfc->addItems(SvOHT::availableInterfaces());
+
+        break;
+
+      case dev::SKM:
+
+        ui->cbIfc->addItems(SvSKM::availableInterfaces());
 
         break;
 
@@ -245,6 +252,11 @@ void SvDeviceEditor::on_bnDefaultDeviceParams_clicked()
       ui->textDeviceParams->setText(SvOHT::defaultDeviceParams());
       break;
 
+    case dev::SKM:
+
+      ui->textDeviceParams->setText(SvSKM::defaultDeviceParams());
+      break;
+
     default:
       break;
   }
@@ -255,7 +267,12 @@ void SvDeviceEditor::on_bnDefaultIfcParams_clicked()
   switch (dev::HARDWARE_CODES.value(_device_hardware_code)) {
     case dev::OHT:
 
-      ui->textDeviceParams->setText(SvOHT::defaultIfcParams(ui->cbIfc->currentText()));
+      ui->textIfcParams->setText(SvOHT::defaultIfcParams(ui->cbIfc->currentText()));
+      break;
+
+    case dev::SKM:
+
+      ui->textIfcParams->setText(SvSKM::defaultIfcParams(ui->cbIfc->currentText()));
       break;
 
     default:

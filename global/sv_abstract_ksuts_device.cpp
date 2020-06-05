@@ -112,8 +112,6 @@ void dev::SvAbstractUdpThread::open() throw(SvException&)
   if(!p_socket.bind(p_params.listen_port, QAbstractSocket::DontShareAddress))
     throw p_exception.assign(p_socket.errorString());
 
-  *p_logger << "listen_port:" << p_params.listen_port << sv::log::endl;
-
   // с заданным интервалом сбрасываем буфер, чтобы отсекать мусор и битые пакеты
   p_reset_timer.setInterval(p_device->params()->reset_timeout);
 

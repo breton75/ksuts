@@ -1,11 +1,5 @@
 ﻿#include "sv_oht.h"
-
-#include "QJsonObject"
-#include "QJsonDocument"
-
 #include "oht_defs.h"
-
-/** *****************   ************************* **/
 
 /** *****************   ************************* **/
 
