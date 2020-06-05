@@ -27,7 +27,7 @@ struct SKM_Type_0x02_value {
 
 };
 
-const QString SKM_DefByteArray_0x02 = "1F02012402000000";
+const QString SKM_DefByteArray_0x02 = "1F02012402";
 
 const QVector<SKM_Type_0x02_value> type_0x02_values = {SKM_Type_0x02_value("СС4-ВД1 (МО)",  0, 0),
                                                        SKM_Type_0x02_value("СС4-ВД2 (МО)",  0, 1),

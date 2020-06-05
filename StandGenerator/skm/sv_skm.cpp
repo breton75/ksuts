@@ -430,7 +430,7 @@ void SvSKM::setData_0x02()
     if(p_data_regim == DataRegims::Random)
       random_doors.append(type_0x02_values.at(rnd(type_0x02_values.count())));
     
-    QByteArray new_data = QByteArray::fromHex(QString(SKM_DefByteArray_0x02).toUtf8());
+    QByteArray new_data = QByteArray::fromHex("000000");
     
     foreach (QListWidgetItem* wi, p_0x02_items.keys()) {
      
@@ -439,17 +439,19 @@ void SvSKM::setData_0x02()
       if(p_data_regim == DataRegims::Random) {
         
         if(random_doors.contains(cur_0x02))
-          new_data[5 + cur_0x02.byte] = new_data.at(5 + cur_0x02.byte) | quint8(1 << cur_0x02.bit);
+          new_data[0 + cur_0x02.byte] = new_data.at(0 + cur_0x02.byte) | quint8(1 << cur_0x02.bit);
         
       }
       else if(wi->checkState() == Qt::Checked) {
         
-        new_data[5 + cur_0x02.byte] = new_data.at(5 + cur_0x02.byte) | quint8(1 << cur_0x02.bit);
+        new_data[0 + cur_0x02.byte] = new_data.at(0 + cur_0x02.byte) | quint8(1 << cur_0x02.bit);
         
       }
     }
     
     p_data.data_0x02.clear();
+    p_data.data_0x02.append(QByteArray::fromHex(QString(SKM_DefByteArray_0x02).toUtf8()));
+    
     for(quint8 b: new_data)
       checkAndAppend(p_data.data_0x02, b);
     
