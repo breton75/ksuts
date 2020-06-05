@@ -14,11 +14,11 @@
 #include "ui_ktv.h"
 #include "ui_ktv_type01values.h"
 
-#include "../../global/dev_defs.h"
+#include "../../svlib/sv_serial_params.h"
 #include "../../svlib/sv_log.h"
 #include "../../svlib/sv_settings.h"
-
-#include "../global/sv_serialeditor.h"
+#include "../../svlib/sv_serial_editor.h"
+#include "../../svlib/sv_crc.h"
 
 namespace Ui {
   class KTV_MainWidget;
@@ -56,7 +56,7 @@ private:
   
   QMap<quint8, KTV_Type_0x33*> p_0x33_items;
   
-  SerialPortParams p_port_params;
+  sv::SerialParams p_port_params;
   
   KTVData p_data;
   
@@ -95,7 +95,7 @@ class SvKTVThread: public SvAbstractDeviceThread
   Q_OBJECT
   
 public:
-  SvKTVThread(SerialPortParams *params, quint64 sessionTimeout, quint64 packetDelay, bool DisplayRequest, QMutex *mutex, KTVData *data);
+  SvKTVThread(sv::SerialParams *params, quint64 sessionTimeout, quint64 packetDelay, bool DisplayRequest, QMutex *mutex, KTVData *data);
   ~SvKTVThread();
   
   void open() throw(SvException&) override;
@@ -104,7 +104,7 @@ public:
 private:
   QSerialPort p_port;
   
-  SerialPortParams* p_port_params;
+  sv::SerialParams* p_port_params;
   
   quint64 p_session_timeout;
   quint64 p_packet_delay;

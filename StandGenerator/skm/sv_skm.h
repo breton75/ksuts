@@ -14,11 +14,11 @@
 #include "ui_skm.h"
 #include "ui_type01values.h"
 
-#include "../../global/dev_defs.h"
+#include "../../svlib/sv_serial_params.h"
 #include "../../svlib/sv_log.h"
 #include "../../svlib/sv_settings.h"
-
-#include "../global/sv_serialeditor.h"
+#include "../../svlib/sv_serial_editor.h"
+#include "../../svlib/sv_crc.h"
 
 namespace Ui {
   class SKM_MainWidget;
@@ -58,7 +58,7 @@ private:
   QVector<T0x01Widget*> p_0x01_widgets;
   QMap<QListWidgetItem*, SKM_Type_0x02_value> p_0x02_items;
   
-  SerialPortParams p_port_params;
+  sv::SerialParams p_port_params;
   
   SKMData p_data;
   
@@ -101,7 +101,7 @@ class SvSKMThread: public SvAbstractDeviceThread
   Q_OBJECT
   
 public:
-  SvSKMThread(SerialPortParams *params, quint64 sessionTimeout, quint64 packetDelay, bool DisplayRequest, QMutex *mutex, SKMData *data);
+  SvSKMThread(sv::SerialParams *params, quint64 sessionTimeout, quint64 packetDelay, bool DisplayRequest, QMutex *mutex, SKMData *data);
   ~SvSKMThread();
   
   void open() throw(SvException&) override;
@@ -110,7 +110,7 @@ public:
 private:
   QSerialPort p_port;
   
-  SerialPortParams* p_port_params;
+  sv::SerialParams* p_port_params;
   
   quint64 p_session_timeout;
   quint64 p_packet_delay;
