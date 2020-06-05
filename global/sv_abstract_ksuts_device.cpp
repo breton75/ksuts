@@ -21,6 +21,9 @@ bool dev::SvAbstractKsutsDevice::setup(const dev::DeviceInfo& info)
 
     p_params = dev::DeviceParams::fromJson(p_info.device_params);
 
+    if(!p_params.isValid)
+      p_exception->raise(QString("Неверные параметры устройства: %1").arg(p_info.device_params));
+
     return true;
 
   }
@@ -113,6 +116,7 @@ void dev::SvAbstractUdpThread::open() throw(SvException&)
 
   // с заданным интервалом сбрасываем буфер, чтобы отсекать мусор и битые пакеты
   p_reset_timer.setInterval(p_device->params()->reset_timeout);
+
   connect(&p_socket, SIGNAL(readyRead()), &p_reset_timer, SLOT(start()));
   connect(&p_reset_timer, &QTimer::timeout, this, &dev::SvAbstractKsutsThread::reset_buffer);
 
@@ -196,7 +200,7 @@ void dev::SvAbstractSerialThread::open() throw(SvException&)
     throw p_exception.assign(p_port.errorString());
 
   // с заданным интервалом сбрасываем буфер, чтобы отсекать мусор и битые пакеты
-  p_reset_timer.setInterval(RESET_INTERVAL);
+  p_reset_timer.setInterval(p_device->params()->reset_timeout);
 
   connect(&p_port, SIGNAL(readyRead()), &p_reset_timer, SLOT(start()));
   connect(&p_reset_timer, &QTimer::timeout, this, &dev::SvAbstractKsutsThread::reset_buffer);

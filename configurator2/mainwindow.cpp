@@ -43,13 +43,7 @@ MainWindow::MainWindow(const AppConfig &cfg, QWidget *parent) :
   setWindowTitle(QString("Конфигуратор пульта v.%1").arg(APP_VERSION));
   setWindowIcon(QIcon(":/signals/icons/application-default-icon_37713.ico"));
 
-  DEVICE_LOGS.clear();
-  LOGGERS.clear();
-//qDebug() << 1;
-  mainlog = new sv::SvWidgetLogger();
-  mainlog->setTextEdit(ui->textLog);
-
-  LOGGERS.insert("main", mainlog);
+  mainlog.setTextEdit(ui->textLog);
 
 //  ui->treeView->header()->setSectionResizeMode(QHeaderView::Stretch);
   ui->treeView->setSelectionBehavior(QAbstractItemView::SelectRows);
@@ -146,13 +140,8 @@ MainWindow::MainWindow(const AppConfig &cfg, QWidget *parent) :
 
 void MainWindow::messageSlot(const QString& sender, const QString& message, const QString& type)
 {
-//  qDebug() << LOGGERS.contains(sender) << sender;
-//  if(!LOGGERS.contains(sender))
-//    return;
-
-//  *(LOGGERS.value(sender)) << sv::log::stringToType(type) << QString("%1").arg(message) << sv::log::endl;
-
-  *mainlog << sv::log::stringToType(type) << QString("%1").arg(message) << sv::log::endl;
+  if(sender == "main")
+    mainlog << sv::log::stringToType(type) << QString("%1").arg(message) << sv::log::endl;
 
 }
 
@@ -289,7 +278,7 @@ bool MainWindow::init()
     PGDB = nullptr;
     QSqlDatabase::removeDatabase(p_connection_name);
 
-    *mainlog << sv::log::mtCritical << e.error << sv::log::endl;
+    mainlog << sv::log::mtCritical << e.error << sv::log::endl;
 
     return false;
 
@@ -414,7 +403,7 @@ bool MainWindow::makeTree()
     q->finish();
     delete q;
 
-    *mainlog << sv::log::Time << sv::log::mtCritical << e.error << sv::log::endl;
+    mainlog << sv::log::Time << sv::log::mtCritical << e.error << sv::log::endl;
 
     return false;
 
@@ -625,7 +614,7 @@ bool MainWindow::pourDevicesToStorages(TreeItem* rootItem)
 
         q->finish();
         delete q;
-        *mainlog << sv::log::Time << sv::log::mtCritical << e.error << sv::log::endl;
+        mainlog << sv::log::Time << sv::log::mtCritical << e.error << sv::log::endl;
         throw;
         return false;
 
@@ -686,7 +675,7 @@ bool MainWindow::pourSignalsToStorages(TreeItem* rootItem)
 
         q->finish();
         delete q;
-        *mainlog << sv::log::Time << sv::log::mtCritical << e.error << sv::log::endl;
+        mainlog << sv::log::Time << sv::log::mtCritical << e.error << sv::log::endl;
         throw e;
         return false;
 
@@ -1651,21 +1640,12 @@ void MainWindow::on_treeView_doubleClicked(const QModelIndex &index)
 
     if(_ksuts_monitor->getKsutsServerInfo().is_active)
     {
-      QString n = QString(mainlog->options().log_sender_name).arg(item->index);
-
-      if(DEVICE_LOGS.contains(n))
-        return;
-
-      SvDeviceLog* newlog = new SvDeviceLog();
-
-      DEVICE_LOGS.insert(n, newlog);
-      LOGGERS.insert(n, newlog->logger());
-
-      newlog->exec();
-
-//      delete newlog;
-
-
+//      QString n = QString(mainlog.options().log_sender_name).arg(item->index);
+      QProcess::startDetached("sudo /home/user/ksuts_server/device_logger -dbus_sender device_40");
+//      QProcess::execute(QString("sudo /home/user/ksuts_server/device_logger -dbus_sender 'device_40'")); //, QStringList() << QString("-dbus_sender '%1'").arg(n));
+          /*;
+      if(!p.startDetached(QString("/home/user/ksuts_server/device_logger -dbus_sender '%1'").arg(n)))
+        mainlog << sv::log::mtError << p.errorString() << sv::log::endl;*/
 
     }
     else

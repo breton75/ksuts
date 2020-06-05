@@ -13,6 +13,7 @@
 //#include <QSqlError>
 #include <QSql>
 #include <QApplication>
+#include <QProcess>
 
 #include "../../svlib/sv_exception.h"
 #include "../../svlib/sv_widget_log.h"
@@ -74,11 +75,7 @@ public:
   explicit MainWindow(const AppConfig& cfg, QWidget *parent = 0);
   ~MainWindow();
 
-
-  QMap<QString, SvDeviceLog*> DEVICE_LOGS;
-  QMap<QString, sv::SvAbstractLogger*> LOGGERS;
-
-  sv::SvWidgetLogger* mainlog = nullptr;
+  sv::SvWidgetLogger mainlog;
 
   bool init();
 

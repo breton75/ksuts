@@ -13,15 +13,14 @@
 
 #include "ui_sv_device_editor.h"
 
-//#include "sv_dev_model.h"
-//#include "sv_select_model_dialog.h"
-//#include "sv_select_brand_dialog.h"
-//#include "sv_select_class_dialog.h"
-//#include "sv_device_config.h"
-
 #include "../global/sql_defs.h"
 #include "../global/device_params.h"
 #include "../global/global_defs.h"
+
+#include "../ksuts_devices/oht/sv_oht.h"
+#include "../ksuts_devices/opa/sv_opa.h"
+#include "../ksuts_devices/skm/sv_skm.h"
+#include "../ksuts_devices/sktv/sv_ktv.h"
 
 #include "../../svlib/sv_serial_editor.h"
 #include "../../svlib/sv_udp_editor.h"

@@ -75,11 +75,14 @@ public:
     if(!oht::ifcesMap.contains(ifc))
       return QString("");
 
+
+    QString result = "";
+
     switch (oht::ifcesMap.value(ifc)) {
 
     case oht::Ifces::RS485:
 
-      QString("{\n"
+      result = QString("{\n"
               "  \"portname\": \"ttyS0\",\n"
               "  \"baudrate\": 19200,\n"
               "  \"databits\": 8,\n"
@@ -93,7 +96,7 @@ public:
 
     case oht::Ifces::UDP:
 
-      return QString("{\n"
+      result = QString("{\n"
                      "  \"host\": \"192.168.1.1\",\n"
                      "  \"recv_port\": 5300,\n"
                      "  \"send_port\": 5800\n"
@@ -101,6 +104,8 @@ public:
 
       break;
     }
+
+    return result;
 
   }
 
@@ -113,8 +118,8 @@ public:
   {
     QJsonObject j;
 
-    j.insert(P_START_REGISTER, QJsonValue(QString("0x0000"))); // ::number(0, 16)).toString());
-    j.insert(P_RESET_TIMEOUT, QJsonValue(10));
+    j.insert(P_START_REGISTER, QJsonValue(QString("0000")));
+    j.insert(P_RESET_TIMEOUT, QJsonValue(int(RESET_INTERVAL)));
 
     QJsonDocument jd;
     jd.setObject(j);

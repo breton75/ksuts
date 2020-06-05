@@ -1,10 +1,7 @@
 ﻿#ifndef GEN_DEFS_H
 #define GEN_DEFS_H
 
-#include "../ksuts_devices/oht/sv_oht.h"
-#include "../ksuts_devices/opa/sv_opa.h"
-#include "../ksuts_devices/skm/sv_skm.h"
-#include "../ksuts_devices/sktv/sv_ktv.h"
+#include "../../svlib/sv_abstract_logger.h"
 
 #define ACTUAL_DB_VERSION "1.1.0"
 
@@ -29,6 +26,7 @@
 #define OPTION_AUTORUN_CFG_FILE          "autorun_cfg_file"
 #define OPTION_TEMPLATES_DIRECTORY       "templates_directory"
 #define OPTION_PATH_TO_POSTGRES_BIN      "postgres_bin_path"
+#define OPTION_DBUS_SENDER               "dbus_sender"
 
 struct AppConfig {
     QString db_name;

@@ -20,10 +20,10 @@
 //#include "../global/dev_defs.h"
 #include "../global/sv_signal.h"
 
-//#include "../ksuts_devices/oht/sv_oht.h"
-//#include "../ksuts_devices/opa/sv_opa.h"
-//#include "../ksuts_devices/skm/sv_skm.h"
-//#include "../ksuts_devices/sktv/sv_ktv.h"
+#include "../ksuts_devices/oht/sv_oht.h"
+#include "../ksuts_devices/opa/sv_opa.h"
+#include "../ksuts_devices/skm/sv_skm.h"
+#include "../ksuts_devices/sktv/sv_ktv.h"
 
 #include "../../svlib/sv_sqlite.h"
 #include "../../svlib/sv_exception.h"
@@ -217,6 +217,9 @@ bool parse_params(const QStringList& args, AppConfig &cfg, const QString& file_n
                                                        cfg_parser.value(OPTION_LOG_ROTATION_SIZE);
     cfg.log_options.log_rotation_size = sv::log::stringToSize(val, &ok);
     if(!ok) exception.raise(-1, QString("Неверный формат размера файла: %1").arg(val));
+
+    // формат имени отправителя по dbus
+    cfg.log_options.log_sender_name = QString(DBUS_SENDER_NAME);
 
     return true;
 
@@ -516,7 +519,7 @@ bool readDevices(const AppConfig& cfg)
     while(q.next()) {
        
       dev::SvAbstractDevice* newdev = create_device(&q);
-      
+
       if(newdev) {
 
         DEVICES.insert(newdev->info()->index, newdev);
@@ -534,17 +537,20 @@ bool readDevices(const AppConfig& cfg)
 
       }
 
-      else
-         dbus << sv::log::sender("main")
-              << sv::log::mtError << sv::log::llError << QString("Не удалось добавить устройство %1 [Индекс %2]\n")
-                                        .arg(q.value("device_name").toString())
-                                        .arg(q.value("device_index").toInt())
+      else {
+
+        dbus << sv::log::sender("main")
+              << sv::log::mtError << sv::log::llError << QString("Не удалось добавить устройство '%1' [Индекс %2]\n")
+                                        .arg(q.value(1).toString())
+                                        .arg(q.value(0).toInt())
              << sv::log::endl;
-      
+
 //        exception.raise(QString("Не удалось добавить устройство %1 (id %2)")
 //                        .arg(q->value("device_name").toString())
 //                        .arg(q->value("device_index").toInt()));
+      }
     }
+
     q.finish();
 
     if(counter == 0)
@@ -743,6 +749,7 @@ dev::SvAbstractDevice* create_device(const QSqlQuery* q)
   info.is_involved = q->value("device_is_involved").toBool();
   info.debug_mode = q->value("device_debug").toBool();
   info.timeout = q->value("device_timeout").toUInt();
+//  info.re= q->value("device_timeout").toUInt();
 //  QString params = q->value("device_params").toString();
   
   try {
@@ -773,21 +780,21 @@ dev::SvAbstractDevice* create_device(const QSqlQuery* q)
     
     if(!newdev->setup(info)) exception.raise(newdev->lastError());
 //    if(!newdev->setParams(params)) exception.raise(newdev->lastError());
-
-    return newdev;
     
   }
   
   catch(SvException& e) {
     
-    dbus << sv::log::llError << QString("Ошибка: %1\n").arg(e.error) << sv::log::endl;
+    dbus << sv::log::sender("main") << sv::log::mtError << sv::log::llError << QString("Ошибка: %1\n").arg(e.error) << sv::log::endl;
     if(newdev)
       delete newdev;
 
-
-    return Q_NULLPTR;
+    newdev = nullptr;
     
   }
+
+  return newdev;
+
 }
 
 SvStorage* create_storage(QSqlQuery* q)

@@ -9,8 +9,8 @@
 #include "../../svlib/sv_abstract_logger.h"
 #include "../../svlib/sv_udp_params.h"
 #include "../../svlib/sv_serial_params.h"
+#include "device_params.h"
 
-#define RESET_INTERVAL  10
 #define MAX_PACKET_SIZE 0xFFFF
 
 namespace dev {
