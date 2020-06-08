@@ -150,6 +150,12 @@ bool SvDeviceEditor::loadIfces()
 
         break;
 
+      case dev::KTV:
+
+        ui->cbIfc->addItems(SvKTV::availableInterfaces());
+
+        break;
+
       default:
         _exception.raise(QString("Неизвестный интерфейс: %1").arg(_device_hardware_code));
         break;
@@ -257,6 +263,11 @@ void SvDeviceEditor::on_bnDefaultDeviceParams_clicked()
       ui->textDeviceParams->setText(SvSKM::defaultDeviceParams());
       break;
 
+    case dev::KTV:
+
+      ui->textDeviceParams->setText(SvKTV::defaultDeviceParams());
+      break;
+
     default:
       break;
   }
@@ -273,6 +284,11 @@ void SvDeviceEditor::on_bnDefaultIfcParams_clicked()
     case dev::SKM:
 
       ui->textIfcParams->setText(SvSKM::defaultIfcParams(ui->cbIfc->currentText()));
+      break;
+
+    case dev::KTV:
+
+      ui->textIfcParams->setText(SvKTV::defaultIfcParams(ui->cbIfc->currentText()));
       break;
 
     default:

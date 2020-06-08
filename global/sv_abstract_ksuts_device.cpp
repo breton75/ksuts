@@ -44,7 +44,8 @@ bool dev::SvAbstractKsutsDevice::open()
 
     p_thread->setIfcParams(p_info.ifc_params);
 
-    connect(p_thread, &dev::SvAbstractDeviceThread::finished, this, &dev::SvAbstractKsutsDevice::deleteThread);
+//    connect(p_thread, &dev::SvAbstractDeviceThread::finished, this, &dev::SvAbstractKsutsDevice::deleteThread);
+    connect(this, &SvAbstractKsutsDevice::stop_thread, p_thread, &dev::SvAbstractDeviceThread::stop);
     connect(p_thread, &dev::SvAbstractDeviceThread::finished, p_thread, &dev::SvAbstractDeviceThread::deleteLater);
 
     p_thread->open();
@@ -73,12 +74,15 @@ void dev::SvAbstractKsutsDevice::close()
 
 void dev::SvAbstractKsutsDevice::deleteThread()
 {
-  if(p_thread) {
+  // тут надо делать через сигнал слот, иначе ругается что останавливаем сокет или порт из другого потока
+  emit stop_thread();
 
-    delete p_thread;
-    p_thread = nullptr;
+//  if(p_thread) {
 
-  }
+//    delete p_thread;
+//    p_thread = nullptr;
+
+//  }
 }
 
 
@@ -86,14 +90,14 @@ void dev::SvAbstractKsutsDevice::deleteThread()
 dev::SvAbstractUdpThread::SvAbstractUdpThread(dev::SvAbstractDevice *device, sv::SvAbstractLogger *logger):
   dev::SvAbstractKsutsThread(device, logger)
 {
-
+//  connect(dev)
 }
 
 void dev::SvAbstractUdpThread::setIfcParams(const QString& params) throw(SvException&)
 {
   try {
 
-    p_params = sv::UdpParams::fromJsonString(params);
+    p_ifc_params = sv::UdpParams::fromJsonString(params);
 
   }
   catch(SvException& e) {
@@ -102,14 +106,15 @@ void dev::SvAbstractUdpThread::setIfcParams(const QString& params) throw(SvExcep
   }
 }
 
-dev::SvAbstractUdpThread::~SvAbstractUdpThread()
-{
-  p_socket.close();
-}
+//dev::SvAbstractUdpThread::~SvAbstractUdpThread()
+//{
+//  p_socket.close();
+//  dev::SvAbstractKsutsThread::stop();
+//}
 
 void dev::SvAbstractUdpThread::open() throw(SvException&)
 {
-  if(!p_socket.bind(p_params.listen_port, QAbstractSocket::DontShareAddress))
+  if(!p_socket.bind(p_ifc_params.listen_port, QAbstractSocket::DontShareAddress))
     throw p_exception.assign(p_socket.errorString());
 
   // с заданным интервалом сбрасываем буфер, чтобы отсекать мусор и битые пакеты
@@ -133,7 +138,7 @@ quint64 dev::SvAbstractUdpThread::write(const QByteArray& data)
               << QString(data.toHex())
               << sv::log::endl;
 
-  return p_socket.writeDatagram(data, QHostAddress(p_params.host), p_params.remote_port);
+  return p_socket.writeDatagram(data, QHostAddress(p_ifc_params.host), p_ifc_params.remote_port);
 
 }
 
@@ -147,13 +152,11 @@ void dev::SvAbstractUdpThread::run()
 
       while(p_socket.hasPendingDatagrams())
       {
-
         if(p_buff.offset > MAX_PACKET_SIZE)
           reset_buffer();
 
         /* ... the rest of the datagram will be lost ... */
         p_buff.offset += p_socket.readDatagram((char*)(&p_buff.buf[0] + p_buff.offset), MAX_PACKET_SIZE - p_buff.offset);
-
 
         process_data();
 
@@ -176,7 +179,7 @@ void dev::SvAbstractSerialThread::setIfcParams(const QString& params) throw(SvEx
 {
   try {
 
-    p_params = sv::SerialParams::fromJsonString(params);
+    p_ifc_params = sv::SerialParams::fromJsonString(params);
 
   }
   catch(SvException& e) {
@@ -187,12 +190,12 @@ void dev::SvAbstractSerialThread::setIfcParams(const QString& params) throw(SvEx
 
 void dev::SvAbstractSerialThread::open() throw(SvException&)
 {
-  p_port.setPortName   (p_params.portname   );
-  p_port.setBaudRate   (p_params.baudrate   );
-  p_port.setStopBits   (p_params.stopbits   );
-  p_port.setFlowControl(p_params.flowcontrol);
-  p_port.setDataBits   (p_params.databits   );
-  p_port.setParity     (p_params.parity     );
+  p_port.setPortName   (p_ifc_params.portname   );
+  p_port.setBaudRate   (p_ifc_params.baudrate   );
+  p_port.setStopBits   (p_ifc_params.stopbits   );
+  p_port.setFlowControl(p_ifc_params.flowcontrol);
+  p_port.setDataBits   (p_ifc_params.databits   );
+  p_port.setParity     (p_ifc_params.parity     );
 
   if(!p_port.open(QIODevice::ReadWrite))
     throw p_exception.assign(p_port.errorString());

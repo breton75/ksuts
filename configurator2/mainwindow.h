@@ -159,6 +159,8 @@ private:
 
   QList<int> p_device_index_list = QList<int>();
 
+  QString _current_sender = "main";
+
   void createActions();
   void createTrayIcon();
 
@@ -214,7 +216,12 @@ private slots:
 
   void on_treeView_doubleClicked(const QModelIndex &index);
 
-  void messageSlot(const QString& sender, const QString& message, const QString &type);
+  void currentSenderMessageSlot(const QString& sender, const QString& message, const QString &type);
+  void allMessagesSlot(const QString& sender, const QString& message, const QString &type);
+
+  void on_bnEditSender_clicked();
+
+  void on_bnClear_clicked();
 
 public slots:
   void loadConfig();

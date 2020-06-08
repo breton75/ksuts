@@ -6,6 +6,8 @@
 #include <QFile>
 //#include <QCommandLineParser>
 
+#include <signal.h>
+
 #include <QtNetwork/QHostAddress>
 //#include "signal.h"
 #include <stdlib.h>
@@ -84,8 +86,7 @@ sv::SvAbstractLogger* create_logger(const sv::log::Options& options, const QStri
 bool openDevices();
 bool initStorages();
 
-int sig = 0;
-void close_app();
+void signal_handler(int sig);
 
 void closeDevices();
 void deinitStorages();
@@ -344,32 +345,10 @@ int main(int argc, char *argv[])
     }
   }
 
-//  // создаем потомка
-//  switch (fork()) {
-
-//    case -1:   // если не удалось запустить потомка выведем на экран ошибку и её описание
-
-//      printf("Ошибка при запуске службы сервера (%s)\n", strerror(errno));
-//      return -1;
-//      break;
-
-//    case 0:
-//      break;
-
-//    default:
-
-//      /* Функция  _exit()  подобна  exit(3),  но  не  вызывает никаких функций,
-//       * зарегистрированных с помощью  atexit(3)  или  on_exit(3)...
-//       * читай man _Exit */
-//      return 0;
-////      _Exit(0);
-//      break;
-
-//  }
 
   /// перехватываем момент закрытия программы, чтобы корректно завершить
-  atexit(close_app);
-
+  signal(SIGINT, signal_handler);
+  signal(SIGTERM, signal_handler);
 
   dbus << llinf << mtinf << me
        << QString("Сервер сбора и обработки данных КСУТС v.%1\n").arg(APP_VERSION)
@@ -416,14 +395,6 @@ int main(int argc, char *argv[])
       close(STDOUT_FILENO);
       close(STDERR_FILENO);
 
-//      if(!cfg.log_options.logging || cfg.log_options.log_devices.isEmpty()) {
-
-//        close(STDIN_FILENO);
-//        close(STDOUT_FILENO);
-//        close(STDERR_FILENO);
-
-//      }
-
       return a.exec();
 
   }
@@ -432,6 +403,21 @@ int main(int argc, char *argv[])
     return result;
   }
 
+}
+
+void signal_handler(int sig)
+{
+  Q_UNUSED(sig);
+
+  close_db();
+
+  closeDevices();
+
+  deinitStorages();
+
+  deleteSignals();
+
+  _Exit(0);
 }
 
 void close_db()
@@ -444,15 +430,6 @@ void close_db()
 
   PG = nullptr;
 
-}
-
-void close_app()
-{
-  close_db();
-
-  closeDevices();
-  deinitStorages();
-  deleteSignals();
 }
 
 bool initConfig(const AppConfig& cfg)
@@ -777,7 +754,7 @@ dev::SvAbstractDevice* create_device(const QSqlQuery* q)
         break;
 
     case dev::KTV:
-//        newdev = new SvKTV();
+        newdev = new SvKTV();
         break;
 
       default:
@@ -785,6 +762,9 @@ dev::SvAbstractDevice* create_device(const QSqlQuery* q)
         break;
         
     }
+
+    if(!newdev)
+      exception.raise("Неизвестная ошибка при создании устройства");
     
     if(!newdev->setup(info)) exception.raise(newdev->lastError());
 //    if(!newdev->setParams(params)) exception.raise(newdev->lastError());

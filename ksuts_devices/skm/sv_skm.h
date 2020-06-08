@@ -112,9 +112,8 @@ public:
   {
 
     return QString("{\n"
-                   "  \"%1\": \"0x0000\",\n"
-                   "  \"%2\": %3\n"
-                   "}").arg(P_START_REGISTER).arg(P_RESET_TIMEOUT).arg(RESET_INTERVAL);
+                   "  \"%1\": %2\n"
+                   "}").arg(P_RESET_TIMEOUT).arg(RESET_INTERVAL);
   }
 
 private:
@@ -149,8 +148,6 @@ private:
   skm::Header _header;
   size_t _hSize = sizeof(skm::Header);
 
-  quint8  _confirm[8];
-
   void process_data();
 
 };
@@ -167,8 +164,6 @@ private:
 
   skm::Header _header;
   size_t _hSize = sizeof(skm::Header);
-
-  quint8  _confirm[8];
 
   void process_data();
 

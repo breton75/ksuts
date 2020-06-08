@@ -125,7 +125,8 @@ MainWindow::MainWindow(const AppConfig &cfg, QWidget *parent) :
 
   AppParams::loadLayout(this);
 
-  QDBusConnection::sessionBus().connect(QString(), QString(), DBUS_SERVER_NAME, "message", this, SLOT(messageSlot(const QString&,const QString&,const QString&)));
+  QDBusConnection::sessionBus().connect(QString(), QString(), DBUS_SERVER_NAME, "message", this, SLOT(currentSenderMessageSlot(const QString&,const QString&,const QString&)));
+
 
 //  connect(ui->treeView, &QTreeView::entered)
 
@@ -138,11 +139,15 @@ MainWindow::MainWindow(const AppConfig &cfg, QWidget *parent) :
 
 }
 
-void MainWindow::messageSlot(const QString& sender, const QString& message, const QString& type)
+void MainWindow::currentSenderMessageSlot(const QString& sender, const QString& message, const QString& type)
 {
-  if(sender == "main")
+  if(sender == _current_sender)
     mainlog << sv::log::stringToType(type) << QString("%1").arg(message) << sv::log::endl;
+}
 
+void MainWindow::allMessagesSlot(const QString& sender, const QString& message, const QString& type)
+{
+  mainlog << sv::log::stringToType(type) << QString("%1").arg(message) << sv::log::endl;
 }
 
 void MainWindow::closeEvent(QCloseEvent *event)
@@ -1892,4 +1897,39 @@ void MainWindow::restoreDB()
                           .arg(e.error));
 
   }
+}
+
+void MainWindow::on_bnEditSender_clicked()
+{
+  ui->lineSender->setEnabled(!ui->lineSender->isEnabled());
+
+  if(!ui->lineSender->isEnabled())
+  {
+    ui->bnEditSender->setIcon(QIcon(":/my_icons/icons/004-lock.png"));
+    return;
+
+  }
+  else
+  {
+    ui->bnEditSender->setIcon(QIcon(":/my_icons/icons/005-lock-1.png"));
+
+  }
+
+
+  if(ui->lineSender->text().isEmpty() || ui->lineSender->text() == "*")
+  {
+    QDBusConnection::sessionBus().disconnect(QString(), QString(), DBUS_SERVER_NAME, "message", this, SLOT(currentSenderMessageSlot(const QString&,const QString&,const QString&)));
+    QDBusConnection::sessionBus().connect(QString(), QString(), DBUS_SERVER_NAME, "message", this, SLOT(allMessagesSlot(const QString&,const QString&,const QString&)));
+  }
+  else
+  {
+    QDBusConnection::sessionBus().disconnect(QString(), QString(), DBUS_SERVER_NAME, "message", this, SLOT(allMessagesSlot(const QString&,const QString&,const QString&)));
+    QDBusConnection::sessionBus().connect(QString(), QString(), DBUS_SERVER_NAME, "message", this, SLOT(currentSenderMessageSlot(const QString&,const QString&,const QString&)));
+  }
+
+}
+
+void MainWindow::on_bnClear_clicked()
+{
+    ui->textLog->clear();
 }

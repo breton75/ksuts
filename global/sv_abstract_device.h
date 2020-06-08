@@ -169,7 +169,7 @@ public:
   virtual void setIfcParams(const QString& params) throw(SvException&) = 0;
 
   virtual void open() throw(SvException&) = 0;
-  virtual void stop() = 0;
+//  virtual void stop() = 0;
 
   virtual void setLogger(sv::SvAbstractLogger* logger)
   {
@@ -181,6 +181,15 @@ protected:
   dev::SvAbstractDevice *p_device = nullptr;
 
   virtual void process_data() = 0;
+
+public slots:
+  virtual void stop() = 0;
+//  {
+//    *p_logger << "p_is_active" << (p_is_active ? "true" : "false") << sv::log::endl;
+//    p_is_active = false;
+//    while(this->isRunning()) qApp->processEvents();
+//    *p_logger << "p_is_active" << (p_is_active ? "true" : "false") << sv::log::endl;
+//  }
 
 };
 

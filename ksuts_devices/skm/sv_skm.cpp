@@ -121,7 +121,6 @@ skm::SvUDPThread::SvUDPThread(dev::SvAbstractDevice *device, sv::SvAbstractLogge
 
 void skm::SvUDPThread::process_data()
 {
-
   if(p_buff.offset >= sizeof(_header)) {
 
     memcpy(&_header, &p_buff.buf[0], sizeof(_header));
@@ -146,6 +145,7 @@ void skm::SvUDPThread::process_data()
         /* кто-то неправильно считает crc, или скм или я. поэтому crc не проверяем */
         skm::parse_data(&p_buff, &p_data, &_header);
 
+//        return;
 
         /* программист СКМ говорит, что они никак не анализируют мой ответ на посылку данных
          * поэтому, чтобы не тратить ресурсы, убрал отправку подтверждения.
@@ -205,9 +205,10 @@ void skm::SvSerialThread::process_data()
                     << QString(QByteArray((const char*)&p_buff.buf[0], p_buff.offset).toHex()) << sv::log::endl;
 
 
-        /* кто-то неправильно считает crc, или скм или я. поэтому crc не проверяем */
-        skm::parse_data(&p_buff, &p_data, &_header);
+        /* кто-то неправильно считает crc, или скм или я. поэтому crc не проверяем
+        if(p_data.crc != ... */
 
+        skm::parse_data(&p_buff, &p_data, &_header);
 
         /* программист СКМ говорит, что они никак не анализируют мой ответ на посылку данных
          * поэтому, чтобы не тратить ресурсы, убрал отправку подтверждения.
@@ -245,41 +246,26 @@ quint16 skm::parse_data(dev::BUFF* buff, dev::DATA* data, skm::Header* header)
   // длина crc может увеличиться за счет удвоения управляющих байтов
   int crc_length = 1;
   quint8  crc_tmp[2];
+
   memcpy(&crc_tmp[1], &buff[0] + sizeof(header) + data->data_length - crc_length++, 1);
   if(skm::check_1F_2F_55(crc_tmp[1])) crc_length++;
 
   memcpy(&crc_tmp[0], &buff[0] + sizeof(header) + data->data_length - crc_length  , 1);
   if(skm::check_1F_2F_55(crc_tmp[0])) crc_length++;
 
+  // полученная crc
   memcpy(&data->crc, &crc_tmp[0], 2);
 
-
-  /* кто-то неправильно считает crc, или скм или я.
-   * поэтому crc не проверяем, а всегда возвращаем true
-
-  // вычисляем crc
-  quint16 crc = CRC::CRC16_CCITT(&_buf[0], sizeof(_header) + _data_length);
-
-  // если crc не совпадает, то выходим без обработки и ответа
-  if(crc != _crc) {
-
-      p_log << sv::log::llError4
-            << sv::log::TimeZZZ
-            << QString("Ошибка crc! Ожидалось %1, получено %2").arg(crc, 0, 16).arg(_crc, 0, 16);
-
-      return false;
-  }
-
-//  qDebug() << "crc" << QByteArray((const char*)&_crc_tmp[0], 2).toHex() << "crc_length" << crc_length;
-
-  */
-
-
-  /// все что осталось - это чистые данные. корректируем длину данных
+  // все что осталось - это чистые данные. корректируем длину данных
   data->data_length -= crc_length + 1 /* тип данных */;  // чистая длина данных
+
+  // данные
   memcpy(&data->data[0], &buff[0] + sizeof(header) + 1, data->data_length);
 
-  return true;
+  // вычисляем crc из данных
+  quint16 crc = CRC::CRC16_CCITT(&buff->buf[0], sizeof(header) + data->data_length);
+
+  return crc;
 
 }
 
