@@ -1,4 +1,4 @@
-// модуль для работы с платой CAN - AdLink, PCI-7841
+﻿// модуль для работы с платой CAN - AdLink, PCI-7841
 // используется встроенный в линукс питон
 // для работы нужны питоновские скрипты:
 // /home/user/proj/up.py
@@ -24,6 +24,10 @@
 #include <linux/can/raw.h>
 
 #include "can_queue.h" // буферизованая работа порта CAN
+
+//#include "../../svlib/sv_tcp_client.h"
+#include <QTcpSocket>
+#include <QHostAddress>
 
 #include <QObject>
 #include <QThread>
@@ -59,7 +63,7 @@ class SvCAN_Writer: public QObject
     Q_OBJECT
 
 public:
-    explicit SvCAN_Writer(int id, QObject *parent = 0);
+    explicit SvCAN_Writer(int id, QHostAddress ip, quint16 port, QObject *parent = 0);
     ~SvCAN_Writer();
 
     int init(QString dev_name);
@@ -70,7 +74,13 @@ public:
     int sock = 0;
     struct sockaddr_can addr;
     struct can_frame frame;
-    struct ifreq ifr;
+    struct ifreq ifr;    
+
+//    svtcp::SvTcpClient tcp_client;
+    QTcpSocket tcp_client;
+
+    QHostAddress tcp_host;
+    quint16 tcp_port;
 
 private:
     bool _logging;
@@ -86,7 +96,7 @@ class SvCAN_Reader : public QThread
     Q_OBJECT
 
 public:
-    explicit SvCAN_Reader(int id);
+    explicit SvCAN_Reader(int id, QHostAddress ip, quint16 port);
     ~SvCAN_Reader();
 
     int init(QString dev_name, CAN_Queue* out);//can_frame *out);
@@ -95,10 +105,19 @@ public:
 
 private:
     int _id = -1;
+
     int sock = 0;
     struct sockaddr_can addr;
     struct can_frame frame;
     struct ifreq ifr;
+
+
+//    svtcp::SvTcpClient tcp_client;
+    QTcpSocket tcp_client;
+
+    QHostAddress tcp_host;
+    quint16 tcp_port;
+
 
     bool _logging;
     quint32 _check_can_id;

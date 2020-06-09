@@ -6,7 +6,7 @@
 
 # заготовка под Qt 5.9.5 и выше
 #QT       += core gui widgets sql serialdevice
-QT       += core gui widgets sql
+QT       += core gui widgets sql network
 
 CONFIG += console
 
@@ -21,14 +21,16 @@ SOURCES += main.cpp\
     sv_can.cpp \
     db_queue.cpp \
     can_parser.cpp \
-    command_timer.cpp
+    command_timer.cpp \
+    ../../svlib/sv_tcp_client.cpp
 
 HEADERS  += mainwindow.h \
     can_queue.h \
     sv_can.h \
     db_queue.h \
     can_parser.h \
-    command_timer.h
+    command_timer.h \
+    ../../svlib/sv_tcp_client.h
 
 FORMS    += mainwindow.ui
 

@@ -1,4 +1,4 @@
-#include "mainwindow.h"
+﻿#include "mainwindow.h"
 #include "ui_mainwindow.h"
 
 #include <QMessageBox>
@@ -78,6 +78,41 @@ void MainWindow::setPGPort(int newPGPort)
     if(newPGPort < 5400) return;
     postgresPort = newPGPort;
     qDebug() << "Задан номер порта сервера постгрес:" << newPGPort;
+}
+
+bool MainWindow::setCanHosts(char *arg0, char *arg1)
+{
+  bool ok = false;
+
+  QStringList h = QString(arg0).split(':');
+
+  if(h.count() != 2)
+    return false;
+
+  tcp_hosts[0] = QHostAddress(QString(h.at(0)));
+  if(tcp_hosts[0].toIPv4Address() == 0)
+    return false;
+
+  tcp_ports[0] = QString(h.at(1)).toUInt(&ok);
+  if(!ok) return false;
+
+
+  h = QString(arg1).split(':');
+
+  if(h.count() != 2)
+    return false;
+
+  tcp_hosts[1] = QHostAddress(QString(h.at(0)));
+  if(tcp_hosts[1].toIPv4Address() == 0)
+    return false;
+
+  tcp_ports[1] = QString(h.at(1)).toUInt(&ok);
+  if(!ok) return false;
+
+  qDebug() << tcp_hosts[0] << tcp_ports[0] << tcp_hosts[1] << tcp_ports[1];
+
+  return true;
+
 }
 
 //===========================================
@@ -448,8 +483,10 @@ QByteArray MainWindow::can_status(QString dev_name)
 //===========================================
 bool MainWindow::startCan(quint8 id)
 {
-    qDebug() << "startCan" << id;
-    QString dev_name = "can" + QString::number(id);
+  qDebug() << "startCan" << id;
+  QString dev_name = "can" + QString::number(id);
+
+/**
     can_up(dev_name);
     QByteArray b = can_status(dev_name);
     qDebug() << "CAN" << id << " start, status: " << b;
@@ -460,6 +497,9 @@ bool MainWindow::startCan(quint8 id)
     }
 
     bool stat = b.contains(",UP,");
+**/
+
+    bool stat = true;
 
     if(stat) // порт открыт успешно
     {
@@ -475,12 +515,13 @@ bool MainWindow::startCan(quint8 id)
         qDebug() << "Запущен поток парсера:" << can_parser[id]->isRunning();
 
         // "писатель"
-        can_writer[id] = new SvCAN_Writer(id);
+//        int res;
+        can_writer[id] = new SvCAN_Writer(id, tcp_hosts[id], tcp_ports[id]);
         int res = can_writer[id]->init(dev_name);
         qDebug() << "Запущен поток записи в порт, результат запуска:" << res;
 
         // "читатель"
-        can_reader[id] = new SvCAN_Reader(id);
+        can_reader[id] = new SvCAN_Reader(id, tcp_hosts[id], tcp_ports[id]);
         res = can_reader[id]->init(dev_name, queue[id]);
         qDebug() << "Запущен поток чтения из порта, работа-результат запуска:" << can_reader[id]->isRunning() << res;
 

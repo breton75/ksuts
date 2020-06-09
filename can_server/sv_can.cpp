@@ -1,4 +1,4 @@
-// модуль для работы с платой CAN - AdLink, PCI-7841
+﻿// модуль для работы с платой CAN - AdLink, PCI-7841
 // используется встроенный в линукс питон
 // для работы нужны питоновские скрипты:
 // /home/user/proj/up.py
@@ -166,6 +166,8 @@ void SvCAN_Reader::run()
         // здесь висим, пока что-нибудь не придёт в порт
         // (обработка событий, например, завершение потока, внутри проц. read() ведется)
         int nbytes = read(sock, &frame, sizeof(struct can_frame));
+
+        qDebug() << QByteArray((char*)&frame, frame_size) << frame.can_id;
 
         if (nbytes < 0)
         {

@@ -1,4 +1,4 @@
-#include "mainwindow.h"
+﻿#include "mainwindow.h"
 #include <QApplication>
 #include <QDebug>
 #include <QProcess>
@@ -19,11 +19,16 @@ int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
 
+    if(argc > 3){
+      qWarning() << "Необходимо задать ip адреса и порты для can0 и can1 в формате: 192.168.1.1:10003 192.168.1.1:10003";
+      a.exit(-1);
+    }
+
     MainWindow w;
 
     //qDebug() << argv[0];
     // порт постгрес
-    if(argc > 1) {
+/**    if(argc > 1) {
         int pgPort = atoi(argv[1]);
         if(pgPort > 5000) w.setPGPort(pgPort);
         else {
@@ -31,6 +36,15 @@ int main(int argc, char *argv[])
             qDebug() << "Оставлен порт по умолчанию: 5432";
         }
     }
+**/
+
+    if(!w.setCanHosts(argv[1], argv[2]))
+    {
+      qWarning() << "Необходимо задать ip адреса и порты для can0 и can1 в формате: 192.168.1.1:10003 192.168.1.1:10003";
+      a.exit(-1);
+    }
+
+//    return 0;
 
     // инициализация
     if(!w.init()) {

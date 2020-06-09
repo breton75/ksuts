@@ -1,4 +1,4 @@
-#ifndef MAINWINDOW_H
+﻿#ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
 #include <QMainWindow>
@@ -8,6 +8,8 @@
 #include <QCloseEvent>
 #include <QHideEvent>
 #include <QShowEvent>
+
+#include <QHostAddress>
 
 #include "sv_can.h"
 #include "can_queue.h"
@@ -36,6 +38,8 @@ public:
     bool init();
     // стоп машина, в штатном режиме
     void deinit();
+
+    bool setCanHosts(char *arg1, char *arg2);
 
 private:
     Ui::MainWindow *ui;
@@ -79,6 +83,9 @@ private:
     CAN_Queue* queue[2];
     // разборщик пакетов
     CAN_Parser* can_parser[2];
+
+    QHostAddress tcp_hosts[2];
+    quint16 tcp_ports[2];
 
     QTimer *check_timer; // таймер проверки наличия связи с датчиком (поступления данных по CAN)
 
