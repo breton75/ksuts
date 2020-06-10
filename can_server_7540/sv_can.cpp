@@ -71,12 +71,21 @@ void SvCAN_Writer::setLogging(bool newLogging, quint32 new_can_id)
 
 int SvCAN_Writer::writeData(quint32 id, QByteArray data)
 {
-  return 0;
+/**
     frame.can_id = canid_t(id);
     frame.can_dlc = data.length();
 
     for(int i = 0; i < data.length(); i++)
         frame.data[i] = data[i];
+**/
+
+  QByteArray frame = QByteArray();
+
+  frame.append("t")
+      .append(QString::number(id, 16).toUpper().right(3))
+      .append(QString::number(data.length(), 16).right(1))
+      .append(data.toHex())
+      .append('\r');
 
     tcp_client.connectToHost(tcp_host, tcp_port);
     if(!tcp_client.waitForConnected(1000))
@@ -84,7 +93,7 @@ int SvCAN_Writer::writeData(quint32 id, QByteArray data)
 
 /**    int nbytes = write(sock, &frame, sizeof(struct can_frame)); **/
 
-    int nbytes = tcp_client.write((char*)&frame, sizeof(struct can_frame));
+    int nbytes = tcp_client.write(frame);
 
     if(_logging && (_check_can_id == id)) {
         qDebug() << QTime::currentTime().toString("hh:mm:ss.zzz") << "Произведена запись в порт - can_id - пакет:" << _id << id << data.toHex();
@@ -196,24 +205,14 @@ void SvCAN_Reader::run()
 {
     qDebug() << QTime::currentTime().toString("hh:mm:ss.zzz") << "Запуск рабочего цикла чтения из порта" << _id;
 
-    int frame_size = sizeof(can_frame);
-
     while (true)
     {
-
-
         // здесь висим, пока что-нибудь не придёт в порт
         // (обработка событий, например, завершение потока, внутри проц. read() ведется)
         if(tcp_client.waitForReadyRead(1000))
         {
 
-        int nbytes = frame_size; // read(sock, &frame, sizeof(struct can_frame));
-
           QByteArray b = tcp_client.readAll();
-
-//          qint64 nbytes = tcp_client.read(frame_size);
-
-//          memcpy(&frame, b.data(), frame_size);
 
           for(QByteArray hexpack: b.split('\r'))
           {
@@ -234,19 +233,6 @@ void SvCAN_Reader::run()
 
             memcpy((char*)&frame.data, QByteArray::fromHex(hexpack.mid(5, frame.can_dlc)).data(), frame.can_dlc);
 
-//            qDebug() << frame.can_id << frame.can_dlc << QByteArray((char*)&frame.data, 8);
-
-//            if (nbytes < 0)
-//            {
-//                perror("read error");
-//                break;
-//            }
-//            else if (nbytes < frame_size)
-//            {
-//                perror("read: incomplete CAN frame\n");
-//                break;
-//            }
-//            else
             {
                 // отладка - контроль пакетов по can_id
                 if(_logging && (_check_can_id == frame.can_id)) {
@@ -261,12 +247,8 @@ void SvCAN_Reader::run()
 //                QApplication::processEvents();
   //              usleep(10);
             }
-
           }
-
-
         }
-
     }
 
     qDebug() << QTime::currentTime().toString("hh:mm:ss.zzz") << "Останов рабочего цикла чтения из порта can" << _id;
