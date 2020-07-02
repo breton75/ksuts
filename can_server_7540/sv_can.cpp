@@ -231,7 +231,11 @@ void SvCAN_Reader::run()
 
             if(frame.can_dlc > 8) continue;
 
-            memcpy((char*)&frame.data, QByteArray::fromHex(hexpack.mid(5, frame.can_dlc)).data(), frame.can_dlc);
+            QByteArray d = QByteArray::fromHex(hexpack.mid(5, frame.can_dlc));
+
+            for(int i = 0; i < frame.can_dlc; ++i)
+              frame.data[i] = d.at(frame.can_dlc - i - 1);
+//              memcpy((char*)&frame.data[i], , frame.can_dlc);
 
             {
                 // отладка - контроль пакетов по can_id
