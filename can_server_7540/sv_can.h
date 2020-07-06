@@ -28,11 +28,14 @@
 //#include "../../svlib/sv_tcp_client.h"
 #include <QTcpSocket>
 #include <QHostAddress>
+#include <QNetworkInterface>
 
 #include <QObject>
 #include <QThread>
 #include <QDateTime>
 #include <QMetaType>
+
+#include <QAbstractSocket>
 
 // декларация отладочной версии
 //#define DEBUG_VERSION
@@ -55,7 +58,10 @@ struct can_frame {
 
 */
 
+int reconnect(const QString &ifc_name, QTcpSocket *socket, QHostAddress &tcp_host, quint16 tcp_port);
+
 Q_DECLARE_METATYPE(can_frame)
+//Q_DECLARE_METATYPE(QAbstractSocket::SocketError)
 
 //============ WRITER ============
 class SvCAN_Writer: public QObject
@@ -63,7 +69,7 @@ class SvCAN_Writer: public QObject
     Q_OBJECT
 
 public:
-    explicit SvCAN_Writer(int id, QHostAddress ip, quint16 port, QObject *parent = 0);
+    explicit SvCAN_Writer(int id, const QString& ifc_name, QHostAddress ip, quint16 port, QObject *parent = 0);
     ~SvCAN_Writer();
 
     int init(QString dev_name);
@@ -79,12 +85,14 @@ public:
 //    svtcp::SvTcpClient tcp_client;
     QTcpSocket tcp_client;
 
+    QString ifc_name;
     QHostAddress tcp_host;
     quint16 tcp_port;
 
 private:
     bool _logging;
     quint32 _check_can_id;
+
 
 public slots:
     void sendCmd(quint16 can_id, quint16 sender_id, quint64 send_value);
@@ -96,7 +104,7 @@ class SvCAN_Reader : public QThread
     Q_OBJECT
 
 public:
-    explicit SvCAN_Reader(int id, QHostAddress ip, quint16 port);
+    explicit SvCAN_Reader(int id, const QString &ifc_name, QHostAddress ip, quint16 port);
     ~SvCAN_Reader();
 
     int init(QString dev_name, CAN_Queue* out);//can_frame *out);
@@ -115,9 +123,11 @@ private:
 //    svtcp::SvTcpClient tcp_client;
     QTcpSocket tcp_client;
 
+    QString ifc_name;
     QHostAddress tcp_host;
     quint16 tcp_port;
 
+    bool _connected = false;
 
     bool _logging;
     quint32 _check_can_id;
@@ -126,6 +136,9 @@ private:
     CAN_Queue* _out;
 
     void run() Q_DECL_OVERRIDE;
+
+private slots:
+    void on_error(QAbstractSocket::SocketError e);
 
 };
 

@@ -18,6 +18,35 @@
 //#include <QCanBusFrame>
 //#include <QCanBusDevice>
 
+
+#include "../../svlib/sv_config.h"
+
+#define OPTION_DB_HOST                   "db_host"
+#define OPTION_DB_PORT                   "db_port"
+#define OPTION_DB_NAME                   "db_name"
+#define OPTION_DB_USER                   "db_user"
+#define OPTION_DB_PASS                   "db_pass"
+#define OPTION_IFC1_NAME                 "ifc1_name"
+#define OPTION_IFC1_IP                   "ifc1_ip"
+#define OPTION_IFC1_PORT                 "ifc1_port"
+#define OPTION_IFC2_NAME                 "ifc2_name"
+#define OPTION_IFC2_IP                   "ifc2_ip"
+#define OPTION_IFC2_PORT                 "ifc2_port"
+
+struct AppConfig {
+    QString db_name;
+    QString db_host;
+    quint16 db_port;
+    QString db_user;
+    QString db_pass;
+    QString ifc1_name;
+    QString ifc1_ip;
+    quint16 ifc1_port;
+    QString ifc2_name;
+    QString ifc2_ip;
+    quint16 ifc2_port;
+};
+
 namespace Ui {
 class MainWindow;
 }
@@ -39,7 +68,7 @@ public:
     // стоп машина, в штатном режиме
     void deinit();
 
-    bool setCanHosts(char *arg1, char *arg2);
+    bool setCanHosts(const AppConfig& cfg); // char *arg1, char *arg2);
 
 private:
     Ui::MainWindow *ui;
@@ -84,6 +113,7 @@ private:
     // разборщик пакетов
     CAN_Parser* can_parser[2];
 
+    QString ifc_names[2];
     QHostAddress tcp_hosts[2];
     quint16 tcp_ports[2];
 

@@ -22,7 +22,8 @@ SOURCES += main.cpp\
     db_queue.cpp \
     can_parser.cpp \
     command_timer.cpp \
-    ../../svlib/sv_tcp_client.cpp
+    ../../svlib/sv_tcp_client.cpp \
+    ../../svlib/sv_config.cpp
 
 HEADERS  += mainwindow.h \
     can_queue.h \
@@ -30,7 +31,8 @@ HEADERS  += mainwindow.h \
     db_queue.h \
     can_parser.h \
     command_timer.h \
-    ../../svlib/sv_tcp_client.h
+    ../../svlib/sv_tcp_client.h \
+    ../../svlib/sv_config.h
 
 FORMS    += mainwindow.ui
 

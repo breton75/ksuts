@@ -80,36 +80,27 @@ void MainWindow::setPGPort(int newPGPort)
     qDebug() << "Задан номер порта сервера постгрес:" << newPGPort;
 }
 
-bool MainWindow::setCanHosts(char *arg0, char *arg1)
+bool MainWindow::setCanHosts(const AppConfig& cfg) //char *arg0, char *arg1)
 {
-  bool ok = false;
+  ifc_names[0] = cfg.ifc1_name;
 
-  QStringList h = QString(arg0).split(':');
-
-  if(h.count() != 2)
-    return false;
-
-  tcp_hosts[0] = QHostAddress(QString(h.at(0)));
+  tcp_hosts[0] = QHostAddress(cfg.ifc1_ip);
   if(tcp_hosts[0].toIPv4Address() == 0)
     return false;
 
-  tcp_ports[0] = QString(h.at(1)).toUInt(&ok);
-  if(!ok) return false;
+  tcp_ports[0] = cfg.ifc1_port;
 
 
-  h = QString(arg1).split(':');
+  ifc_names[1] = cfg.ifc2_name;
 
-  if(h.count() != 2)
-    return false;
-
-  tcp_hosts[1] = QHostAddress(QString(h.at(0)));
+  tcp_hosts[1] = QHostAddress(cfg.ifc2_ip);
   if(tcp_hosts[1].toIPv4Address() == 0)
     return false;
 
-  tcp_ports[1] = QString(h.at(1)).toUInt(&ok);
-  if(!ok) return false;
+  tcp_ports[1] = cfg.ifc2_port;
 
-  qDebug() << tcp_hosts[0] << tcp_ports[0] << tcp_hosts[1] << tcp_ports[1];
+  qDebug() << QString("Интерфейс 1: %1 %2 %3").arg(ifc_names[0]).arg(tcp_hosts[0].toString()).arg(tcp_ports[0]);
+  qDebug() << QString("Интерфейс 2: %1 %2 %3").arg(ifc_names[1]).arg(tcp_hosts[1].toString()).arg(tcp_ports[1]);
 
   return true;
 
@@ -516,12 +507,12 @@ bool MainWindow::startCan(quint8 id)
 
         // "писатель"
 //        int res;
-        can_writer[id] = new SvCAN_Writer(id, tcp_hosts[id], tcp_ports[id]);
+        can_writer[id] = new SvCAN_Writer(id, ifc_names[id], tcp_hosts[id], tcp_ports[id]);
         int res = can_writer[id]->init(dev_name);
         qDebug() << "Запущен поток записи в порт, результат запуска:" << res;
 
         // "читатель"
-        can_reader[id] = new SvCAN_Reader(id, tcp_hosts[id], tcp_ports[id]);
+        can_reader[id] = new SvCAN_Reader(id, ifc_names[id], tcp_hosts[id], tcp_ports[id]);
         res = can_reader[id]->init(dev_name, queue[id]);
         qDebug() << "Запущен поток чтения из порта, работа-результат запуска:" << can_reader[id]->isRunning() << res;
 

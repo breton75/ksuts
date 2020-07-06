@@ -11,14 +11,39 @@
 #include <QDebug>
 #include <QApplication>
 
+
+int reconnect(const QString& ifc_name, QTcpSocket* socket, QHostAddress& tcp_host, quint16 tcp_port)
+{
+  QNetworkInterface ifc = QNetworkInterface::interfaceFromName(ifc_name);
+  if(!ifc.isValid())
+    return -1;
+
+  if(ifc.addressEntries().count() == 0)
+    return -2;
+
+  /* For TCP sockets, this function may be used to specify
+   * which interface to use for an outgoing connection,
+   * which is useful in case of multiple network interfaces */
+  socket->bind(ifc.addressEntries().at(0).ip());
+
+  socket->connectToHost(tcp_host, tcp_port);
+
+  if(!socket->waitForConnected(1000))
+    return -3;
+
+  return 0;
+
+}
+
 //============ WRITER ============
-SvCAN_Writer::SvCAN_Writer(int id, QHostAddress ip, quint16 port, QObject *parent):
+SvCAN_Writer::SvCAN_Writer(int id, const QString& ifc_name, QHostAddress ip, quint16 port, QObject *parent):
     QObject(parent)
 {
     _id = id;
     _logging = false;
     _check_can_id = 0;    
 
+    this->ifc_name = ifc_name;
     tcp_host = ip;
     tcp_port = port;
 }
@@ -79,6 +104,10 @@ int SvCAN_Writer::writeData(quint32 id, QByteArray data)
         frame.data[i] = data[i];
 **/
 
+  int r = reconnect(ifc_name, &tcp_client, tcp_host, tcp_port);
+  if(r)
+    return r;
+
   QByteArray frame = QByteArray();
 
   frame.append("t")
@@ -87,13 +116,10 @@ int SvCAN_Writer::writeData(quint32 id, QByteArray data)
       .append(data.toHex())
       .append('\r');
 
-    tcp_client.connectToHost(tcp_host, tcp_port);
-    if(!tcp_client.waitForConnected(1000))
-      return -1;
-
 /**    int nbytes = write(sock, &frame, sizeof(struct can_frame)); **/
 
     int nbytes = tcp_client.write(frame);
+    tcp_client.flush();
 
     if(_logging && (_check_can_id == id)) {
         qDebug() << QTime::currentTime().toString("hh:mm:ss.zzz") << "Произведена запись в порт - can_id - пакет:" << _id << id << data.toHex();
@@ -135,14 +161,24 @@ void SvCAN_Writer::sendCmd(quint16 can_id, quint16 sender_id, quint64 send_value
 
 
 //============ READER ============
-SvCAN_Reader::SvCAN_Reader(int id, QHostAddress ip, quint16 port)
+SvCAN_Reader::SvCAN_Reader(int id, const QString& ifc_name, QHostAddress ip, quint16 port)
 {
+
+//  int id = qMetaTypeId<QAbstractSocket::SocketError>();
+
+//  qDebug() << id;
+  qRegisterMetaType<QAbstractSocket::SocketError>("QAbstractSocket::SocketError"); //").toStdString().c_str());
+
     _id = id;
     _logging = false;
     _check_can_id = 0;
 
+    this->ifc_name = ifc_name;
     tcp_host = ip;
     tcp_port = port;
+
+    connect(&tcp_client, SIGNAL(error(QAbstractSocket::SocketError)), this, SLOT(on_error(QAbstractSocket::SocketError)));
+
 }
 
 SvCAN_Reader::~SvCAN_Reader()
@@ -153,7 +189,6 @@ SvCAN_Reader::~SvCAN_Reader()
     tcp_client.disconnectFromHost();
 
 }
-
 
 int SvCAN_Reader::init(QString dev_name, CAN_Queue* out) //can_frame* out)
 {
@@ -181,15 +216,16 @@ int SvCAN_Reader::init(QString dev_name, CAN_Queue* out) //can_frame* out)
     }
 **/
 
-//    tcp_client.setIp(tcp_host.toString());
-//    tcp_client.setPort(tcp_port);
+    int r = reconnect(ifc_name, & tcp_client, tcp_host, tcp_port);
+    if(r)
+      return r;
 
-    tcp_client.connectToHost(tcp_host, tcp_port);
-
-    if(!tcp_client.waitForConnected(5000))
-      return -1;
+    _connected = true;
 
     tcp_client.moveToThread(this);
+
+    connect(&tcp_client, SIGNAL(error(QAbstractSocket::SocketError)), this, SLOT(on_error(QAbstractSocket::SocketError)));
+//    connect(&tcp_client, &QAbstractSocket::error, [=](QAbstractSocket::SocketError){ tcp_client.disconnectFromHost(); });
 
     this->start();
     return 0;
@@ -201,12 +237,33 @@ void SvCAN_Reader::setLogging(bool newLogging, quint32 new_can_id)
     _check_can_id = new_can_id;
 }
 
+void SvCAN_Reader::on_error(QAbstractSocket::SocketError e)
+{
+  Q_UNUSED(e);
+
+  _connected = false;
+}
+
 void SvCAN_Reader::run()
 {
     qDebug() << QTime::currentTime().toString("hh:mm:ss.zzz") << "Запуск рабочего цикла чтения из порта" << _id;
 
+//    connect(&tcp_client, SIGNAL(error(QAbstractSocket::SocketError)), this, SLOT(on_error(QAbstractSocket::SocketError)));
+
     while (true)
     {
+
+      if(!_connected) // tcp_client.state() != QAbstractSocket::ConnectedState)
+      {
+        tcp_client.disconnectFromHost();
+
+        if(reconnect(ifc_name, &tcp_client, tcp_host, tcp_port) != 0)
+          continue;
+
+        _connected = true;
+      }
+
+
         // здесь висим, пока что-нибудь не придёт в порт
         // (обработка событий, например, завершение потока, внутри проц. read() ведется)
         if(tcp_client.waitForReadyRead(1000))
@@ -231,11 +288,12 @@ void SvCAN_Reader::run()
 
             if(frame.can_dlc > 8) continue;
 
-            QByteArray d = QByteArray::fromHex(hexpack.mid(5, frame.can_dlc));
+//            QByteArray d = QByteArray::fromHex(hexpack.mid(5, frame.can_dlc));
 
-            for(int i = 0; i < frame.can_dlc; ++i)
-              frame.data[i] = d.at(frame.can_dlc - i - 1);
-//              memcpy((char*)&frame.data[i], , frame.can_dlc);
+//            for(int i = 0; i < frame.can_dlc; ++i)
+//              frame.data[i] = d.at(frame.can_dlc - i - 1);
+
+            memcpy((char*)&frame.data, QByteArray::fromHex(hexpack.mid(5, frame.can_dlc)).data(), frame.can_dlc * 2);
 
             {
                 // отладка - контроль пакетов по can_id
