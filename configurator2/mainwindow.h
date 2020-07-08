@@ -47,18 +47,6 @@
 #include "sv_editconfig.h"
 #include "sv_device_log.h"
 
-//struct AppConfig {
-//    QString db_name;
-//    QString db_host;
-//    quint16 db_port;
-//    QString db_user;
-//    QString db_pass;
-//    clog::LogOptions log_options;
-//    QString autorun_cfg_file;
-//    QString templates_dir;
-//    QString postgres_bin_path;
-//};
-
 
 namespace Ui {
 class MainWindow;

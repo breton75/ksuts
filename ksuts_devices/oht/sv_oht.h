@@ -49,8 +49,6 @@ namespace oht {
 
   const QMap<QString, Ifces> ifcesMap = {{"RS485", Ifces::RS485}, {"UDP", Ifces::UDP}};
 
-//  class DataProcessor;
-
   quint16 parse_data(dev::BUFF* buff, dev::DATA* data, oht::Header* header);
   QByteArray confirmation(const oht::Header* header);
 
@@ -125,7 +123,6 @@ public:
 private:
   bool create_new_thread();
 
-    
 };
 
 
@@ -166,36 +163,5 @@ private:
   void process_data();
 
 };
-
-//class oht::DataProcessor
-//{
-//  Q_OBJECT
-
-//public:
-//  DataProcessor(dev::SvAbstractKsutsDeviceThread* thread):
-//    _thread(thread)
-//  {  }
-
-//  void process_data();
-
-//private:
-//  dev::SvAbstractKsutsDeviceThread* _thread;
-
-//  oht::Header _header;
-//  size_t _hSize = sizeof(oht::Header);
-
-//  bool parse();
-//  void send_confirmation();
-
-//};
-
-//class SvDataProcessor
-//{
-//  Q_OBJECT
-
-//  public:
-//    SvDataProcessor(dev::Sv)
-
-//}
 
 #endif // OHT_H

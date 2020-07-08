@@ -70,7 +70,8 @@ QByteArray sudo_ip_addr_show(const QString& ifc_name)
 QString get_ifc_addr(const QString& ifc_name)
 {
   QString ip = "";
-  QString pout(sudo_ip_addr_show(ifc_name));
+
+/*  QString pout(sudo_ip_addr_show(ifc_name));
 
   QStringList lst = pout.split("\n");
   for(QString sl: lst) {
@@ -84,6 +85,9 @@ QString get_ifc_addr(const QString& ifc_name)
 
     }
   }
+*/
+
+
 
   return ip;
 }

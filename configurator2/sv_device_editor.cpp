@@ -138,6 +138,12 @@ bool SvDeviceEditor::loadIfces()
 
     switch (dev::HARDWARE_CODES.value(_device_hardware_code)) {
 
+      case dev::OPA:
+
+        ui->cbIfc->addItems(SvOPA::availableInterfaces());
+
+        break;
+
       case dev::OHT:
 
         ui->cbIfc->addItems(SvOHT::availableInterfaces());
@@ -253,6 +259,12 @@ void SvDeviceEditor::on_bnUnlockDeviceParams_clicked()
 void SvDeviceEditor::on_bnDefaultDeviceParams_clicked()
 {
   switch (dev::HARDWARE_CODES.value(_device_hardware_code)) {
+
+    case dev::OPA:
+
+      ui->textDeviceParams->setText(SvOPA::defaultDeviceParams());
+      break;
+
     case dev::OHT:
 
       ui->textDeviceParams->setText(SvOHT::defaultDeviceParams());
@@ -276,6 +288,12 @@ void SvDeviceEditor::on_bnDefaultDeviceParams_clicked()
 void SvDeviceEditor::on_bnDefaultIfcParams_clicked()
 {
   switch (dev::HARDWARE_CODES.value(_device_hardware_code)) {
+
+    case dev::OPA:
+
+      ui->textIfcParams->setText(SvOPA::defaultIfcParams(ui->cbIfc->currentText()));
+      break;
+
     case dev::OHT:
 
       ui->textIfcParams->setText(SvOHT::defaultIfcParams(ui->cbIfc->currentText()));

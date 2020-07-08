@@ -248,12 +248,10 @@ void SvCAN_Reader::run()
 {
     qDebug() << QTime::currentTime().toString("hh:mm:ss.zzz") << "Запуск рабочего цикла чтения из порта" << _id;
 
-//    connect(&tcp_client, SIGNAL(error(QAbstractSocket::SocketError)), this, SLOT(on_error(QAbstractSocket::SocketError)));
-
     while (true)
     {
 
-      if(!_connected) // tcp_client.state() != QAbstractSocket::ConnectedState)
+      if(!_connected)
       {
         tcp_client.disconnectFromHost();
 

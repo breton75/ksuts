@@ -61,6 +61,12 @@
         </attribute>
        </widget>
        <widget class="QWidget" name="widgetControls" native="true">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
         <layout class="QVBoxLayout" name="vlayControls"/>
        </widget>
       </widget>
@@ -90,6 +96,9 @@ p, li { white-space: pre-wrap; }
         </property>
        </widget>
        <widget class="QTabWidget" name="tabWidget">
+        <property name="styleSheet">
+         <string notr="true"/>
+        </property>
         <property name="tabPosition">
          <enum>QTabWidget::South</enum>
         </property>

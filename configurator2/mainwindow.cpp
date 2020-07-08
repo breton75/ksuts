@@ -30,9 +30,9 @@ MainWindow::MainWindow(const AppConfig &cfg, QWidget *parent) :
   ui->vlayControls->addWidget(_soeg_monitor);
   _soeg_monitor->setVisible(true);
 
-  _net_monitor = new Netmon(ui->centralWidget);
-  ui->vlayControls->addWidget(_net_monitor);
-  _net_monitor->setVisible(true);
+//  _net_monitor = new Netmon(ui->centralWidget);
+//  ui->vlayControls->addWidget(_net_monitor);
+//  _net_monitor->setVisible(true);
 
   _agg_monitor = new Aggmon(ui->centralWidget);
   ui->vlayControls->addWidget(_agg_monitor);
@@ -1288,29 +1288,33 @@ void MainWindow::make_stand_info()
 
 
     /** сетевые интерфейсы **/
-    QStringList ifclist = Netmon::getInterfaceList();
+    QList<IfcDescription> ifcs = Netmon::getAllIfcDescriptions(); //InterfaceList();
     QString ifc_str = "";
-    for(QString ifc: ifclist) {
+    for(IfcDescription ifc: ifcs) {
 
       ifc_str += "<tr>";
 
-      ifc_str += QString("<td style=\"font-size: 13px; width: 25%;\">&nbsp;%1</td>").arg(ifc);
-
-      IfcStateInfo ifc_info = Netmon::getInterfaceState(ifc);
-      ifc_str += QString("<td style=\"font-size: 13px; width: 25%; color: %1\">&nbsp;%2</td>")
-          .arg(ifc_info.colors.first().name(QColor::HexRgb))
-          .arg(ifc_info.states.first());
+      ifc_str += QString("<td style=\"font-size: 13px; width: 15%;\">&nbsp;%1</td>").arg(ifc.name);
 
       ifc_str += QString("<td style=\"font-size: 13px; width: 25%; color: %1\">&nbsp;%2</td>")
-          .arg(ifc_info.colors.last().name(QColor::HexRgb))
-          .arg(ifc_info.states.last());
+          .arg(ifc.state_color)
+          .arg(ifc.state);
 
-      QString ifc_ip = Netmon::getInterfaceAddr(ifc);
-      ifc_str += QString("<td style=\"font-size: 13px; width: 25%;\">&nbsp;%1</td>").arg(ifc_ip);
+//      ifc_str += QString("<td style=\"font-size: 13px; width: 15%; color: %1\">&nbsp;%2</td>")
+//          .arg(ifc.up_color)
+//          .arg(ifc.up_label);
+
+//      ifc_str += QString("<td style=\"font-size: 13px; width: 15%; color: %1\">&nbsp;%2</td>")
+//          .arg(ifc.running_color)
+//          .arg(ifc.running_label);
+
+      ifc_str += QString("<td style=\"font-size: 13px; width: 20%;\">&nbsp;%1</td>").arg(ifc.ip);
+      ifc_str += QString("<td style=\"font-size: 13px; width: 20%;\">&nbsp;%1</td>").arg(ifc.mask);
+      ifc_str += QString("<td style=\"font-size: 13px; width: 20%;\">&nbsp;%1</td>").arg(ifc.mac);
 
       ifc_str += "</tr>\n";
 
-      p_current_stand_info_hint += QString("%1: %2\n").arg(ifc).arg(ifc_ip);
+      p_current_stand_info_hint += QString("%1: %2\n").arg(ifc.name).arg(ifc.ip);
 
     }
 

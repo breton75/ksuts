@@ -148,7 +148,7 @@ void dev::SvAbstractUdpThread::run()
 
   while(p_is_active) {
 
-    while(p_socket.waitForReadyRead(1)) {
+    while(p_socket.waitForReadyRead(100)) {
 
       while(p_socket.hasPendingDatagrams())
       {
