@@ -49,8 +49,6 @@ namespace oht {
 
   const QMap<QString, Ifces> ifcesMap = {{"RS485", Ifces::RS485}, {"UDP", Ifces::UDP}};
 
-//  class DataProcessor;
-
   quint16 parse_data(dev::BUFF* buff, dev::DATA* data, oht::Header* header);
   QByteArray confirmation(const oht::Header* header);
 
@@ -64,7 +62,6 @@ namespace oht {
 
 class /*OHTSHARED_EXPORT*/ SvOHT: public dev::SvAbstractKsutsDevice
 {
-
   Q_OBJECT
 
 public:
@@ -116,24 +113,17 @@ public:
 
   static QString defaultDeviceParams()
   {
-    QJsonObject j;
 
-    j.insert(P_START_REGISTER, QJsonValue(QString("0000")));
-    j.insert(P_RESET_TIMEOUT, QJsonValue(int(RESET_INTERVAL)));
-
-    QJsonDocument jd;
-    jd.setObject(j);
-
-    return QString(jd.toJson(QJsonDocument::Indented));
+    return QString("{\n"
+                   "  \"%1\": \"0x0000\",\n"
+                   "  \"%2\": %3\n"
+                   "}").arg(P_START_REGISTER).arg(P_RESET_TIMEOUT).arg(RESET_INTERVAL);
   }
 
 private:
   bool create_new_thread();
 
-    
 };
-
-#define RESET_INTERVAL 10
 
 
 class oht::SvUDPThread: public dev::SvAbstractUdpThread
@@ -145,15 +135,10 @@ public:
 
 private:
 
-//  oht::DataProcessor _processor;
-
   oht::Header _header;
   size_t _hSize = sizeof(oht::Header);
 
   quint8  _confirm[8];
-
-//  bool parse_data();
-//  void send_confirmation();
 
   void process_data();
 
@@ -178,36 +163,5 @@ private:
   void process_data();
 
 };
-
-//class oht::DataProcessor
-//{
-//  Q_OBJECT
-
-//public:
-//  DataProcessor(dev::SvAbstractKsutsDeviceThread* thread):
-//    _thread(thread)
-//  {  }
-
-//  void process_data();
-
-//private:
-//  dev::SvAbstractKsutsDeviceThread* _thread;
-
-//  oht::Header _header;
-//  size_t _hSize = sizeof(oht::Header);
-
-//  bool parse();
-//  void send_confirmation();
-
-//};
-
-//class SvDataProcessor
-//{
-//  Q_OBJECT
-
-//  public:
-//    SvDataProcessor(dev::Sv)
-
-//}
 
 #endif // OHT_H

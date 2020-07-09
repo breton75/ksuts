@@ -560,6 +560,34 @@ const QMap<quint16, QString> SIGNALS_Z_BY_ROOMS = {{139,  "FI20_POGREB_MIN_TRAL_
 #define POMP_SS1_150_STATUS "POMP_SS1_150_STATUS"
 #define POMP_SS1_218_STATUS "POMP_SS1_218_STATUS"
 
+const QMap<quint16, QString> reg2STATUS = {{0x0400, POMP_SS1_119_STATUS},
+                                           {0x04A0, POMP_SS1_122_STATUS},
+                                           {0x0540, POMP_SS1_218_STATUS},
+                                           {0x05E0, POMP_SS1_8_STATUS},
+                                           {0x0680, POMP_SS1_38_STATUS},
+                                           {0x0720, POMP_SS1_67_STATUS},
+                                           {0x07C0, POMP_SS1_93_STATUS},
+                                           {0x0860, POMP_SS1_123_STATUS},
+                                           {0x0900, POMP_SS1_150_STATUS}};
+
+const QMap<quint16, QString> reg2FI  = {{0x0400, FI20_SS1_119},
+                                        {0x04A0, FI20_SS1_122},
+                                        {0x0540, FI82_12SS1_218},
+                                        {0x05E0, FI82_12SS1_8},
+                                        {0x0680, FI82_12SS1_38},
+                                        {0x0720, FI82_12SS1_67},
+                                        {0x07C0, FI82_12SS1_93},
+                                        {0x0860, FI82_12SS1_123},
+                                        {0x0900, FI82_12SS1_150}};
+
+
+
+
+
+
+
+
+
 #endif // OPA_DEFS_H
 
 

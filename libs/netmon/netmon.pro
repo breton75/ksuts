@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-QT       += widgets
+QT       += widgets network
 
 QT       -= gui
 CONFIG += c++11
@@ -14,12 +14,10 @@ TEMPLATE = lib
 CONFIG += staticlib
 
 SOURCES += netmon.cpp \
-    ../../global/t_network_interface.cpp \
-    ../../global/t_network_state_label.cpp
+    state_label.cpp
 
 HEADERS += netmon.h \
-    ../../global/t_network_state_label.h \
-    ../../global/t_network_interface.h
+    state_label.h
 unix {
     target.path = /usr/lib
     INSTALLS += target

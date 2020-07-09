@@ -180,6 +180,9 @@ bool parse_params(const QStringList& args, AppConfig& cfg, const QString& file_n
     cfg.log_options.log_rotation_size = sv::log::stringToSize(val, &ok);
     if(!ok) exception.raise(-1, QString("Неверный формат размера файла: %1").arg(val));
 
+    // формат имени отправителя по dbus
+    cfg.log_options.log_sender_name = QString(DBUS_SENDER_NAME);
+
     return true;
 
   }

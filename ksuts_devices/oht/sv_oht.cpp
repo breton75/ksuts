@@ -1,11 +1,5 @@
 ﻿#include "sv_oht.h"
-
-#include "QJsonObject"
-#include "QJsonDocument"
-
 #include "oht_defs.h"
-
-/** *****************   ************************* **/
 
 /** *****************   ************************* **/
 
@@ -183,7 +177,9 @@ void oht::SvSerialThread::process_data()
         // считаем, что линия передачи в порядке и задаем новую контрольную точку времени
         p_device->setNewLostEpoch();
 
-        switch (_header.OFFSET)
+        quint16 current_register = (static_cast<quint16>(_header.ADDRESS) << 8) + _header.OFFSET;
+
+        switch (current_register - p_device->params()->start_register)
         {
           case 0x00:
           case 0x03:
@@ -247,57 +243,6 @@ void oht::SvSerialThread::process_data()
   }
 }
 
-//void oht::SvSerialThread::send_confirmation()
-//{
-//    quint8  _confirm[8];
-//    memcpy(&_confirm[0], &_header, 6);
-
-//    // вычисляем crc ответа
-//    quint16 crc = CRC::MODBUS_CRC16((uchar*)&_header, 6);
-//    _confirm[6] = crc & 0xFF;
-//    _confirm[7] = crc >> 8;
-
-//    p_port.write((const char*)&_confirm[0], 8);
-
-//    if(p_logger && p_device->config()->debug_mode)
-//      *p_logger << sv::log::mtDebug
-//                << sv::log::llDebug
-//                << sv::log::TimeZZZ << sv::log::out
-//                << QString(QByteArray((const char*)&_confirm[0], 8).toHex())
-//                << sv::log::endl;
-
-//}
-
-//bool oht::SvSerialThread::parse_data()
-//{
-//  // тип данных
-//  memcpy(&p_data.data_type, &p_buff.buf[0] + _hSize, 1);
-
-//  // длина данных
-//  memcpy(&p_data.data_length, &p_buff.buf[0] + _hSize + 1, 1);
-
-//  // данные
-//  memcpy(&p_data.data[0], &p_buff.buf[0] + _hSize + 2, p_data.data_length);
-
-//  // crc
-//  memcpy(&p_data.crc, &p_buff.buf[0] + _hSize + _header.byte_count, 2);
-////  memcpy(&_crc1, &p_buf[0] + _hSize + _header.byte_count, 1);
-////  memcpy(&_crc2, &p_buf[0] + _hSize + _header.byte_count + 1, 1);
-
-//  // проверяем crc
-//  quint16 crc = CRC::MODBUS_CRC16(&p_buff.buf[0], _hSize + _header.byte_count);
-
-//  // если crc не совпадает, то выходим без обработки и ответа
-//  if(p_logger && (crc != p_data.crc))
-//      *p_logger << sv::log::mtError
-//                << sv::log::llError
-//                << sv::log::TimeZZZ
-//                << QString("Ошибка crc! Ожидалось %1, получено %2").arg(crc, 0, 16).arg(p_data.crc, 0, 16)
-//                << sv::log::endl;
-
-//  return crc == p_data.crc;
-
-//}
 
 
 /** oht general functions **/

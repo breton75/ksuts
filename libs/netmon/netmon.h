@@ -14,12 +14,34 @@
 #include <QtWidgets/QGroupBox>
 #include <QPair>
 
-#include "../../global/t_network_interface.h"
-#include "../../global/t_network_state_label.h"
+#include <QtNetwork/QNetworkInterface>
 
-struct IfcStateInfo {
-  QList<QString> states;
-  QList<QColor> colors;
+#include "state_label.h"
+
+#define STATE_UNKNOWN "--"
+#define STATE_NO "Нет"
+#define STATE_YES "Да"
+
+#define STATE_UP          "Включен"
+#define STATE_DOWN        "Отключен"
+#define STATE_RUNNING     "Активен"
+#define STATE_NOT_RUNNING "Не активен"
+
+#define COLOR_RED   "rgb(255,50,50)"
+#define COLOR_BLUE  "rgb(0,0,204)"
+#define COLOR_GREEN "rgb(0,204,0)"
+
+struct IfcDescription {
+  QString name;
+  QString state;
+  QString state_color;
+  QString up_label;
+  QString up_color;
+  QString running_label;
+  QString running_color;
+  QString ip;
+  QString mask;
+  QString mac;
 };
 
 
@@ -39,22 +61,23 @@ public:
     explicit Netmon(QWidget *parent = 0);
     ~Netmon();
 
-    static QStringList getInterfaceList();
-
-    static IfcStateInfo getInterfaceState(const QString& ifc_name);
-    static QString getInterfaceAddr(const QString& ifc_name);
-
-
+    static QList<IfcDescription> getAllIfcDescriptions();
+    static IfcDescription getIfcDescription(QNetworkInterface *ifc);
 
 private:
-    QList<TNetworkInterface*> _ifces;
+    QList<TNetworkStateLabel*> _ifclabels;
+
+    QTimer _timer;
 
     void setupUi();
     void makeNetworkStateLabels();
 
+    void update_label(TNetworkStateLabel* lbl);
+
 
 private slots:
-//    void update_state();
+  void update_all_labels();
+
 };
 
 #endif // NETMON_H

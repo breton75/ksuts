@@ -19,7 +19,13 @@ SvStorage::~SvStorage()
   if(_thr)
     delete _thr;
 
-  deleteLater();  
+  /** при завершении работы сервера, сбрасываем все сигналы **/
+  foreach (SvSignal* signal, _signals)
+    signal->setLostValue();
+
+
+  deleteLater();
+
 }
 
 bool SvStorage::init()

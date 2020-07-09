@@ -3,191 +3,58 @@
 
 /** *****************   ************************* **/
 
-
-
-/** *****************   ************************* **/
-
 SvOPA::SvOPA(sv::SvAbstractLogger *logger):
   dev::SvAbstractKsutsDevice(dev::OPA, logger)
-//  p_logger(logger)
 {
 
 }
 
 bool SvOPA::create_new_thread()
 {
-  p_thread = new SvOPAThread(this, p_logger);
+  try {
 
-  return true;
+    switch (opa::ifcesMap.value(info()->ifc_name)) {
+
+      case opa::Ifces::RS485:
+
+        p_thread = new opa::SvSerialThread(this, p_logger);
+        break;
+
+      case opa::Ifces::UDP:
+
+        p_thread = new opa::SvUDPThread(this, p_logger);
+        break;
+
+    default:
+
+      p_exception->raise(QString("Неизвестный тип интерфейса: %1").arg(info()->ifc_name));
+      break;
+    }
+
+    return true;
+
+  }
+  catch(SvException& e) {
+
+    p_last_error = e.error;
+    return false;
+
+  }
 }
 
-//SvOPA::~SvOPA()
-//{
-//  if(_serial.isOpen())
-//    _serial.close();
-  
-//  deleteLater();
-//}
 
-//bool SvOPA::setParams(const QString& params)
-//{
-//  try {
-    
-//    dev::SerialParamsParser p(params);
-//    if(!p.parse())
-//      _exception->raise(p.lastError());
-    
-//    p_params = p.params();
-    
-//    _serial.setPortName(   p_params.serialParams.portname);
-//    _serial.setBaudRate(   p_params.serialParams.baudrate);
-//    _serial.setDataBits(   p_params.serialParams.databits);
-//    _serial.setFlowControl(p_params.serialParams.flowcontrol);
-//    _serial.setParity(     p_params.serialParams.parity);
-//    _serial.setStopBits(   p_params.serialParams.stopbits);
-
-//    return true;
-      
-//  }
-  
-//  catch(SvException& e) {
-
-//    setLastError(e.error);
-//    return false;
-//  }
-//}
-
-//bool SvOPA::open()
-//{
-
-//  if(!_serial.open(QSerialPort::ReadWrite)) {
-    
-//    setLastError(_serial.errorString());
-//    return false;
-//  }
-  
-//  p_isOpened = _serial.isOpen();
-  
-//  connect(&_serial, &QSerialPort::readyRead, this, &SvOPA::read);
-
-//  _t.setInterval(10);
-//  connect(&_serial, SIGNAL(readyRead()), &_t, SLOT(start()));
-//  connect(&_t, &QTimer::timeout, this, &SvOPA::packetTimeout);
-
-//  return p_isOpened;
-
-//}
-
-//void SvOPA::close()
-//{
-//  _serial.close();
-//  disconnect(&_serial, &QSerialPort::readyRead, this, &SvOPA::read);
-//  p_isOpened = false;
-//}
-
-//void SvOPA::write(const QByteArray* data)
-//{
-//  _serial.write((const char*)data->data(), data->size());
-  
-////  return _serial.waitForBytesWritten(500);
-//}
-
-
-//void SvOPA::read()
-//{
-  
-//  try {
-
-//    if(_buf_offset > 512)
-//        packetTimeout();
-
-//    quint64 cur_offset = _buf_offset;
-
-//    _buf_offset += _serial.read((char*)(&_buf[0] + _buf_offset), 512 - _buf_offset);
-
-//    // для сбора реальных логов
-//    if(p_logger && p_config.debug_mode)
-//      *p_logger << sv::log::llDebug2
-//                << sv::log::TimeZZZ << sv::log::in
-//                << QString(QByteArray((const char*)&_buf[cur_offset], _buf_offset - cur_offset).toHex()) << sv::log::endl;
-
-//    if(_buf_offset >= _hSize) {
-
-//      memcpy(&_header, &_buf[0], _hSize);
-
-//      if((_header.client_addr != 1) || (_header.func_code != 0x10)) {
-//        packetTimeout();
-//        return;
-//      }
-
-//      if(_buf_offset >= _hSize + _header.byte_count + 2) {
-
-//        quint16 REGISTER = (_header.ADDRESS <<= 8) + _header.OFFSET;
-
-//        if(p_logger && p_config.debug_mode)
-//          *p_logger << sv::log::llDebug
-//                    << sv::log::TimeZZZ << sv::log::in
-//                    << QString(QByteArray((const char*)&_buf[0], _buf_offset).toHex())
-//                    << sv::log::endl;
-
-//          // если хоть какие то пакеты сыпятся (для данного получателя), то
-//          // считаем, что линия передачи в порядке и задаем новую контрольную точку времени
-//          setNewLostEpoch();
-
-//          // ставим состояние данной линии
-//          setLineStatus();
-
-//          switch (REGISTER - p_params.address) {
-
-//            case 0x00:
-//            case 0x03:
-//            case 0x05:
-
-//                  sendConfirmation();
-//                  break;
-
-
-//              case 0x06:
-//              case 0x10:
-//              case 0x50:
-//              case 0x90:
-              
-//                  analizeData();
-//                  break;
-
-//              default:
-//                  break;
-//          }
-
-//        packetTimeout();
-
-//      }
-//    }
-//  }
-  
-//  catch(SvException& e) {
-    
-//    *p_logger << sv::log::llError << e.error << sv::log::endl;
-//    return;
-    
-//  }
-//}
-
-
-/**         SvOHTThread         **/
-SvOPAThread::SvOPAThread(dev::SvAbstractDevice *device, sv::SvAbstractLogger *logger):
-  dev::SvAbstractSerialDeviceThread(device, logger)
-//  p_device(device),
-//  is_active(false)
+/**         opa::SvUDPThread         **/
+opa::SvUDPThread::SvUDPThread(dev::SvAbstractDevice *device, sv::SvAbstractLogger *logger):
+  dev::SvAbstractUdpThread(device, logger)
 {
 
 }
 
-void SvOPAThread::process_data()
+void opa::SvUDPThread::process_data()
 {
-  if(p_buf_offset >= _hSize) {
+  if(p_buff.offset >= _hSize) {
 
-    memcpy(&_header, &p_buf[0], _hSize);
+    memcpy(&_header, &p_buff.buf[0], _hSize);
 
     if((_header.client_addr != 1) || (_header.func_code != 0x10)) {
 
@@ -195,15 +62,14 @@ void SvOPAThread::process_data()
       return;
     }
 
-    if(p_buf_offset >= _hSize + _header.byte_count + 2) {
+    if(p_buff.offset >= _hSize + _header.byte_count + 2) {
 
-        quint16 REGISTER = (_header.ADDRESS <<= 8) + _header.OFFSET;
-
-        if(p_logger && p_device->config()->debug_mode)
-          *p_logger << sv::log::mtDebug
+        if(p_logger && p_device->info()->debug_mode)
+          *p_logger << sv::log::sender(p_logger->options().log_sender_name.arg(p_device->info()->index))
+                    << sv::log::mtDebug
                     << sv::log::llDebug
                     << sv::log::TimeZZZ << sv::log::in
-                    << QString(QByteArray((const char*)&p_buf[0], p_buf_offset).toHex())
+                    << QString(QByteArray((const char*)&p_buff.buf[0], p_buff.offset).toHex())
                     << sv::log::endl;
 
         // если хоть какие то пакеты сыпятся (для данного получателя), то
@@ -211,46 +77,175 @@ void SvOPAThread::process_data()
         p_device->setNewLostEpoch();
 
         // ставим состояние данной линии
-        setLineStatus();
+        opa::func_set_line_status(p_device, &p_data);
 
-        switch (REGISTER - p_device->params()->address)
+        quint16 current_register = (static_cast<quint16>(_header.ADDRESS << 8)) + _header.OFFSET;
+        *p_logger << sv::log::sender(p_logger->options().log_sender_name.arg(p_device->info()->index))
+                  << sv::log::mtDebug
+                  << sv::log::llDebug
+                  << current_register
+                  << p_device->params()->start_register
+                  << sv::log::endl;
+        switch (current_register - p_device->params()->start_register)
         {
 
             case 0x00:
             case 0x03:
             case 0x05:
 
-                // здесь просто отправляем ответ-квитирование
-                send_confirmation();
+              // здесь просто отправляем ответ-квитирование
+              write(confirmation(&_header));
 
-                if(_data_type == 0x77)
-                    func_0x77();
+              if(p_data.data_type == 0x77)
+                func_0x77(p_device);
 
-                break;
+              break;
 
             case 0x06:
             case 0x10:
             case 0x50:
             case 0x90:
             {
+              // парсим и проверяем crc
+              quint16 calc_crc = opa::parse_data(&p_buff, &p_data, &_header);
 
-              if(parse_data())
+              if(calc_crc != p_data.crc)
               {
-                msleep(10); // небольшая задержка перед отправкой подтверждения
+                // если crc не совпадает, то выходим без обработки и ответа
+                if(p_logger)
+                    *p_logger << sv::log::sender(p_logger->options().log_sender_name.arg(p_device->info()->index))
+                              << sv::log::mtError
+                              << sv::log::llError
+                              << sv::log::TimeZZZ
+                              << QString("Ошибка crc! Ожидалось %1, получено %2").arg(calc_crc, 0, 16).arg(p_data.crc, 0, 16)
+                              << sv::log::endl;
 
-                // формируем и отправляем ответ-квитирование
-                send_confirmation();
-
-                // раскидываем данные по сигналам, в зависимости от типа данных
-                switch (_data_type) {
-
-                  case 0x19: func_0x19(); break;
-                  case 0x02: func_0x02(); break;
-                  case 0x03: func_0x03(); break;
-                  case 0x04: func_0x04(); break;
-
-                }
               }
+              else
+              {
+                  // небольшая задержка перед отправкой подтверждения
+                  // из-за того, что "шкаф не успевает обработать данные" (c) Гаврилов
+                  msleep(10);
+
+                  // формируем и отправляем ответ-квитирование
+                  write(confirmation(&_header));
+
+                  // раскидываем данные по сигналам, в зависимости от типа данных
+                  switch (p_data.data_type) {
+
+                    case 0x19: opa::func_0x19(p_device, &p_data); break;
+                    case 0x02: opa::func_0x02(p_device, &p_data); break;
+                    case 0x03: opa::func_0x03(p_device, &p_data); break;
+                    case 0x04: opa::func_0x04(p_device, &p_data); break;
+
+                  }
+                }
+
+              break;
+            }
+
+            default:
+                break;
+        }
+
+        reset_buffer();
+
+    }
+  }
+}
+
+/**         opa::SvSerialThread         **/
+opa::SvSerialThread::SvSerialThread(dev::SvAbstractDevice *device, sv::SvAbstractLogger *logger):
+  dev::SvAbstractSerialThread(device, logger)
+{
+
+}
+
+void opa::SvSerialThread::process_data()
+{
+  if(p_buff.offset >= _hSize) {
+
+    memcpy(&_header, &p_buff.buf[0], _hSize);
+
+    if((_header.client_addr != 1) || (_header.func_code != 0x10)) {
+
+      reset_buffer();
+      return;
+    }
+
+    if(p_buff.offset >= _hSize + _header.byte_count + 2) {
+
+        if(p_logger && p_device->info()->debug_mode)
+          *p_logger << sv::log::sender(p_logger->options().log_sender_name.arg(p_device->info()->index))
+                    << sv::log::mtDebug
+                    << sv::log::llDebug
+                    << sv::log::TimeZZZ << sv::log::in
+                    << QString(QByteArray((const char*)&p_buff.buf[0], p_buff.offset).toHex())
+                    << sv::log::endl;
+
+        // если хоть какие то пакеты сыпятся (для данного получателя), то
+        // считаем, что линия передачи в порядке и задаем новую контрольную точку времени
+        p_device->setNewLostEpoch();
+
+        // ставим состояние данной линии
+        opa::func_set_line_status(p_device, &p_data);
+
+        quint16 current_register = (static_cast<quint16>(_header.ADDRESS) << 8) + _header.OFFSET;
+
+        switch (current_register - p_device->params()->start_register)
+        {
+
+            case 0x00:
+            case 0x03:
+            case 0x05:
+
+              // здесь просто отправляем ответ-квитирование
+              write(confirmation(&_header));
+
+              if(p_data.data_type == 0x77)
+                func_0x77(p_device);
+
+              break;
+
+            case 0x06:
+            case 0x10:
+            case 0x50:
+            case 0x90:
+            {
+              // парсим и проверяем crc
+              quint16 calc_crc = opa::parse_data(&p_buff, &p_data, &_header);
+
+              if(calc_crc != p_data.crc)
+              {
+                // если crc не совпадает, то выходим без обработки и ответа
+                if(p_logger)
+                    *p_logger << sv::log::sender(p_logger->options().log_sender_name.arg(p_device->info()->index))
+                              << sv::log::mtError
+                              << sv::log::llError
+                              << sv::log::TimeZZZ
+                              << QString("Ошибка crc! Ожидалось %1, получено %2").arg(calc_crc, 0, 16).arg(p_data.crc, 0, 16)
+                              << sv::log::endl;
+
+              }
+              else
+              {
+                  // небольшая задержка перед отправкой подтверждения
+                  // из-за того, что "шкаф не успевает обработать данные" (c) Гаврилов
+                  msleep(10);
+
+                  // формируем и отправляем ответ-квитирование
+                  write(confirmation(&_header));
+
+                  // раскидываем данные по сигналам, в зависимости от типа данных
+                  switch (p_data.data_type) {
+
+                    case 0x19: opa::func_0x19(p_device, &p_data); break;
+                    case 0x02: opa::func_0x02(p_device, &p_data); break;
+                    case 0x03: opa::func_0x03(p_device, &p_data); break;
+                    case 0x04: opa::func_0x04(p_device, &p_data); break;
+
+                  }
+                }
 
               break;
             }
@@ -266,169 +261,78 @@ void SvOPAThread::process_data()
 }
 
 
-void SvOPAThread::setLineStatus()
+/** oht general functions **/
+quint16 opa::parse_data(dev::BUFF* buff, dev::DATA* data, opa::Header* header)
 {
-    switch (p_device->params()->address) {
+  size_t hSize = sizeof(opa::Header);
 
-      case 0x0400:
-        p_device->setSignalValue(POMP_SS1_119_STATUS, 1);
-        break;
-
-      case 0x04A0:
-        p_device->setSignalValue(POMP_SS1_122_STATUS, 1);
-        break;
-
-      case 0x0540:
-        p_device->setSignalValue(POMP_SS1_218_STATUS, 1);
-        break;
-
-      case 0x05E0:
-        p_device->setSignalValue(POMP_SS1_8_STATUS, 1);
-        break;
-
-      case 0x0680:
-        p_device->setSignalValue(POMP_SS1_38_STATUS, 1);
-        break;
-
-      case 0x0720:
-        p_device->setSignalValue(POMP_SS1_67_STATUS, 1);
-        break;
-
-      case 0x07C0:
-        p_device->setSignalValue(POMP_SS1_93_STATUS, 1);
-        break;
-
-      case 0x0860:
-        p_device->setSignalValue(POMP_SS1_123_STATUS, 1);
-        break;
-
-      case 0x0900:
-        p_device->setSignalValue(POMP_SS1_150_STATUS, 1);
-        break;
-
-      default:
-        break;
-    }
-}
-
-void SvOPAThread::send_confirmation()
-{
-    memcpy(&_confirm[0], &_header, 6);
-    quint16 crc = CRC::MODBUS_CRC16((uchar*)&_header, 6);
-
-    _confirm[6] = crc & 0xFF;
-    _confirm[7] = crc >> 8;
-
-    p_port.write((const char*)&_confirm[0], 8);
-
-    if(p_logger && p_device->config()->debug_mode)
-      *p_logger << sv::log::llDebug
-                << sv::log::TimeZZZ << sv::log::out
-                << QString(QByteArray((const char*)&_confirm[0], 8).toHex())
-                << sv::log::endl;
-
-}
-
-bool SvOPAThread::parse_data()
-{
   // тип данных
-  memcpy(&_data_type, &p_buf[0] + _hSize, 1);
+  memcpy(&data->data_type, &buff->buf[0] + hSize, 1);
 
   // длина данных
-  memcpy(&_data_length, &p_buf[0] + _hSize + 1, 1);
+  memcpy(&data->data_length, &buff->buf[0] + hSize + 1, 1);
 
   // данные
-  memcpy(&_data[0], &p_buf[0] + _hSize + 2, _data_length);
+  memcpy(&data->data[0], &buff->buf[0] + hSize + 2, data->data_length);
 
-  // crc
-  memcpy(&_crc, &p_buf[0] + _hSize + _header.byte_count, 2);
+  // crc полученная
+  memcpy(&data->crc, &buff->buf[0] + hSize + header->byte_count, 2);
 
-  /// вычисляем crc
-  quint16 crc = CRC::MODBUS_CRC16(&p_buf[0], _hSize + _header.byte_count);
+  // вычисляем crc из данных
+  quint16 crc = CRC::MODBUS_CRC16(&buff->buf[0], hSize + header->byte_count);
 
-  /// если crc не совпадает, то выходим без обработки и ответа
-  if(p_logger && (crc != _crc))
-    *p_logger << sv::log::mtError
-              << sv::log::llError
-              << sv::log::TimeZZZ
-              << QString("wrong crc! ожидалось %1, получено %2").arg(crc, 0, 16).arg(_crc, 0, 16)
-              << sv::log::endl;
-
-  return crc == _crc;
+  return crc;
 
 }
 
-void SvOPAThread::func_0x77()
+QByteArray opa::confirmation(const opa::Header* header)
 {
-  foreach (SvSignal* signal, p_device->Signals()->values()) {
+  QByteArray confirm;
+  confirm.append((const char*)header, 6);
 
+  // вычисляем crc ответа
+  quint16 crc = CRC::MODBUS_CRC16((uchar*)header, 6);
+  confirm.append(quint8(crc & 0xFF));
+  confirm.append(quint8(crc >> 8));
+
+  return confirm;
+
+}
+
+void opa::func_0x77(dev::SvAbstractDevice* device)
+{
+  foreach (SvSignal* signal, device->Signals()->values())
     signal->setValue(0.0);
-
-  }
 }
 
-void SvOPAThread::func_0x19()
+/** в результате несогласованности, получилось 2 набора сигналов состояния линии **/
+void opa::func_set_line_status(dev::SvAbstractDevice* device, dev::DATA* data)
 {
-  switch (p_device->params()->address) {
-
-    case 0x0400:
-      p_device->setSignalValue(FI20_SS1_119, _data[0]);
-      break;
-      
-    case 0x04A0:
-      p_device->setSignalValue(FI20_SS1_122, _data[0]);
-      break;
-      
-    case 0x0540:
-      p_device->setSignalValue(FI82_12SS1_218, _data[0]);
-      break;
-      
-    case 0x05E0:
-      p_device->setSignalValue(FI82_12SS1_8, _data[0]);
-      break;
-      
-    case 0x0680:
-      p_device->setSignalValue(FI82_12SS1_38, _data[0]);
-      break;
-      
-    case 0x0720:
-      p_device->setSignalValue(FI82_12SS1_67, _data[0]);
-      break;
-      
-    case 0x07C0:
-      p_device->setSignalValue(FI82_12SS1_93, _data[0]);
-      break;
-      
-    case 0x0860:
-      p_device->setSignalValue(FI82_12SS1_123, _data[0]);
-      break;
-      
-    case 0x0900:
-      p_device->setSignalValue(FI82_12SS1_150, _data[0]);
-      break;
-      
-    default:
-      break;
-  }
-//    setSignalValue(BI40_LIUB_NEISP,     CALC_BI40_LIUB_NEISP(     _data[0]) );
+  if(reg2STATUS.contains(device->params()->start_register))
+    device->setSignalValue(reg2STATUS.value(device->params()->start_register), 1);
 }
 
-void SvOPAThread::func_0x02()
+void opa::func_0x19(dev::SvAbstractDevice* device, dev::DATA* data)
+{
+  if(reg2FI.contains(device->params()->start_register))
+    device->setSignalValue(reg2FI.value(device->params()->start_register), data->data[0]);
+}
+
+void opa::func_0x02(dev::SvAbstractDevice* device, dev::DATA* data)
 {
   quint8 data_begin = 0;
   quint16 detector_num;
   quint8  factor;
   QString signal_name;
 
-  while(data_begin < _data_length) {
+  while(data_begin < data->data_length) {
 
-    memcpy(&detector_num, &_data[data_begin], sizeof(quint16));
-    memcpy(&factor, &_data[data_begin + sizeof(quint16)], sizeof(quint8));
+    memcpy(&detector_num, &data->data[data_begin], sizeof(quint16));
+    memcpy(&factor, &data->data[data_begin + sizeof(quint16)], sizeof(quint8));
 
     if(factor & 0x7F) {
       
       if(SIGNALS_TABLE.contains(factor)) {
-
   
         signals_by_detector* sbd = SIGNALS_TABLE.value(factor);
   
@@ -436,7 +340,7 @@ void SvOPAThread::func_0x02()
 
           signal_name = sbd->value(detector_num);
 //          qDebug() << QString("detector_num: %1   factor: %2  signal_name: %3").arg(detector_num).arg(factor).arg(signal_name);
-          p_device->setSignalValue(signal_name, 1.0);
+          device->setSignalValue(signal_name, 1.0);
   
         }
       }
@@ -463,13 +367,13 @@ void SvOPAThread::func_0x02()
 
               signal_name = sbd->value(detector_num);
       //        qDebug() << QString("detector_num: %1   factor: %2  signal_name: %3").arg(detector_num).arg(factor).arg(signal_name);
-              p_device->setSignalValue(signal_name, 1.0);
+              device->setSignalValue(signal_name, 1.0);
 
             }
           }
       }
 
-      /* теперрь все то же самое делаем для дублирующих сигналов Z */
+      /* теперь все то же самое делаем для дублирующих сигналов Z */
       if(SIGNALS_Z_TABLE.contains(factor)) {
 
         signals_by_detector* sbd = SIGNALS_Z_TABLE.value(factor);
@@ -478,7 +382,7 @@ void SvOPAThread::func_0x02()
 
           signal_name = sbd->value(detector_num);
 //          qDebug() << QString("detector_num: %1   factor: %2  signal_name: %3").arg(detector_num).arg(factor).arg(signal_name);
-          p_device->setSignalValue(signal_name, 1.0);
+          device->setSignalValue(signal_name, 1.0);
 
         }
 
@@ -495,7 +399,7 @@ void SvOPAThread::func_0x02()
 
               signal_name = sbd->value(detector_num);
       //        qDebug() << QString("detector_num: %1   factor: %2  signal_name: %3").arg(detector_num).arg(factor).arg(signal_name);
-              p_device->setSignalValue(signal_name, 1.0);
+              device->setSignalValue(signal_name, 1.0);
 
             }
           }
@@ -513,7 +417,7 @@ void SvOPAThread::func_0x02()
           if(dn == detector_num) {
             
             signal_name = sbd->value(dn);
-            p_device->setSignalValue(signal_name, 0.0);
+            device->setSignalValue(signal_name, 0.0);
             
           }
         }
@@ -526,7 +430,7 @@ void SvOPAThread::func_0x02()
           if(dn == detector_num) {
 
             signal_name = sbd->value(dn);
-            p_device->setSignalValue(signal_name, 0.0);
+            device->setSignalValue(signal_name, 0.0);
 
           }
         }
@@ -538,22 +442,22 @@ void SvOPAThread::func_0x02()
   }
 }
 
-void SvOPAThread::func_0x03()
+void opa::func_0x03(dev::SvAbstractDevice* device, dev::DATA* data)
 {
   quint8 data_begin = 0;
   quint16 room_num;
   quint8  level;
   QString signal_name;
 
-  while(data_begin < _data_length) {
+  while(data_begin < data->data_length) {
 
-    memcpy(&room_num, &_data[data_begin], sizeof(quint16));
-    memcpy(&level, &_data[data_begin + sizeof(quint16)], sizeof(quint8));
+    memcpy(&room_num, &data->data[data_begin], sizeof(quint16));
+    memcpy(&level, &data->data[data_begin + sizeof(quint16)], sizeof(quint8));
 
     if(SIGNALS_BY_ROOMS.contains(room_num)) {
 
       signal_name = SIGNALS_BY_ROOMS.value(room_num);
-      p_device->setSignalValue(signal_name, static_cast<qreal>(level));
+      device->setSignalValue(signal_name, static_cast<qreal>(level));
 
 //      if(config()->debug)
 //        qDebug() << QString("sig: %1  room: %2  lvl: %3").arg(signal_name).arg(room_num).arg(level);
@@ -564,7 +468,7 @@ void SvOPAThread::func_0x03()
     if(SIGNALS_Z_BY_ROOMS.contains(room_num)) {
 
       signal_name = SIGNALS_Z_BY_ROOMS.value(room_num);
-      p_device->setSignalValue(signal_name, static_cast<qreal>(level));
+      device->setSignalValue(signal_name, static_cast<qreal>(level));
 
 //      if(config()->debug)
 //        qDebug() << QString("sig: %1  room: %2  lvl: %3").arg(signal_name).arg(room_num).arg(level);
@@ -576,9 +480,9 @@ void SvOPAThread::func_0x03()
   }
 }
 
-void SvOPAThread::func_0x04()
+void opa::func_0x04(dev::SvAbstractDevice* device, dev::DATA* data)
 {
-  p_device->setSignalValue(BI25_5SS1_VD1, qreal(CALC_BI25_5SS1_VD1( _data[0] ) ));
-  p_device->setSignalValue(BI25_5SS1_VD2, qreal(CALC_BI25_5SS1_VD2( _data[0] ) ));
-  p_device->setSignalValue(BI26_6SS1_VD1, qreal(CALC_BI26_6SS1_VD1( _data[0] ) ));
+  device->setSignalValue(BI25_5SS1_VD1, qreal(CALC_BI25_5SS1_VD1( data->data[0] ) ));
+  device->setSignalValue(BI25_5SS1_VD2, qreal(CALC_BI25_5SS1_VD2( data->data[0] ) ));
+  device->setSignalValue(BI26_6SS1_VD1, qreal(CALC_BI26_6SS1_VD1( data->data[0] ) ));
 }

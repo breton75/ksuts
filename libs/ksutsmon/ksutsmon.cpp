@@ -324,7 +324,7 @@ void Ksutsmon::stop(QList<int> pids)
 
   for(int pid: pids) {
 
-    p->start(QString("kill -SIGINT %1").arg(pid));
+    p->start(QString("sudo kill -SIGINT %1").arg(pid));
     p->waitForFinished();
   }
 

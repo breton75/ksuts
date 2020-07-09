@@ -30,9 +30,9 @@ MainWindow::MainWindow(const AppConfig &cfg, QWidget *parent) :
   ui->vlayControls->addWidget(_soeg_monitor);
   _soeg_monitor->setVisible(true);
 
-  _net_monitor = new Netmon(ui->centralWidget);
-  ui->vlayControls->addWidget(_net_monitor);
-  _net_monitor->setVisible(true);
+//  _net_monitor = new Netmon(ui->centralWidget);
+//  ui->vlayControls->addWidget(_net_monitor);
+//  _net_monitor->setVisible(true);
 
   _agg_monitor = new Aggmon(ui->centralWidget);
   ui->vlayControls->addWidget(_agg_monitor);
@@ -125,7 +125,8 @@ MainWindow::MainWindow(const AppConfig &cfg, QWidget *parent) :
 
   AppParams::loadLayout(this);
 
-  QDBusConnection::sessionBus().connect(QString(), QString(), DBUS_SERVER_NAME, "message", this, SLOT(messageSlot(const QString&,const QString&,const QString&)));
+  QDBusConnection::sessionBus().connect(QString(), QString(), DBUS_SERVER_NAME, "message", this, SLOT(currentSenderMessageSlot(const QString&,const QString&,const QString&)));
+
 
 //  connect(ui->treeView, &QTreeView::entered)
 
@@ -138,11 +139,15 @@ MainWindow::MainWindow(const AppConfig &cfg, QWidget *parent) :
 
 }
 
-void MainWindow::messageSlot(const QString& sender, const QString& message, const QString& type)
+void MainWindow::currentSenderMessageSlot(const QString& sender, const QString& message, const QString& type)
 {
-  if(sender == "main")
+  if(sender == _current_sender)
     mainlog << sv::log::stringToType(type) << QString("%1").arg(message) << sv::log::endl;
+}
 
+void MainWindow::allMessagesSlot(const QString& sender, const QString& message, const QString& type)
+{
+  mainlog << sv::log::stringToType(type) << QString("%1").arg(message) << sv::log::endl;
 }
 
 void MainWindow::closeEvent(QCloseEvent *event)
@@ -1283,29 +1288,33 @@ void MainWindow::make_stand_info()
 
 
     /** сетевые интерфейсы **/
-    QStringList ifclist = Netmon::getInterfaceList();
+    QList<IfcDescription> ifcs = Netmon::getAllIfcDescriptions(); //InterfaceList();
     QString ifc_str = "";
-    for(QString ifc: ifclist) {
+    for(IfcDescription ifc: ifcs) {
 
       ifc_str += "<tr>";
 
-      ifc_str += QString("<td style=\"font-size: 13px; width: 25%;\">&nbsp;%1</td>").arg(ifc);
-
-      IfcStateInfo ifc_info = Netmon::getInterfaceState(ifc);
-      ifc_str += QString("<td style=\"font-size: 13px; width: 25%; color: %1\">&nbsp;%2</td>")
-          .arg(ifc_info.colors.first().name(QColor::HexRgb))
-          .arg(ifc_info.states.first());
+      ifc_str += QString("<td style=\"font-size: 13px; width: 15%;\">&nbsp;%1</td>").arg(ifc.name);
 
       ifc_str += QString("<td style=\"font-size: 13px; width: 25%; color: %1\">&nbsp;%2</td>")
-          .arg(ifc_info.colors.last().name(QColor::HexRgb))
-          .arg(ifc_info.states.last());
+          .arg(ifc.state_color)
+          .arg(ifc.state);
 
-      QString ifc_ip = Netmon::getInterfaceAddr(ifc);
-      ifc_str += QString("<td style=\"font-size: 13px; width: 25%;\">&nbsp;%1</td>").arg(ifc_ip);
+//      ifc_str += QString("<td style=\"font-size: 13px; width: 15%; color: %1\">&nbsp;%2</td>")
+//          .arg(ifc.up_color)
+//          .arg(ifc.up_label);
+
+//      ifc_str += QString("<td style=\"font-size: 13px; width: 15%; color: %1\">&nbsp;%2</td>")
+//          .arg(ifc.running_color)
+//          .arg(ifc.running_label);
+
+      ifc_str += QString("<td style=\"font-size: 13px; width: 20%;\">&nbsp;%1</td>").arg(ifc.ip);
+      ifc_str += QString("<td style=\"font-size: 13px; width: 20%;\">&nbsp;%1</td>").arg(ifc.mask);
+      ifc_str += QString("<td style=\"font-size: 13px; width: 20%;\">&nbsp;%1</td>").arg(ifc.mac);
 
       ifc_str += "</tr>\n";
 
-      p_current_stand_info_hint += QString("%1: %2\n").arg(ifc).arg(ifc_ip);
+      p_current_stand_info_hint += QString("%1: %2\n").arg(ifc.name).arg(ifc.ip);
 
     }
 
@@ -1640,12 +1649,16 @@ void MainWindow::on_treeView_doubleClicked(const QModelIndex &index)
 
     if(_ksuts_monitor->getKsutsServerInfo().is_active)
     {
-//      QString n = QString(mainlog.options().log_sender_name).arg(item->index);
-      QProcess::startDetached("sudo /home/user/ksuts_server/device_logger -dbus_sender device_40");
-//      QProcess::execute(QString("sudo /home/user/ksuts_server/device_logger -dbus_sender 'device_40'")); //, QStringList() << QString("-dbus_sender '%1'").arg(n));
-          /*;
-      if(!p.startDetached(QString("/home/user/ksuts_server/device_logger -dbus_sender '%1'").arg(n)))
-        mainlog << sv::log::mtError << p.errorString() << sv::log::endl;*/
+      QString n = QString(_config.log_options.log_sender_name).arg(item->index);
+//      QString cmd = ;
+
+//      mainlog << "log_sender_name" << mainlog.options().log_sender_name << sv::log::endl;
+//      QProcess::startDetached("sudo /home/user/ksuts_server/device_logger -dbus_sender device_40");
+
+      QProcess p;
+
+      if(!p.startDetached(QString("./device_logger -dbus_sender %1").arg(n)))
+        mainlog << sv::log::mtError << p.errorString() << sv::log::endl;
 
     }
     else
@@ -1888,4 +1901,39 @@ void MainWindow::restoreDB()
                           .arg(e.error));
 
   }
+}
+
+void MainWindow::on_bnEditSender_clicked()
+{
+  ui->lineSender->setEnabled(!ui->lineSender->isEnabled());
+
+  if(!ui->lineSender->isEnabled())
+  {
+    ui->bnEditSender->setIcon(QIcon(":/my_icons/icons/004-lock.png"));
+    return;
+
+  }
+  else
+  {
+    ui->bnEditSender->setIcon(QIcon(":/my_icons/icons/005-lock-1.png"));
+
+  }
+
+
+  if(ui->lineSender->text().isEmpty() || ui->lineSender->text() == "*")
+  {
+    QDBusConnection::sessionBus().disconnect(QString(), QString(), DBUS_SERVER_NAME, "message", this, SLOT(currentSenderMessageSlot(const QString&,const QString&,const QString&)));
+    QDBusConnection::sessionBus().connect(QString(), QString(), DBUS_SERVER_NAME, "message", this, SLOT(allMessagesSlot(const QString&,const QString&,const QString&)));
+  }
+  else
+  {
+    QDBusConnection::sessionBus().disconnect(QString(), QString(), DBUS_SERVER_NAME, "message", this, SLOT(allMessagesSlot(const QString&,const QString&,const QString&)));
+    QDBusConnection::sessionBus().connect(QString(), QString(), DBUS_SERVER_NAME, "message", this, SLOT(currentSenderMessageSlot(const QString&,const QString&,const QString&)));
+  }
+
+}
+
+void MainWindow::on_bnClear_clicked()
+{
+    ui->textLog->clear();
 }

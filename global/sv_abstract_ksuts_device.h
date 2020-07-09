@@ -64,6 +64,9 @@ protected:
 private slots:
   void deleteThread();
 
+signals:
+  void stop_thread();
+
 };
 
 class dev::SvAbstractKsutsThread: public dev::SvAbstractDeviceThread
@@ -84,12 +87,6 @@ public:
   virtual void setIfcParams(const QString& params) throw(SvException&) = 0;
 
   virtual void open() throw(SvException&) = 0;
-
-  virtual void stop()
-  {
-    p_is_active = false;
-    while(this->isRunning()) qApp->processEvents();
-  }
 
   virtual quint64 write(const QByteArray& data) = 0;
 
@@ -112,6 +109,13 @@ public slots:
     p_buff.offset = 0;
   }
 
+  virtual void stop()
+  {
+    p_is_active = false;
+    while(this->isRunning()) qApp->processEvents();
+  }
+
+
 };
 
 
@@ -121,7 +125,7 @@ class dev::SvAbstractUdpThread: public dev::SvAbstractKsutsThread
 
 public:
   SvAbstractUdpThread(dev::SvAbstractDevice* device, sv::SvAbstractLogger *logger = nullptr);
-  virtual ~SvAbstractUdpThread();
+//  virtual ~SvAbstractUdpThread() override;
 
   virtual void setIfcParams(const QString& params) throw(SvException&);
 
@@ -132,7 +136,7 @@ public:
 
 protected:
   QUdpSocket p_socket;
-  sv::UdpParams p_params;
+  sv::UdpParams p_ifc_params;
 
   virtual void run() override;
 
@@ -156,7 +160,7 @@ public:
 
 protected:
   QSerialPort p_port;
-  sv::SerialParams p_params;
+  sv::SerialParams p_ifc_params;
 
   virtual void run() override;
 

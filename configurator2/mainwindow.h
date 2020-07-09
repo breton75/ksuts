@@ -47,18 +47,6 @@
 #include "sv_editconfig.h"
 #include "sv_device_log.h"
 
-//struct AppConfig {
-//    QString db_name;
-//    QString db_host;
-//    quint16 db_port;
-//    QString db_user;
-//    QString db_pass;
-//    clog::LogOptions log_options;
-//    QString autorun_cfg_file;
-//    QString templates_dir;
-//    QString postgres_bin_path;
-//};
-
 
 namespace Ui {
 class MainWindow;
@@ -159,6 +147,8 @@ private:
 
   QList<int> p_device_index_list = QList<int>();
 
+  QString _current_sender = "main";
+
   void createActions();
   void createTrayIcon();
 
@@ -214,7 +204,12 @@ private slots:
 
   void on_treeView_doubleClicked(const QModelIndex &index);
 
-  void messageSlot(const QString& sender, const QString& message, const QString &type);
+  void currentSenderMessageSlot(const QString& sender, const QString& message, const QString &type);
+  void allMessagesSlot(const QString& sender, const QString& message, const QString &type);
+
+  void on_bnEditSender_clicked();
+
+  void on_bnClear_clicked();
 
 public slots:
   void loadConfig();

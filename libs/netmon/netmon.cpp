@@ -8,11 +8,17 @@ Netmon::Netmon(QWidget *parent):
 
    makeNetworkStateLabels();
 
-}
+   _timer.setInterval(500);
+   connect(&_timer, SIGNAL(timeout()), this, SLOT(update_state_label()));
+   _timer.start();
 
+}
 
 Netmon::~Netmon()
 {
+  foreach (TNetworkStateLabel* lbl, _ifclabels)
+    delete lbl;
+
 //    delete hSpacerFrame;  // почему то программа некорректно завершается здесь
     delete lblHeaderIfc;
     delete lblHeaderUp;
@@ -129,63 +135,96 @@ void Netmon::setupUi()
 
 void Netmon::makeNetworkStateLabels()
 {
-  QStringList ifclist = getInterfaceList();
+//  QStringList ifclist = getInterfaceList();
 
-  for(QString ifc: ifclist) {
+  QList<QNetworkInterface> ifcs = QNetworkInterface::allInterfaces();
+
+  for(QNetworkInterface ifc: ifcs) {
 
     TNetworkStateLabel* ifclbl = new TNetworkStateLabel(ifc, gbFrame);
     vlayFrame->addLayout(ifclbl->hlay);
 
-    _ifces.append(new TNetworkInterface(ifc, ifclbl));
+    _ifclabels.append(ifclbl);
+
+    update_label(ifclbl);
 
   }
 }
 
-QStringList Netmon::getInterfaceList()
+void Netmon::update_label(TNetworkStateLabel* lbl)
 {
-  QStringList result = QStringList();
+    IfcDescription desc = getIfcDescription(lbl->interface());
 
-  /// получаем список сетевых интерфейсов
-  QProcess* p = new QProcess();
-  p->start("sudo ifconfig -a -s");
-  p->waitForFinished(2000);
-  QString s(p->readAll());
-  delete p;
+    // interface is up
+    lbl->lblUp->setText(desc.up_label);
+    lbl->lblUp->setStyleSheet(QString("color: %1;").arg(desc.up_color));
 
-  QStringList ifc_list = s.split("\n");
+    // interface is running
+    lbl->lblRunning->setText(desc.running_label);
+    lbl->lblRunning->setStyleSheet(QString("color: %1;").arg(desc.running_color));
 
-  if(ifc_list.count() > 1) {
+    // interface addresses
+    lbl->lblIp->setText(QString("%1 [%2]").arg(desc.ip).arg(desc.mac));
 
-    for(int i = 1; i < ifc_list.count(); i++) {
+}
 
-        QString ifc_line = ifc_list.at(i);
-        if(ifc_line.split(" ").count() > 1) {
+void Netmon::update_all_labels()
+{
+  for(TNetworkStateLabel* lbl: _ifclabels)
+    update_label(lbl);
 
-            QString ifc = ifc_line.split(" ").at(0);
+}
 
-            result << ifc;
+IfcDescription Netmon::getIfcDescription(QNetworkInterface* ifc)
+{
+  IfcDescription result;
 
-      }
-    }
+  QNetworkInterface::InterfaceFlags f = ifc->flags();
+
+  // interface name
+  result.name = ifc->humanReadableName();
+
+  // interface is up
+  result.up_label = f.testFlag(QNetworkInterface::IsUp) ? STATE_YES : STATE_NO;
+
+  switch (f & 0b11)  {
+    case 0:  result.up_color = COLOR_RED;   break;
+    case 1:  result.up_color = COLOR_BLUE;  break;
+    default: result.up_color = COLOR_GREEN; break;
   }
 
-  return result;
+  // interface is running
+  result.running_label = f.testFlag(QNetworkInterface::IsRunning) ? STATE_YES : STATE_NO;
+  result.running_color = f.testFlag(QNetworkInterface::IsRunning) ? COLOR_GREEN : COLOR_RED;
 
+  // interface state
+  result.state = QString("%1, %2")
+      .arg(f.testFlag(QNetworkInterface::IsUp) ? STATE_UP : STATE_DOWN)
+      .arg(f.testFlag(QNetworkInterface::IsRunning) ? STATE_RUNNING : STATE_NOT_RUNNING);
+
+  switch (f & 0b11)  {
+    case 0:  result.state_color = COLOR_RED;   break;
+    case 1:  result.state_color = COLOR_BLUE;  break;
+    default: result.state_color = COLOR_GREEN; break;
+  }
+
+  // interface addresses
+  QList<QNetworkAddressEntry> e = ifc->addressEntries();
+  result.ip = e.count() ? e.at(0).ip().toString() : "";
+  result.mask = e.count() ? e.at(0).netmask().toString() : "";
+
+  result.mac = ifc->hardwareAddress();
+
+  return result;
 }
 
-IfcStateInfo Netmon::getInterfaceState(const QString& ifc_name)
+QList<IfcDescription> Netmon::getAllIfcDescriptions()
 {
-  NetIfcStates state = get_ifc_state(ifc_name);
+  QList<IfcDescription> result;
 
-  IfcStateInfo result;
-
-  result.states = ni_states_text.value(state);
-  result.colors = ni_states_color.value(state);
+  for(QNetworkInterface ifc: QNetworkInterface::allInterfaces())
+    result.append(getIfcDescription(&ifc));
 
   return result;
-}
 
-QString Netmon::getInterfaceAddr(const QString& ifc_name)
-{
-  return get_ifc_addr(ifc_name);
 }
