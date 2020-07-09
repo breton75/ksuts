@@ -75,8 +75,8 @@ bool SvSKM::create_new_thread()
 //  try {
 
 //    p_thread = new SvSKMThread(this, p_logger);
-//    connect(p_thread, &dev::SvAbstractDeviceThread::finished, this, &SvSKM::deleteThread);
-//    connect(p_thread, &dev::SvAbstractDeviceThread::finished, p_thread, &dev::SvAbstractDeviceThread::deleteLater);
+//    connect(p_thread, &dev::SvAbstractKsutsDeviceThread::finished, this, &SvSKM::deleteThread);
+//    connect(p_thread, &dev::SvAbstractKsutsDeviceThread::finished, p_thread, &dev::SvAbstractKsutsDeviceThread::deleteLater);
 
 //    p_thread->open();
 //    p_thread->start();
@@ -112,7 +112,7 @@ bool SvSKM::create_new_thread()
 //}
 
 /**         skm::SvUDPThread         **/
-skm::SvUDPThread::SvUDPThread(dev::SvAbstractDevice *device, sv::SvAbstractLogger *logger):
+skm::SvUDPThread::SvUDPThread(dev::SvAbstractDevice* device, sv::SvAbstractLogger *logger):
   dev::SvAbstractUdpThread(device, logger)
 {
 
@@ -135,7 +135,7 @@ void skm::SvUDPThread::process_data()
     if((p_buff.buf[p_buff.offset - 1] == 0x55) && (p_buff.buf[p_buff.offset - 2] == 0x2F)) {
 
         if(p_logger && p_device->info()->debug_mode)
-          *p_logger << sv::log::sender(p_logger->options().log_sender_name.arg(p_device->info()->index))
+          *p_logger << static_cast<dev::SvAbstractKsutsDevice*>(p_device)->make_dbus_sender()
                     << sv::log::mtDebug
                     << sv::log::llDebug
                     << sv::log::TimeZZZ << sv::log::in
@@ -173,7 +173,7 @@ void skm::SvUDPThread::process_data()
 
 
 /**         skm::SvSerialThread         **/
-skm::SvSerialThread::SvSerialThread(dev::SvAbstractDevice *device, sv::SvAbstractLogger *logger):
+skm::SvSerialThread::SvSerialThread(dev::SvAbstractDevice* device, sv::SvAbstractLogger *logger):
   dev::SvAbstractSerialThread(device, logger)
 {
 
@@ -198,7 +198,7 @@ void skm::SvSerialThread::process_data()
     if((p_buff.buf[p_buff.offset - 1] == 0x55) && (p_buff.buf[p_buff.offset - 2] == 0x2F)) {
 
         if(p_logger && p_device->info()->debug_mode)
-          *p_logger << sv::log::sender(p_logger->options().log_sender_name.arg(p_device->info()->index))
+          *p_logger << static_cast<dev::SvAbstractKsutsDevice*>(p_device)->make_dbus_sender()
                     << sv::log::mtDebug
                     << sv::log::llDebug
                     << sv::log::TimeZZZ << sv::log::in

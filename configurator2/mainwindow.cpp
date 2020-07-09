@@ -247,8 +247,8 @@ bool MainWindow::init()
     makeTree();
 //    updateTable();
 
-    if(_config.single_device_mode)
-      _ksuts_monitor->setSingleDeviceList(p_device_index_list);
+//    if(_config.single_device_mode)
+//      _ksuts_monitor->setSingleDeviceList(p_device_index_list);
 
     ui->treeView->setColumnWidth(0, 38);
 //    ui->treeView->setColumnWidth(1, 90);
@@ -1649,7 +1649,7 @@ void MainWindow::on_treeView_doubleClicked(const QModelIndex &index)
 
     if(_ksuts_monitor->getKsutsServerInfo().is_active)
     {
-      QString n = QString(_config.log_options.log_sender_name).arg(item->index);
+//      QString n = QString(_config.log_options.log_sender_name).arg(item->index);
 //      QString cmd = ;
 
 //      mainlog << "log_sender_name" << mainlog.options().log_sender_name << sv::log::endl;
@@ -1657,7 +1657,7 @@ void MainWindow::on_treeView_doubleClicked(const QModelIndex &index)
 
       QProcess p;
 
-      if(!p.startDetached(QString("./device_logger -dbus_sender %1").arg(n)))
+      if(!p.startDetached(QString("./device_logger -%1 %2").arg(OPTION_DEVICE_INDEX).arg(item->index)))
         mainlog << sv::log::mtError << p.errorString() << sv::log::endl;
 
     }

@@ -5,6 +5,8 @@
 #include <QTimer>
 #include <QtWidgets>
 
+QTextEdit* MainWindow::log = 0;
+
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
@@ -17,6 +19,9 @@ MainWindow::MainWindow(QWidget *parent) :
 #endif
 
     ui->setupUi(this);
+
+    log = ui->textlog;
+
     ui->centralWidget->setLayout(ui->gridLayout);
     setWindowIcon(QIcon(":/Network.png"));
     ui->pushButton->setVisible(false);
@@ -65,6 +70,8 @@ MainWindow::MainWindow(QWidget *parent) :
 
     check_timer = new QTimer(this);
     connect(check_timer, SIGNAL(timeout()), this, SLOT(check_connect()));
+
+    setWindowState(Qt::WindowMinimized);
 }
 
 MainWindow::~MainWindow()
@@ -162,18 +169,18 @@ void MainWindow::showEvent(QShowEvent *)
 //========================== init part ==================================
 bool MainWindow::init()
 {
-    int ppid = getppid(); // parent process id
-    if(ppid < 10) {
-        QMessageBox* mb = new QMessageBox(QMessageBox::Warning,//Critical,
-                                          "Ошибка запуска программы",
-                                          "Программа должна запускаться из терминала:\n\n"\
-                                          "fly-term -e ./can_server\n\n"\
-                                          "Самостоятельная работа невозможна.\nПриложение будет закрыто."
-                                          );
-        mb->setWindowIcon(QIcon(":/Network.png"));
-        mb->exec();
-        return false;
-    } else qDebug() << "Parent process id:" << ppid;
+//    int ppid = getppid(); // parent process id
+//    if(ppid < 10) {
+//        QMessageBox* mb = new QMessageBox(QMessageBox::Warning,//Critical,
+//                                          "Ошибка запуска программы",
+//                                          "Программа должна запускаться из терминала:\n\n"\
+//                                          "fly-term -e ./can_server\n\n"\
+//                                          "Самостоятельная работа невозможна.\nПриложение будет закрыто."
+//                                          );
+//        mb->setWindowIcon(QIcon(":/Network.png"));
+//        mb->exec();
+//        return false;
+//    } else qDebug() << "Parent process id:" << ppid;
 
     qDebug() << "It is latest version of 30.08.2018";
     QString msgSt;
@@ -503,6 +510,7 @@ bool MainWindow::startCan(quint8 id)
         can_parser[id]->max_can_id = max_can_id;
         can_parser[id]->init(queue[id], db_queue);
         can_parser[id]->canList = canList[id];
+
         qDebug() << "Запущен поток парсера:" << can_parser[id]->isRunning();
 
         // "писатель"

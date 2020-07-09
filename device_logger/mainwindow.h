@@ -8,8 +8,10 @@
 
 #include "../../svlib/sv_widget_log.h"
 #include "../../svlib/sv_dbus.h"
+#include "../../svlib/sv_pgdb.h"
 
 #include "../global/global_defs.h"
+#include "../global/sql_defs.h"
 
 namespace Ui {
 class MainWindow;
@@ -47,6 +49,8 @@ private:
 
   SvException p_exception;
   bool _enable;
+
+  sv::log::sender _sender;
 
   bool save();
 

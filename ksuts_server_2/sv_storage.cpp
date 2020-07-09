@@ -182,13 +182,16 @@ void SvStorageThread::run()
   
   _started = true;
   _finished = false;
-  while(_started) {
+
+  bool _need_to_finish = false;
+
+  while(!_need_to_finish) {
     
     msleep(1); // чтоб не грузило систему
     
-    if(elapsed_time.elapsed() < 1000 ) {
+    if(elapsed_time.elapsed() < 1000 )
       continue;
-    }
+
     
     elapsed_time.restart();
     
@@ -199,6 +202,9 @@ void SvStorageThread::run()
 
     while(signal) {
 
+      if(!_started)
+        break;
+
 #ifndef TEST_VALUES
         qsrand(QDateTime::currentMSecsSinceEpoch());
         if(signal->params()->data_type == 0)
@@ -208,46 +214,29 @@ void SvStorageThread::run()
 //        qDebug() << signal->value();
 #endif
 
-//      if(signal->params()->timeout == 0) {
-
-//        signal = nextSignal();    /* так делать неправильно */
-//        continue;
-
-//      }
-
       if((signal->params()->timeout >  0 && signal->isAlive()) ||
          (signal->params()->timeout == 0 && signal->isDeviceAlive())) {
 
         signals_values += QString("%1;%2|").arg(signal->index()).arg(signal->value());
-
-//        upd_query = QString(PG_SQL_EXEC_SET_SIGNAL_VALUE)
-//                     .arg(signal->index())
-//                     .arg(signal->value());
       
       }
+
+      /* алгоритм при потере сигнала:
+       * 1) если для сигнала назначен резервный сигнал, то сигналу присваивается значение резервного сигнала
+       * 2) если резервного сигнала нет, то присваиваем сигналу значение timeout_value,
+       * 3) в первый раз зписываем в базу через функцию set_values. таким образом фиксируем в базе время потери связи
+       * 4) впоследующем, если сигнал уже имеет значение timeout_value, то пропускаем его фиксацию в базе, для экономии ресурсов
+       */
       else {
         
-        if(signal->params()->timeout_signal_index > 0) {
-          
+        if(signal->params()->timeout_signal_index > 0)
           signals_reserve_values += QString("%1;%2|").arg(signal->index()).arg(signal->params()->timeout_signal_index);
 
-//          upd_query = QString(PG_SQL_EXEC_SET_SIGNAL_FROM_RESERVED)
-//                                         .arg(signal->index())
-//                                         .arg(signal->params()->timeout_signal_index);
-        }
-        else
 
-          /// алгоритм при потере сигнала:
-          /// 1) присваиваем сигналу значение timeout_value,
-          /// 2) в первый раз зписываем в базу через функцию set_values. таким образом фиксируем в базе время потери связи
-          /// 3) впоследующем, если сигнал уже имеет значение timeout_value, то пропускаем его фиксацию в базе, для экономии ресурсов
+        else
 
           if(signal->setLostValue())
             signals_values += QString("%1;%2|").arg(signal->index()).arg(signal->params()->timeout_value);
-
-//          upd_query = QString(PG_SQL_EXEC_SET_SIGNAL_LOST_VALUE)
-//                                         .arg(signal->index())
-//                                         .arg(signal->params()->timeout_value);
         
       }
 
@@ -256,9 +245,29 @@ void SvStorageThread::run()
         
     }
 
+    /** здесь проверяем флаг _started. если _started = false, то есть пришел внешний сигнал на завершение потока,
+     * то проходим по всем сигналам, и присваиваем им timeout_value.
+     * присваиваем _need_to_finish = true. после прохода по всем сигналам, будет произведена запись в БД
+     * на следующем прходе, главный цикл завершится, т.к. _need_to_finish уже true
+     * такая схема применена для гарантированной записи в  значений timeout_value при завершении работы сервера */
+    if(!_started)
+    {
+      signals_values = "";
+      SvSignal* signal = firstSignal();
+
+      while(signal) {
+
+        signals_values += QString("%1;%2|").arg(signal->index()).arg(signal->params()->timeout_value);
+
+        signal = nextSignal();
+
+      }
+
+      _need_to_finish = true;
+    }
+
 
     try {
-
 
       if(!signals_values.isEmpty()) {
 

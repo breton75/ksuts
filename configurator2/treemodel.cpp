@@ -193,6 +193,8 @@ QVariant TreeModel::data(const QModelIndex &index, int role) const
 //              color.setColor(QColor("cornflowerblue"));
 //              break;
 
+            default:
+              break;
           }
 //        }
 

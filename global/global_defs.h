@@ -14,7 +14,7 @@
 #define OPTION_DETILED                   "detiled"
 #define OPTION_SOEG_PORT                 "soeg_port"
 #define OPTION_SINGLE_DEVICE_MODE        "single_device_mode"
-#define OPTION_SINGLE_DEVICE_INDEX       "single_device_index"
+#define OPTION_DEVICE_INDEX              "device_index"
 #define OPTION_LOGGING                   "logging"
 #define OPTION_LOG_LEVEL                 "log_level"
 #define OPTION_LOG_DEVICE                "log_device"
@@ -26,7 +26,7 @@
 #define OPTION_AUTORUN_CFG_FILE          "autorun_cfg_file"
 #define OPTION_TEMPLATES_DIRECTORY       "templates_directory"
 #define OPTION_PATH_TO_POSTGRES_BIN      "postgres_bin_path"
-#define OPTION_DBUS_SENDER               "dbus_sender"
+#define OPTION_LOG_SENDER_NAME_FORMAT    "log_sender_name_format"
 
 struct AppConfig {
     QString db_name;
@@ -35,12 +35,13 @@ struct AppConfig {
     QString db_user;
     QString db_pass;
     quint16 soeg_port;
-    bool single_device_mode;
-    int single_device_index;
-    sv::log::Options log_options;
+//    bool    single_device_mode;
+    int     device_index;
     QString autorun_cfg_file;
     QString templates_dir;
     QString postgres_bin_path;
+
+    sv::log::Options log_options;
 };
 
 #endif // GEN_DEFS_H

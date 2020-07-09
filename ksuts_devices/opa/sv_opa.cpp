@@ -44,7 +44,7 @@ bool SvOPA::create_new_thread()
 
 
 /**         opa::SvUDPThread         **/
-opa::SvUDPThread::SvUDPThread(dev::SvAbstractDevice *device, sv::SvAbstractLogger *logger):
+opa::SvUDPThread::SvUDPThread(dev::SvAbstractDevice* device, sv::SvAbstractLogger *logger):
   dev::SvAbstractUdpThread(device, logger)
 {
 
@@ -65,7 +65,7 @@ void opa::SvUDPThread::process_data()
     if(p_buff.offset >= _hSize + _header.byte_count + 2) {
 
         if(p_logger && p_device->info()->debug_mode)
-          *p_logger << sv::log::sender(p_logger->options().log_sender_name.arg(p_device->info()->index))
+          *p_logger << static_cast<dev::SvAbstractKsutsDevice*>(p_device)->make_dbus_sender()
                     << sv::log::mtDebug
                     << sv::log::llDebug
                     << sv::log::TimeZZZ << sv::log::in
@@ -80,15 +80,9 @@ void opa::SvUDPThread::process_data()
         opa::func_set_line_status(p_device, &p_data);
 
         quint16 current_register = (static_cast<quint16>(_header.ADDRESS << 8)) + _header.OFFSET;
-        *p_logger << sv::log::sender(p_logger->options().log_sender_name.arg(p_device->info()->index))
-                  << sv::log::mtDebug
-                  << sv::log::llDebug
-                  << (_header.ADDRESS << 8) << (static_cast<quint16>(_header.ADDRESS) << 8)
-                  << p_device->params()->start_register
-                  << sv::log::endl;
+
         switch (current_register - p_device->params()->start_register)
         {
-
             case 0x00:
             case 0x03:
             case 0x05:
@@ -113,7 +107,7 @@ void opa::SvUDPThread::process_data()
               {
                 // если crc не совпадает, то выходим без обработки и ответа
                 if(p_logger)
-                    *p_logger << sv::log::sender(p_logger->options().log_sender_name.arg(p_device->info()->index))
+                    *p_logger << static_cast<dev::SvAbstractKsutsDevice*>(p_device)->make_dbus_sender()
                               << sv::log::mtError
                               << sv::log::llError
                               << sv::log::TimeZZZ
@@ -155,7 +149,7 @@ void opa::SvUDPThread::process_data()
 }
 
 /**         opa::SvSerialThread         **/
-opa::SvSerialThread::SvSerialThread(dev::SvAbstractDevice *device, sv::SvAbstractLogger *logger):
+opa::SvSerialThread::SvSerialThread(dev::SvAbstractDevice* device, sv::SvAbstractLogger *logger):
   dev::SvAbstractSerialThread(device, logger)
 {
 
@@ -176,7 +170,7 @@ void opa::SvSerialThread::process_data()
     if(p_buff.offset >= _hSize + _header.byte_count + 2) {
 
         if(p_logger && p_device->info()->debug_mode)
-          *p_logger << sv::log::sender(p_logger->options().log_sender_name.arg(p_device->info()->index))
+          *p_logger << static_cast<dev::SvAbstractKsutsDevice*>(p_device)->make_dbus_sender() // sv::log::sender(p_logger->options().log_sender_name.arg(p_device->info()->index))
                     << sv::log::mtDebug
                     << sv::log::llDebug
                     << sv::log::TimeZZZ << sv::log::in
@@ -219,7 +213,7 @@ void opa::SvSerialThread::process_data()
               {
                 // если crc не совпадает, то выходим без обработки и ответа
                 if(p_logger)
-                    *p_logger << sv::log::sender(p_logger->options().log_sender_name.arg(p_device->info()->index))
+                    *p_logger << static_cast<dev::SvAbstractKsutsDevice*>(p_device)->make_dbus_sender()
                               << sv::log::mtError
                               << sv::log::llError
                               << sv::log::TimeZZZ

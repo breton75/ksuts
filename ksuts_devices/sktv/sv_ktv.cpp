@@ -45,7 +45,7 @@ bool SvKTV::create_new_thread()
 
 
 /**         ktv::SvUDPThread         **/
-ktv::SvUDPThread::SvUDPThread(dev::SvAbstractDevice *device, sv::SvAbstractLogger *logger):
+ktv::SvUDPThread::SvUDPThread(dev::SvAbstractDevice* device, sv::SvAbstractLogger *logger):
   dev::SvAbstractUdpThread(device, logger)
 {
 
@@ -80,7 +80,7 @@ void ktv::SvUDPThread::process_data()
 
 //        *p_logger << p_logger->options().log_sender_name.arg(p_device->info()->index) << (found ? "true" : "false") << sv::log::endl;
         if(p_logger && p_device->info()->debug_mode)
-            *p_logger << sv::log::sender(p_logger->options().log_sender_name.arg(p_device->info()->index))
+            *p_logger << static_cast<dev::SvAbstractKsutsDevice*>(p_device)->make_dbus_sender()
                       << sv::log::mtDebug
                       << sv::log::llDebug
                       << sv::log::TimeZZZ << sv::log::in
@@ -115,7 +115,7 @@ void ktv::SvUDPThread::process_data()
 
 
 /**         ktv::SvSerialThread         **/
-ktv::SvSerialThread::SvSerialThread(dev::SvAbstractDevice *device, sv::SvAbstractLogger *logger):
+ktv::SvSerialThread::SvSerialThread(dev::SvAbstractDevice* device, sv::SvAbstractLogger *logger):
   dev::SvAbstractSerialThread(device, logger)
 {
 
@@ -150,7 +150,7 @@ void ktv::SvSerialThread::process_data()
         p_buff.offset = offset_of_2f55 + 1;
 
         if(p_logger && p_device->info()->debug_mode)
-            *p_logger << sv::log::sender(p_logger->options().log_sender_name.arg(p_device->info()->index))
+            *p_logger << static_cast<dev::SvAbstractKsutsDevice*>(p_device)->make_dbus_sender()
                       << sv::log::mtDebug
                       << sv::log::llDebug
                       << sv::log::TimeZZZ << sv::log::in

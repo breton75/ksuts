@@ -9,7 +9,7 @@ TARGET = /home/user/ksuts_server/ksuts_server
 DEFINES += APP_DEBUG=1
 DEFINES += TEST_VALUES
 
-VERSION = 2.0.0    # major.minor.patch
+VERSION = 2.2.0    # major.minor.patch
 DEFINES += APP_VERSION=\\\"$$VERSION\\\"
 DEFINES += VERSION_2
 

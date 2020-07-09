@@ -54,8 +54,8 @@ const OptionStructList AppOptions = {
     {{OPTION_DB_USER}, "Имя пользователя базы данных.", "postgres", "", ""},
     {{OPTION_DB_PASS}, "Пароль для подключения к базе данных.", "postgres", "", ""},
     {{OPTION_SOEG_PORT}, "TCP порт для приема запросов СОЭЖ.", "502", "", ""},
-    {{OPTION_SINGLE_DEVICE_MODE}, "Включить/выключить режим 'одно устройство на сервер'.", "off", "", ""},
-    {{OPTION_SINGLE_DEVICE_INDEX}, "Индекс устройства, при работе в режиме 'одно устройство на сервер'.", "-1", "", ""},
+//    {{OPTION_SINGLE_DEVICE_MODE}, "Включить/выключить режим 'одно устройство на сервер'.", "off", "", ""},
+    {{OPTION_DEVICE_INDEX}, "Индекс устройства'.", "-1", "", ""},
     {{OPTION_LOGGING}, "Включить/выключить логирование.", "off", "", ""},
     {{OPTION_LOG_LEVEL}, "Уровень логирования.", "warning", "", ""},
     {{OPTION_LOG_DEVICE}, "Устройство записи логов.", "file", "", ""},
@@ -63,7 +63,9 @@ const OptionStructList AppOptions = {
     {{OPTION_LOG_FILENAME}, "Шаблон имени файла логов.", "%p_%d%M%y_%h%m%s.log", "", ""},
     {{OPTION_LOG_TRUNCATE_ON_ROTATION}, "Переписывать лог файл при ротации.", "off", "", ""},
     {{OPTION_LOG_ROTATION_AGE}, "Максимальное время записи одного файла логов.", "1h", "", ""},
-    {{OPTION_LOG_ROTATION_SIZE}, "Максимальный размер одного файла логов.", "10MB", "", ""}
+    {{OPTION_LOG_ROTATION_SIZE}, "Максимальный размер одного файла логов.", "10MB", "", ""},
+    {{OPTION_LOG_SENDER_NAME_FORMAT}, "Шаблон имени устройства-отправителя для логирования.", "", "", ""}
+
 };
 
 bool parse_params(const QStringList &args, AppConfig& cfg, const QString& file_name);
@@ -166,16 +168,16 @@ bool parse_params(const QStringList& args, AppConfig &cfg, const QString& file_n
     cfg.db_pass = cmd_parser.isSet(OPTION_DB_PASS) ? cmd_parser.value(OPTION_DB_PASS) :
                                                      cfg_parser.value(OPTION_DB_PASS);
 
-    // single device mode
-    val = cmd_parser.isSet(OPTION_SINGLE_DEVICE_MODE) ? cmd_parser.value(OPTION_SINGLE_DEVICE_MODE) :
-                                                        cfg_parser.value(OPTION_SINGLE_DEVICE_MODE);
-    cfg.single_device_mode = sv::log::stringToBool(val);
+//    // single device mode
+//    val = cmd_parser.isSet(OPTION_SINGLE_DEVICE_MODE) ? cmd_parser.value(OPTION_SINGLE_DEVICE_MODE) :
+//                                                        cfg_parser.value(OPTION_SINGLE_DEVICE_MODE);
+//    cfg.single_device_mode = sv::log::stringToBool(val);
 
-    // single device index
+    // device index
     // !!! ЭТОТ ПАРАМЕТР МОЖЕТ БЫТЬ ЗАДАН ТОЛЬКО В КОМАНДНОЙ СТРОКЕ
-    val = cmd_parser.isSet(OPTION_SINGLE_DEVICE_INDEX) ? cmd_parser.value(OPTION_SINGLE_DEVICE_INDEX) : "-1";
+    val = cmd_parser.isSet(OPTION_DEVICE_INDEX) ? cmd_parser.value(OPTION_DEVICE_INDEX) : "-1";
 
-    cfg.single_device_index = val.toInt(&ok);
+    cfg.device_index = val.toInt(&ok);
     if(!ok) exception.raise(-1, QString("Неверный индекс устройства: %1").arg(val));
 
 
@@ -228,8 +230,10 @@ bool parse_params(const QStringList& args, AppConfig &cfg, const QString& file_n
     cfg.log_options.log_rotation_size = sv::log::stringToSize(val, &ok);
     if(!ok) exception.raise(-1, QString("Неверный формат размера файла: %1").arg(val));
 
-    // формат имени отправителя по dbus
-    cfg.log_options.log_sender_name = QString(DBUS_SENDER_NAME);
+    // шаблон имени отправителя по dbus
+    cfg.log_options.log_sender_name_format = cmd_parser.isSet(OPTION_LOG_SENDER_NAME_FORMAT) ? cmd_parser.value(OPTION_LOG_SENDER_NAME_FORMAT) :
+                                                                                               cfg_parser.value(OPTION_LOG_SENDER_NAME_FORMAT);
+//    QString(DBUS_SENDER_NAME);
 
     return true;
 
@@ -306,13 +310,14 @@ int main(int argc, char *argv[])
          << "\nlog_truncate_on_rotation=" << (cfg.log_options.log_truncate_on_rotation ? "on" : "off")
          << "\nlog_rotation_age=" << cfg.log_options.log_rotation_age << " (seconds)"
          << "\nlog_rotation_size=" << cfg.log_options.log_rotation_size << " (bytes)"
-         << "\nsingle_device_mode=" << (cfg.single_device_mode ? "on" : "off")
-         << "\nsingle_device_index=" << cfg.single_device_index << "\n"
+//         << "\nsingle_device_mode=" << (cfg.single_device_mode ? "on" : "off")
+         << "\ndevice_index=" << cfg.device_index << "\n"
+         << "log_sender_name_format" << cfg.log_options.log_sender_name_format << "\n"
          << sv::log::endl;
 
-    // если задан режим работы 'только одно устройство', то проверяем, что задан индекс устройства
-    if(cfg.single_device_mode && cfg.single_device_index < 0)
-      exception.raise(-1, "Включен режим 'одного устройства'. В этом режиме необходимо указать индекс устройства в командной строке параметром -single_device_index");
+//    // если задан режим работы 'только одно устройство', то проверяем, что задан индекс устройства
+//    if(cfg.single_device_mode && cfg.single_device_index < 0)
+//      exception.raise(-1, "Включен режим 'одного устройства'. В этом режиме необходимо указать индекс устройства в командной строке параметром -single_device_index");
 
   }
 
@@ -321,29 +326,29 @@ int main(int argc, char *argv[])
     return e.code;
   }
 
-  // если не задан режим 'одного устройства', то должна быть запущена только одна копия ksuts_server
-  if(!cfg.single_device_mode) {
+//  // если не задан режим 'одного устройства', то должна быть запущена только одна копия ksuts_server
+//  if(!cfg.single_device_mode) {
 
-    // check for only one copy of program is runned
-    QProcess* p = new QProcess();
-    p->start("pgrep -x ksuts_server");
-    p->waitForFinished();
-    QByteArray b = p->readAll();
-    delete p;
+//    // check for only one copy of program is runned
+//    QProcess* p = new QProcess();
+//    p->start("pgrep -x ksuts_server");
+//    p->waitForFinished();
+//    QByteArray b = p->readAll();
+//    delete p;
 
-    if(b.trimmed().split('\n').count() > 1) {
+//    if(b.trimmed().split('\n').count() > 1) {
 
-      for(QByteArray pid: b.split('\n')) {
+//      for(QByteArray pid: b.split('\n')) {
 
-        if(!pid.trimmed().isEmpty() && (pid.trimmed().toInt() != qApp->applicationPid())) {
+//        if(!pid.trimmed().isEmpty() && (pid.trimmed().toInt() != qApp->applicationPid())) {
 
-          std::cout << QString("Другая копия КСУТС сервера уже запущена: PID(%1)\n").arg(QString(pid)).toStdString().c_str();
-          return -1;
+//          std::cout << QString("Другая копия КСУТС сервера уже запущена: PID(%1)\n").arg(QString(pid)).toStdString().c_str();
+//          return -1;
 
-        }
-      }
-    }
-  }
+//        }
+//      }
+//    }
+//  }
 
 
   /// перехватываем момент закрытия программы, чтобы корректно завершить
@@ -492,10 +497,10 @@ bool readDevices(const AppConfig& cfg)
 
     QSqlError serr;
 
-    if(cfg.single_device_mode)
-      serr = PG->execSQL(QString(SQL_SELECT_SINGLE_INVOLVED_DEVICE).arg(cfg.single_device_index), &q);
+//    if(cfg.single_device_mode)
+//      serr = PG->execSQL(QString(SQL_SELECT_SINGLE_INVOLVED_DEVICE).arg(cfg.single_device_index), &q);
 
-    else
+//    else
       serr = PG->execSQL(SQL_SELECT_INVOLVED_DEVICES, &q);
 
     if(serr.type() != QSqlError::NoError) exception.raise(serr.text());
@@ -626,18 +631,18 @@ bool readSignals(const AppConfig &cfg)
 
       SvSignal* newsig = nullptr;
 
-      if(!cfg.single_device_mode) {
+//      if(!cfg.single_device_mode) {
 
         newsig = create_signal(q);
-      }
-      else {
+//      }
+//      else
+//      {
 
-        // в режиме 'одной устройство' создаем сигнал, только если его устройство равно устройству при запуске
-        if(q->value("signal_device_index").toInt() == cfg.single_device_index) {
+//        // в режиме 'одной устройство' создаем сигнал, только если его устройство равно устройству при запуске
+//        if(q->value("signal_device_index").toInt() == cfg.single_device_index)
+//          newsig = create_signal(q);
 
-          newsig = create_signal(q);
-        }
-      }
+//      }
 
       
       if(newsig) {
@@ -688,10 +693,10 @@ bool readSignals(const AppConfig &cfg)
       
       else {
 
-        if(!cfg.single_device_mode)
-          exception.raise(QString("Не удалось добавить сигнал %1 [Индекс %2]")
-                        .arg(q->value("signal_name").toString())
-                        .arg(q->value("signal_index").toInt()));
+//        if(!cfg.single_device_mode)
+//          exception.raise(QString("Не удалось добавить сигнал %1 [Индекс %2]")
+//                        .arg(q->value("signal_name").toString())
+//                        .arg(q->value("signal_index").toInt()));
       }
     }
 

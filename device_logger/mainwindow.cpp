@@ -3,12 +3,55 @@
 
 MainWindow::MainWindow(const AppConfig &cfg, QWidget *parent) :
   QMainWindow(parent),
-  ui(new Ui::MainWindow),
-  _config(cfg)
+  ui(new Ui::MainWindow)
 {
   ui->setupUi(this);
 
   log.setTextEdit(ui->textLog);
+  _config =  cfg;
+
+  QString title = "";
+//  _sender = "";
+
+  QSqlError e = SvPGDB::instance()->connectToDB(cfg.db_name, cfg.db_host, cfg.db_port, cfg.db_user, cfg.db_pass);
+
+  if(e.type() != QSqlError::NoError)
+    QMessageBox::critical(this, "Ошибка", e.text(), QMessageBox::Ok);
+
+  else
+  {
+    QSqlQuery q;
+    e = SvPGDB::instance()->execSQL(QString(SQL_SELECT_ONE_DEVICE).arg(cfg.device_index), &q);
+
+    if(e.type() == QSqlError::NoError)
+    {
+      if(q.first())
+      {
+
+        _sender = sv::log::sender::make(cfg.log_options.log_sender_name_format,
+                                       q.value("device_name").toString(),
+                                       cfg.device_index);
+
+        title = QString("КСУТС логгер %1 [%2]").arg(q.value("device_name").toString()).arg(_sender.name);
+
+        q.finish();
+
+      }
+      else
+        QMessageBox::critical(this, "Ошибка", QString("Устройство с индексом %1 не найдено").arg(cfg.device_index), QMessageBox::Ok);
+
+    }
+
+    else
+      QMessageBox::critical(this, "Ошибка", e.text(), QMessageBox::Ok);
+
+    SvPGDB::instance()->disconnectFromDb();
+  }
+
+  SvPGDB::free();
+
+  this->setWindowTitle(title);
+  ui->labelSenderName->setText(title);
 
   QDBusConnection::sessionBus().connect(QString(), QString(), DBUS_SERVER_NAME, "message", this, SLOT(messageSlot(const QString&,const QString&,const QString&)));
 
@@ -23,8 +66,8 @@ MainWindow::~MainWindow()
 
 void MainWindow::messageSlot(const QString& sender, const QString& message, const QString& type)
 {
-//  qDebug() << sender << _config.log_options.log_sender_name;
-  if(sender == _config.log_options.log_sender_name)
+//  qDebug() << sender << _config.log_options.log_sender_name_format;
+  if(sender == _sender.name)
     log << sv::log::stringToType(type) << QString("%1").arg(message) << sv::log::endl;
 
 }

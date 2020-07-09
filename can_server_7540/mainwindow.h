@@ -8,6 +8,7 @@
 #include <QCloseEvent>
 #include <QHideEvent>
 #include <QShowEvent>
+#include <QTextEdit>
 
 #include <QHostAddress>
 
@@ -70,10 +71,13 @@ public:
 
     bool setCanHosts(const AppConfig& cfg); // char *arg1, char *arg2);
 
+    static QTextEdit* log;
+
 private:
     Ui::MainWindow *ui;
     QSystemTrayIcon* m_ptrayIcon;
     QMenu*           m_ptrayIconMenu;
+
 
     QDateTime startDT;
 

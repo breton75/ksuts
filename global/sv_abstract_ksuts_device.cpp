@@ -83,14 +83,22 @@ void dev::SvAbstractKsutsDevice::deleteThread()
 //    p_thread = nullptr;
 
 //  }
+
+}
+
+sv::log::sender dev::SvAbstractKsutsDevice::make_dbus_sender()
+{
+  return sv::log::sender::make(p_logger->options().log_sender_name_format,
+                               p_info.name,
+                               p_info.index);
 }
 
 
 /**         SvAbstractUdpDeviceThread         **/
-dev::SvAbstractUdpThread::SvAbstractUdpThread(dev::SvAbstractDevice *device, sv::SvAbstractLogger *logger):
+dev::SvAbstractUdpThread::SvAbstractUdpThread(dev::SvAbstractDevice* device, sv::SvAbstractLogger *logger):
   dev::SvAbstractKsutsThread(device, logger)
 {
-//  connect(dev)
+
 }
 
 void dev::SvAbstractUdpThread::setIfcParams(const QString& params) throw(SvException&)
@@ -131,7 +139,7 @@ void dev::SvAbstractUdpThread::open() throw(SvException&)
 quint64 dev::SvAbstractUdpThread::write(const QByteArray& data)
 {
   if(p_logger && p_device->info()->debug_mode)
-    *p_logger << sv::log::sender(p_logger->options().log_sender_name.arg(p_device->info()->index))
+    *p_logger << static_cast<dev::SvAbstractKsutsDevice*>(p_device)->make_dbus_sender()
               << sv::log::mtDebug
               << sv::log::llDebug
               << sv::log::TimeZZZ << sv::log::out
@@ -169,7 +177,7 @@ void dev::SvAbstractUdpThread::run()
 }
 
 /**         SvAbstractSerialThread         **/
-dev::SvAbstractSerialThread::SvAbstractSerialThread(dev::SvAbstractDevice *device, sv::SvAbstractLogger *logger):
+dev::SvAbstractSerialThread::SvAbstractSerialThread(SvAbstractDevice *device, sv::SvAbstractLogger *logger):
   dev::SvAbstractKsutsThread(device, logger)
 {
 
@@ -214,7 +222,7 @@ void dev::SvAbstractSerialThread::open() throw(SvException&)
 quint64 dev::SvAbstractSerialThread::write(const QByteArray& data)
 {
   if(p_logger && p_device->info()->debug_mode)
-    *p_logger << sv::log::sender(p_logger->options().log_sender_name.arg(p_device->info()->index))
+    *p_logger << static_cast<dev::SvAbstractKsutsDevice*>(p_device)->make_dbus_sender()
               << sv::log::mtDebug
               << sv::log::llDebug
               << sv::log::TimeZZZ << sv::log::out

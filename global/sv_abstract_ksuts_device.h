@@ -56,10 +56,13 @@ public:
 
   virtual bool setup(const dev::DeviceInfo& info);
 
+  sv::log::sender make_dbus_sender();
+
 protected:
   SvException* p_exception;
 
   virtual bool create_new_thread() = 0;
+
 
 private slots:
   void deleteThread();
@@ -77,7 +80,9 @@ public:
   SvAbstractKsutsThread(dev::SvAbstractDevice* device, sv::SvAbstractLogger *logger = nullptr):
     dev::SvAbstractDeviceThread(device, logger)
   ,p_is_active(false)
-  {  }
+  {
+
+  }
 
   virtual ~SvAbstractKsutsThread()
   {

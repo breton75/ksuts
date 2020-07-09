@@ -19,8 +19,7 @@ const OptionStructList AppOptions = {
     {{OPTION_DB_NAME}, "Имя базы данных для подключения.", "cms_db", "", ""},
     {{OPTION_DB_USER}, "Имя пользователя базы данных.", "postgres", "", ""},
     {{OPTION_DB_PASS}, "Пароль для подключения к базе данных.", "postgres", "", ""},
-    {{OPTION_SINGLE_DEVICE_MODE}, "Включить/выключить режим 'одно устройство на сервер'.", "off", "", ""},
-    {{OPTION_SINGLE_DEVICE_INDEX}, "Индекс устройства, при работе в режиме 'одно устройство на сервер'.", "-1", "", ""},
+    {{OPTION_DEVICE_INDEX}, "Индекс устройства.", "0", "", ""},
     {{OPTION_LOGGING}, "Включить/выключить логирование.", "off", "", ""},
     {{OPTION_LOG_LEVEL}, "Уровень логирования.", "warning", "", ""},
     {{OPTION_LOG_DEVICE}, "Устройство записи логов.", "file", "", ""},
@@ -32,7 +31,7 @@ const OptionStructList AppOptions = {
     {{OPTION_AUTORUN_CFG_FILE}, "Файл конфигурации автозапуска.", "ksuts_autorun.cfg", "", ""},
     {{OPTION_TEMPLATES_DIRECTORY}, "Каталог шаблонов.", "templates", "", ""},
     {{OPTION_PATH_TO_POSTGRES_BIN}, "Каталог служебных программ postgres.", "/usr/bin", "", ""},
-    {{OPTION_DBUS_SENDER}, "Имя отправителя для перехвата сообщений", "main", "", ""},
+    {{OPTION_LOG_SENDER_NAME_FORMAT}, "Имя отправителя для перехвата сообщений", "", "", ""},
     {{"hide"}, "Сворачивать окно в трей при запуске", "", "", ""}
 };
 
@@ -110,20 +109,6 @@ bool parse_params(const QStringList& args, AppConfig& cfg, const QString& file_n
                                                                        cfg_parser.value(OPTION_PATH_TO_POSTGRES_BIN);
 
 
-    // single device mode
-    val = cmd_parser.isSet(OPTION_SINGLE_DEVICE_MODE) ? cmd_parser.value(OPTION_SINGLE_DEVICE_MODE) :
-                                                        cfg_parser.value(OPTION_SINGLE_DEVICE_MODE);
-
-    cfg.single_device_mode = sv::log::stringToBool(val);
-
-    // single device index
-    // !!! ЭТОТ ПАРАМЕТР МОЖЕТ БЫТЬ ЗАДАН ТОЛЬКО В КОМАНДНОЙ СТРОКЕ
-    val = cmd_parser.isSet(OPTION_SINGLE_DEVICE_INDEX) ? cmd_parser.value(OPTION_SINGLE_DEVICE_INDEX) : "-1";
-
-    cfg.single_device_index = val.toInt(&ok);
-    if(!ok) exception.raise(-1, QString("Неверный индекс устройства: %1").arg(val));
-
-
     // logging
     val = cmd_parser.isSet(OPTION_LOGGING) ? cmd_parser.value(OPTION_LOGGING) :
                                              cfg_parser.value(OPTION_LOGGING);
@@ -173,10 +158,16 @@ bool parse_params(const QStringList& args, AppConfig& cfg, const QString& file_n
     cfg.log_options.log_rotation_size = sv::log::stringToSize(val, &ok);
     if(!ok) exception.raise(-1, QString("Неверный формат размера файла: %1").arg(val));
 
-    // dbus_sender
-    // !!! ЭТОТ ПАРАМЕТР МОЖЕТ БЫТЬ ЗАДАН ТОЛЬКО В КОМАНДНОЙ СТРОКЕ
-    cfg.log_options.log_sender_name = cmd_parser.isSet(OPTION_DBUS_SENDER) ? cmd_parser.value(OPTION_DBUS_SENDER) : "";
+    // log_sender_name_format
+    cfg.log_options.log_sender_name_format = cmd_parser.isSet(OPTION_LOG_SENDER_NAME_FORMAT) ? cmd_parser.value(OPTION_LOG_SENDER_NAME_FORMAT) :
+                                                                                               cfg_parser.value(OPTION_LOG_SENDER_NAME_FORMAT);
 
+    // device_index
+    // !!! ЭТОТ ПАРАМЕТР МОЖЕТ БЫТЬ ЗАДАН ТОЛЬКО В КОМАНДНОЙ СТРОКЕ
+    val = cmd_parser.isSet(OPTION_DEVICE_INDEX) ? cmd_parser.value(OPTION_DEVICE_INDEX) : "-1";
+
+    cfg.device_index = val.toUInt(&ok);
+    if(!ok) exception.raise(-1, QString("Неверный индекс устройства: %1").arg(val));
 
     return true;
 

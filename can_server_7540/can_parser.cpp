@@ -1,4 +1,4 @@
-#include "can_parser.h"
+﻿#include "can_parser.h"
 #include <QDebug>
 
 CAN_Parser::CAN_Parser(quint8 id)

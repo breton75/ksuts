@@ -22,8 +22,8 @@ const OptionStructList AppOptions = {
     {{OPTION_DB_NAME}, "Имя базы данных для подключения.", "cms_db", "", ""},
     {{OPTION_DB_USER}, "Имя пользователя базы данных.", "postgres", "", ""},
     {{OPTION_DB_PASS}, "Пароль для подключения к базе данных.", "postgres", "", ""},
-    {{OPTION_SINGLE_DEVICE_MODE}, "Включить/выключить режим 'одно устройство на сервер'.", "off", "", ""},
-    {{OPTION_SINGLE_DEVICE_INDEX}, "Индекс устройства, при работе в режиме 'одно устройство на сервер'.", "-1", "", ""},
+//    {{OPTION_SINGLE_DEVICE_MODE}, "Включить/выключить режим 'одно устройство на сервер'.", "off", "", ""},
+    {{OPTION_DEVICE_INDEX}, "Индекс устройства, при работе в режиме 'одно устройство на сервер'.", "-1", "", ""},
     {{OPTION_LOGGING}, "Включить/выключить логирование.", "off", "", ""},
     {{OPTION_LOG_LEVEL}, "Уровень логирования.", "warning", "", ""},
     {{OPTION_LOG_DEVICE}, "Устройство записи логов.", "file", "", ""},
@@ -117,17 +117,17 @@ bool parse_params(const QStringList& args, AppConfig& cfg, const QString& file_n
                                                                        cfg_parser.value(OPTION_PATH_TO_POSTGRES_BIN);
 
 
-    // single device mode
-    val = cmd_parser.isSet(OPTION_SINGLE_DEVICE_MODE) ? cmd_parser.value(OPTION_SINGLE_DEVICE_MODE) :
-                                                        cfg_parser.value(OPTION_SINGLE_DEVICE_MODE);
+//    // single device mode
+//    val = cmd_parser.isSet(OPTION_SINGLE_DEVICE_MODE) ? cmd_parser.value(OPTION_SINGLE_DEVICE_MODE) :
+//                                                        cfg_parser.value(OPTION_SINGLE_DEVICE_MODE);
 
-    cfg.single_device_mode = sv::log::stringToBool(val);
+//    cfg.single_device_mode = sv::log::stringToBool(val);
 
     // single device index
     // !!! ЭТОТ ПАРАМЕТР МОЖЕТ БЫТЬ ЗАДАН ТОЛЬКО В КОМАНДНОЙ СТРОКЕ
-    val = cmd_parser.isSet(OPTION_SINGLE_DEVICE_INDEX) ? cmd_parser.value(OPTION_SINGLE_DEVICE_INDEX) : "-1";
+    val = cmd_parser.isSet(OPTION_DEVICE_INDEX) ? cmd_parser.value(OPTION_DEVICE_INDEX) : "-1";
 
-    cfg.single_device_index = val.toInt(&ok);
+    cfg.device_index = val.toInt(&ok);
     if(!ok) exception.raise(-1, QString("Неверный индекс устройства: %1").arg(val));
 
 
@@ -181,7 +181,9 @@ bool parse_params(const QStringList& args, AppConfig& cfg, const QString& file_n
     if(!ok) exception.raise(-1, QString("Неверный формат размера файла: %1").arg(val));
 
     // формат имени отправителя по dbus
-    cfg.log_options.log_sender_name = QString(DBUS_SENDER_NAME);
+    cfg.log_options.log_sender_name_format = cmd_parser.isSet(OPTION_LOG_SENDER_NAME_FORMAT) ? cmd_parser.value(OPTION_LOG_SENDER_NAME_FORMAT) :
+                                                                                               cfg_parser.value(OPTION_LOG_SENDER_NAME_FORMAT);
+
 
     return true;
 

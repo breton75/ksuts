@@ -11,6 +11,22 @@
 
 SvException exception;
 
+QMutex mut;
+
+void qDebugHandler(QtMsgType type, const QMessageLogContext &context, const QString &msg)
+{
+  Q_UNUSED(type);
+  Q_UNUSED(context);
+
+  mut.lock();
+    if(MainWindow::log)
+    {
+      MainWindow::log->append(msg);
+    }
+
+    mut.unlock();
+}
+
 const OptionStructList AppOptions = {
     {{OPTION_DB_HOST}, "Адрес сервера базы данных.","localhost", "", ""},
     {{OPTION_DB_PORT}, "Порт сервера базы данных.", "5432", "", ""},
@@ -121,6 +137,8 @@ void parse_params(const QStringList& args, AppConfig &cfg, const QString& file_n
 
 int main(int argc, char *argv[])
 {
+  qInstallMessageHandler(qDebugHandler);
+
     QApplication a(argc, argv);
 
     AppConfig cfg;
