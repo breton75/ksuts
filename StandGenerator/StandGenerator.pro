@@ -76,7 +76,8 @@ HEADERS += \
     sv_abstract_device.h \
     ../../svlib/sv_userlogon.h \
     ../../svlib/sv_crc.h \
-    ../../svlib/sv_serial_editor.h
+    ../../svlib/sv_serial_editor.h \
+    ../global/device_params.h
 
 FORMS += \
         mainwindow.ui \

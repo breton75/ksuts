@@ -877,7 +877,7 @@ bool SvOPA::parseDeviceParams(const QString& params)
   QCommandLineParser parser; 
   parser.setSingleDashWordOptionMode(QCommandLineParser::ParseAsLongOptions);
   
-  parser.addOption(QCommandLineOption("register", "register", "register", "0000"));
+  parser.addOption(QCommandLineOption("start_register", "start_register", "start_register", "0000"));
   
   
   try {
@@ -886,7 +886,7 @@ bool SvOPA::parseDeviceParams(const QString& params)
       p_except.raise(QString("Wrong params: %1").arg(params)); 
     
     bool ok = false;
-    p_device_params.RegisterAddress = parser.value("register").toUInt(&ok, 16); 
+    p_device_params.RegisterAddress = parser.value("start_register").toUInt(&ok, 16); 
     
     if(!ok)
       p_except.raise(QString("Неверное число в параметрах: %1").arg(params));

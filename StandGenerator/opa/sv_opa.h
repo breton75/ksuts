@@ -84,7 +84,7 @@ struct OPA_DeviceParams
 {
   OPA_DeviceParams() {}
   
-  quint16 RegisterAddress;
+  quint16 StartRegisterAddress;
   
 };
 
