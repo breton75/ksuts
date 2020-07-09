@@ -83,7 +83,7 @@ void opa::SvUDPThread::process_data()
         *p_logger << sv::log::sender(p_logger->options().log_sender_name.arg(p_device->info()->index))
                   << sv::log::mtDebug
                   << sv::log::llDebug
-                  << current_register
+                  << (_header.ADDRESS << 8) << (static_cast<quint16>(_header.ADDRESS) << 8)
                   << p_device->params()->start_register
                   << sv::log::endl;
         switch (current_register - p_device->params()->start_register)
