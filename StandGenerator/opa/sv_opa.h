@@ -26,6 +26,7 @@
 #include "../../svlib/sv_settings.h"
 #include "../../svlib/sv_serial_editor.h"
 #include "../../svlib/sv_crc.h"
+#include "../../global/device_params.h"
 
 namespace Ui {
   class OPA_MainWidget;
@@ -111,7 +112,7 @@ private:
   QMap<QListWidgetItem*, OPA_Type_0x04_value> p_0x04_items;
   
   sv::SerialParams p_port_params;
-  OPA_DeviceParams p_device_params;
+  dev::DeviceParams p_device_params;
   
   OPAData p_data;
   
@@ -177,7 +178,7 @@ class SvOPAThread: public SvAbstractDeviceThread
   Q_OBJECT
   
 public:
-  SvOPAThread(sv::SerialParams *serial_params, OPA_DeviceParams* device_params, quint64 sessionTimeout, quint64 packetDelay, bool DisplayRequest, QMutex *mutex, OPAData *data);
+  SvOPAThread(sv::SerialParams *serial_params, dev::DeviceParams* device_params, quint64 sessionTimeout, quint64 packetDelay, bool DisplayRequest, QMutex *mutex, OPAData *data);
   ~SvOPAThread();
   
   void open() throw(SvException&) override;
@@ -187,7 +188,7 @@ private:
   QSerialPort p_port;
   
   sv::SerialParams* p_port_params;
-  OPA_DeviceParams* p_device_params;
+  dev::DeviceParams* p_device_params;
   
   quint64 p_session_timeout;
   quint64 p_packet_delay;

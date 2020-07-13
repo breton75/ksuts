@@ -337,16 +337,8 @@ void SvOPA::on_bnStartStop_clicked()
 //      }
       
       p_port_params = sv::SerialParams::fromJsonString(ui->editPortParams->text());
-      
-      if(!parseDeviceParams(ui->editDeviceParams->text())) {
-        
-        opalog << svlog::Critical << "Ошибка при парсинге параметров устройства" << svlog::endl;
-        
-        setState(RunState::FINISHED);
-        
-        return;
-        
-      }
+      p_device_params = dev::DeviceParams::fromJson(ui->editDeviceParams->text());
+
       
       setData();
       
@@ -584,8 +576,8 @@ void SvOPA::setData()
     {
       p_data.data_reset = QByteArray::fromHex(QString(OPA_DefByteArray_reset).toUtf8());
       
-      p_data.data_reset[2] = (p_device_params.RegisterAddress + 0x0000) >> 8;
-      p_data.data_reset[3] = (p_device_params.RegisterAddress + 0x0000) & 0xFF;
+      p_data.data_reset[2] = (p_device_params.start_register + 0x0000) >> 8;
+      p_data.data_reset[3] = (p_device_params.start_register + 0x0000) & 0xFF;
       
       quint16 crc_0x77 = CRC::MODBUS_CRC16((uchar*)p_data.data_reset.data(), p_data.data_reset.length());
       p_data.data_reset.append(crc_0x77 & 0xFF);
@@ -597,8 +589,8 @@ void SvOPA::setData()
     {
       p_data.data_duty = QByteArray::fromHex(QString(OPA_DefByteArray_duty).toUtf8());
       
-      p_data.data_duty[2] = (p_device_params.RegisterAddress + 0x0000) >> 8;
-      p_data.data_duty[3] = (p_device_params.RegisterAddress + 0x0000) & 0xFF;
+      p_data.data_duty[2] = (p_device_params.start_register + 0x0000) >> 8;
+      p_data.data_duty[3] = ( + 0x0000) & 0xFF;
       
       quint16 crc_0x00 = CRC::MODBUS_CRC16((uchar*)p_data.data_duty.data(), p_data.data_duty.length());
       p_data.data_duty.append(crc_0x00 & 0xFF).append(crc_0x00 >> 8);
@@ -609,8 +601,8 @@ void SvOPA::setData()
     {
 //      p_data.data_counter = QByteArray::fromHex(QString(OPA_DefByteArray_counter).toUtf8());
       
-//      p_data.data_counter[2] = (p_device_params.RegisterAddress + 0x0005) >> 8;
-//      p_data.data_counter[3] = (p_device_params.RegisterAddress + 0x0005) & 0xFF;
+//      p_data.data_counter[2] = (p_device_params.start_register + 0x0005) >> 8;
+//      p_data.data_counter[3] = (p_device_params.start_register + 0x0005) & 0xFF;
       
       // в потоке!      
     }
@@ -789,8 +781,8 @@ void SvOPA::setData_0x04()
     
     p_data.data_0x04 = QByteArray::fromHex(QString(OPA_DefByteArray_0x04).toUtf8());
     
-    p_data.data_0x04[2] = (p_device_params.RegisterAddress + 0x0090) >> 8;
-    p_data.data_0x04[3] = (p_device_params.RegisterAddress + 0x0090) & 0xFF;
+    p_data.data_0x04[2] = (p_device_params.start_register + 0x0090) >> 8;
+    p_data.data_0x04[3] = (p_device_params.start_register + 0x0090) & 0xFF;
     
     foreach (QListWidgetItem* wi, p_0x04_items.keys()) {
       
@@ -830,8 +822,8 @@ void SvOPA::setData_0x19()
   
     p_data.data_0x19 = QByteArray::fromHex(QString(OPA_DefByteArray_0x19).toUtf8());
     
-    p_data.data_0x19[2] = (p_device_params.RegisterAddress + 0x0006) >> 8;
-    p_data.data_0x19[3] = (p_device_params.RegisterAddress + 0x0006) & 0xFF;
+    p_data.data_0x19[2] = (p_device_params.start_register + 0x0006) >> 8;
+    p_data.data_0x19[3] = (p_device_params.start_register + 0x0006) & 0xFF;
     
     foreach (QListWidgetItem* wi, p_0x19_items.keys()) {
       
@@ -886,7 +878,7 @@ bool SvOPA::parseDeviceParams(const QString& params)
       p_except.raise(QString("Wrong params: %1").arg(params)); 
     
     bool ok = false;
-    p_device_params.RegisterAddress = parser.value("start_register").toUInt(&ok, 16); 
+    p_device_params.start_register = parser.value("start_register").toUInt(&ok, 16); 
     
     if(!ok)
       p_except.raise(QString("Неверное число в параметрах: %1").arg(params));
@@ -955,7 +947,7 @@ void SvOPA::on_bnSelectLogPath_clicked()
 }
 
 /**         SvOPAThread         **/
-SvOPAThread::SvOPAThread(sv::SerialParams *serial_params, OPA_DeviceParams *device_params, quint64 sessionTimeout, quint64 packetDelay, bool DisplayRequest, QMutex *mutex, OPAData *data):
+SvOPAThread::SvOPAThread(sv::SerialParams *serial_params, dev::DeviceParams *device_params, quint64 sessionTimeout, quint64 packetDelay, bool DisplayRequest, QMutex *mutex, OPAData *data):
   p_port_params(serial_params),
   p_device_params(device_params),
   p_session_timeout(sessionTimeout),
@@ -965,7 +957,7 @@ SvOPAThread::SvOPAThread(sv::SerialParams *serial_params, OPA_DeviceParams *devi
 {
   p_mutex = mutex;
   p_data = data;
-//  qDebug() << p_device_params->RegisterAddress;
+//  qDebug() << p_device_params->start_register;
 }
 
 SvOPAThread::~SvOPAThread()
@@ -1018,8 +1010,8 @@ void SvOPAThread::run()
        if(p_data->send_reset) {
          {
            
-           //         p_data->data_reset[2] = (p_device_params->RegisterAddress + 0x0000) >> 8;
-           //         p_data->data_reset[3] = (p_device_params->RegisterAddress + 0x0000) & 0xFF;
+           //         p_data->data_reset[2] = (p_device_params->start_register + 0x0000) >> 8;
+           //         p_data->data_reset[3] = (p_device_params->start_register + 0x0000) & 0xFF;
            
            //         quint16 crc_0x77 = CRC::MODBUS_CRC16((uchar*)p_data->data_reset.data(), p_data->data_reset.length());
            //         p_data->data_reset.append(crc_0x77 & 0xFF);
@@ -1041,8 +1033,8 @@ void SvOPAThread::run()
          {
 //           p_data->data_duty = QByteArray::fromHex(QString(OPA_DefByteArray_duty).toUtf8());
            
-//           p_data->data_duty[2] = (p_device_params->RegisterAddress + 0x0000) >> 8;
-//           p_data->data_duty[3] = (p_device_params->RegisterAddress + 0x0000) & 0xFF;
+//           p_data->data_duty[2] = (p_device_params->start_register + 0x0000) >> 8;
+//           p_data->data_duty[3] = (p_device_params->start_register + 0x0000) & 0xFF;
            
 //           quint16 crc_0x00 = CRC::MODBUS_CRC16((uchar*)p_data->data_duty.data(), p_data->data_duty.length());
 //           p_data->data_duty.append(crc_0x00 & 0xFF).append(crc_0x00 >> 8);
@@ -1058,8 +1050,8 @@ void SvOPAThread::run()
          {
            p_data->data_counter = QByteArray::fromHex(QString(OPA_DefByteArray_counter).toUtf8());
            
-           p_data->data_counter[2] = (p_device_params->RegisterAddress + 0x0005) >> 8;
-           p_data->data_counter[3] = (p_device_params->RegisterAddress + 0x0005) & 0xFF;
+           p_data->data_counter[2] = (p_device_params->start_register + 0x0005) >> 8;
+           p_data->data_counter[3] = (p_device_params->start_register + 0x0005) & 0xFF;
            
            p_data->data_counter[7] = p_data->count & 0xFF;
            p_data->data_counter[8] = p_data->count >> 8;
@@ -1081,8 +1073,8 @@ void SvOPAThread::run()
          {
            QByteArray b0x02 = QByteArray::fromHex(QString(OPA_DefByteArray_0x02).toUtf8());
            
-           b0x02[2] = (p_device_params->RegisterAddress + 0x0010) >> 8;
-           b0x02[3] = (p_device_params->RegisterAddress + 0x0010) & 0xFF;
+           b0x02[2] = (p_device_params->start_register + 0x0010) >> 8;
+           b0x02[3] = (p_device_params->start_register + 0x0010) & 0xFF;
            
            quint16 regs_cnt = p_data->data_0x02.count() * 2 + 1;
            quint8  byte_cnt = p_data->data_0x02.count() * 4 + 2;
@@ -1129,8 +1121,8 @@ void SvOPAThread::run()
          {
            QByteArray b0x03 = QByteArray::fromHex(QString(OPA_DefByteArray_0x03).toUtf8());
            
-           b0x03[2] = (p_device_params->RegisterAddress + 0x0050) >> 8;
-           b0x03[3] = (p_device_params->RegisterAddress + 0x0050) & 0xFF;
+           b0x03[2] = (p_device_params->start_register + 0x0050) >> 8;
+           b0x03[3] = (p_device_params->start_register + 0x0050) & 0xFF;
            
            quint16 regs_cnt = p_data->data_0x03.count() * 2 + 1;
            quint8  byte_cnt = p_data->data_0x03.count() * 4 + 2;

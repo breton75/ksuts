@@ -16,6 +16,7 @@ QMAKE_CXXFLAGS += -std=c++17
 
 VERSION = 1.0.0    # major.minor.patch
 DEFINES += APP_VERSION=\\\"$$VERSION\\\"
+DEFINES += VERSION_2
 
 # The following define makes your compiler emit warnings if you use
 # any feature of Qt which has been marked as deprecated (the exact warnings
