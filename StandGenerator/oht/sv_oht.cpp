@@ -633,22 +633,29 @@ void SvOHTThread::open() throw(SvException&)
   p_port.setFlowControl(p_port_params->flowcontrol);
   p_port.setDataBits(p_port_params->databits);
   p_port.setParity(p_port_params->parity);
-    
+  emit logthr("logthr 1");
+  emit logthrin("logthrin 1");
   if(!p_port.open(QIODevice::ReadWrite))
     throw exception.assign(p_port.errorString());
-
+  emit logthr("logthr 2");
+  emit logthrin("logthrin 2");
   // именно после open!
   p_port.moveToThread(this);
   
-  if(p_display_request)
+  emit logthr("logthr 3");
+  emit logthrin("logthrin 3");
+  if(p_display_request) {
+    emit logthr("logthr 4");
+    emit logthrin("logthrin 4");
     connect(&p_port, &QSerialPort::readyRead, this, &SvOHTThread::readyRead);
+  }
   
 }
 
 void SvOHTThread::readyRead()
 {
   QByteArray b = p_port.readAll();
-  
+  qDebug() << QString(b.toHex().toUpper());
   emit logthrin(QString(b.toHex().toUpper()));
 }
 
