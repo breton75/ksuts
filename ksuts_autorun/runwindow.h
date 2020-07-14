@@ -10,8 +10,10 @@
 #include "../../svlib/sv_settings.h"
 #include "../global/t_aggregate.h"
 #include "../global/t_agg_state_label.h"
-#include "../global/t_network_interface.h"
+//#include "../global/t_network_interface.h"
 #include "../global/autorun_defs.h"
+
+#include "../libs/netmon/netmon.h"
 
 namespace Ui {
 class RunWindow;
@@ -29,7 +31,8 @@ public:
 private:
   Ui::RunWindow *ui;
 
-  
+  Netmon* _net_monitor = nullptr;
+
   bool _wait_postgres = false;
   bool _wait_aggregate = false;
 
@@ -42,7 +45,7 @@ private:
   QStringList _cmds_after;
 
   QList<TAggregate*> _aggs;
-  QList<TNetworkInterface*> _ifces;
+//  QList<TNetworkInterface*> _ifces;
 
   QString _widget_run_cmd = "";
   QString _widget_user;

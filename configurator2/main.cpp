@@ -35,6 +35,7 @@ const OptionStructList AppOptions = {
     {{OPTION_AUTORUN_CFG_FILE}, "Файл конфигурации автозапуска.", "ksuts_autorun.cfg", "", ""},
     {{OPTION_TEMPLATES_DIRECTORY}, "Каталог шаблонов.", "templates", "", ""},
     {{OPTION_PATH_TO_POSTGRES_BIN}, "Каталог служебных программ postgres.", "/usr/bin", "", ""},
+    {{OPTION_LOG_SENDER_NAME_FORMAT}, "Имя отправителя для перехвата сообщений", "", "", ""},
     {{"hide"}, "Сворачивать окно в трей при запуске", "", "", ""}
 };
 

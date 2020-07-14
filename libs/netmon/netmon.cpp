@@ -9,7 +9,7 @@ Netmon::Netmon(QWidget *parent):
    makeNetworkStateLabels();
 
    _timer.setInterval(500);
-   connect(&_timer, SIGNAL(timeout()), this, SLOT(update_state_label()));
+   connect(&_timer, &QTimer::timeout, this, &Netmon::update_all_labels);
    _timer.start();
 
 }
@@ -104,9 +104,9 @@ void Netmon::setupUi()
             lblHeaderIp = new QLabel(gbFrame);
             lblHeaderIp->setObjectName(QStringLiteral("lblHeaderIp"));
             sizePolicy.setHeightForWidth(lblHeaderIp->sizePolicy().hasHeightForWidth());
-            lblHeaderIp->setSizePolicy(sizePolicy);
+            lblHeaderIp->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
             lblHeaderIp->setMinimumSize(QSize(100, 0));
-            lblHeaderIp->setMaximumSize(QSize(100, 16777215));
+            lblHeaderIp->setMaximumSize(QSize(16777215, 16777215));
             lblHeaderIp->setFont(font1);
             lblHeaderIp->setFrameShape(QFrame::StyledPanel);
             lblHeaderIp->setFrameShadow(QFrame::Plain);
@@ -116,7 +116,7 @@ void Netmon::setupUi()
 
             hSpacerFrame = new QSpacerItem(40, 20, QSizePolicy::Expanding, QSizePolicy::Minimum);
 
-            hlayHeader->addItem(hSpacerFrame);
+//            hlayHeader->addItem(hSpacerFrame);
 
 
             vlayFrame->addLayout(hlayHeader);

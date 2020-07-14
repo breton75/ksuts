@@ -99,8 +99,8 @@ public:
 
       result = QString("{\n"
                      "  \"host\": \"192.168.1.1\",\n"
-                     "  \"recv_port\": 5300,\n"
-                     "  \"send_port\": 5800\n"
+                     "  \"recv_port\": 5801,\n"
+                     "  \"send_port\": 5301\n"
                      "}");
 
       break;

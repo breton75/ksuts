@@ -100,37 +100,10 @@ RunWindow::RunWindow(QWidget *parent) :
   }
 
 
-  /// получаем список сетевых интерфейсов
-  QProcess* p = new QProcess(this);
-  p->start("sudo ifconfig -s");
-  p->waitForFinished(2000);
-  QString s(p->readAll());
-  delete p;
-
-
-  QStringList ifc_list = s.split("\n");
-  if(ifc_list.count() > 1) {
-
-      for(int i = 1; i < ifc_list.count(); i++) {
-
-          QString ifc_line = ifc_list.at(i);
-          if(ifc_line.split(" ").count() > 1) {
-
-              QString ifc = ifc_line.split(" ").at(0);
-
-              TNetworkStateLabel* ifclbl = new TNetworkStateLabel(ifc, ui->gbNetwork);
-              ui->vlayNetwork->addLayout(ifclbl->hlay);
-
-              _ifces.append(new TNetworkInterface(ifc, ifclbl));
-
-          }
-
-//      while(ifc.at(i).isDigit())
-
-
-    }
-  }
-
+  /// список сетевых интерфейсов
+  _net_monitor = new Netmon(ui->widgetNetwork);
+  ui->vlayNetwork->addWidget(_net_monitor);
+  _net_monitor->setVisible(true);
 
 
   /// postgres
@@ -158,6 +131,8 @@ RunWindow::RunWindow(QWidget *parent) :
   _t_start.setInterval(500);
   connect(&_t_start, SIGNAL(timeout()), this, SLOT(wait_for()));
   _t_start.start();
+
+  setWindowState(Qt::WindowMinimized);
 
 }
 

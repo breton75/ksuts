@@ -1,0 +1,156 @@
+/home/user/proj/can_server:
+итого 208
+-rw-r--r-- 1 user user   348 дек.  11 11:45 analog_data.sql
+drwxr-xr-x 2 user user  4096 дек.  11 16:29 build
+-rwxrwxrwx 1 user user  6647 окт.   5 14:43 can_parser.cpp
+-rwxrwxrwx 1 user user  2370 окт.   5 14:43 can_parser.h
+-rwxrwxrwx 1 user user  1833 дек.   4 11:32 can_queue.cpp
+-rwxrwxrwx 1 user user  3671 дек.   4 11:13 can_queue.h
+-rwxrwxrwx 1 user user   711 окт.   5 14:43 can_server.pro
+-rwxrwxrwx 1 user user 18830 дек.  11 19:15 can_server.pro.user
+-rwxrwxrwx 1 user user 18830 окт.   9 12:22 can_server.pro.user.48b2eec
+-rwxrwxrwx 1 user user   182 окт.   5 14:43 can_server.qrc
+-rwxrwxrwx 1 user user  3416 окт.   5 14:43 Close.png
+-rwxrwxrwx 1 user user  2138 окт.   5 14:43 command_timer.cpp
+-rwxrwxrwx 1 user user  2040 окт.   5 14:43 command_timer.h
+-rwxrwxrwx 1 user user  2550 окт.   5 14:43 Danger.ico
+-rwxrwxrwx 1 user user  6481 окт.   5 14:43 db_queue.cpp
+-rwxrwxrwx 1 user user  2583 окт.   5 14:43 db_queue.h
+drwxrwxrwx 2 user user  4096 дек.  11 11:53 debug
+-rw-r--r-- 1 user user     0 дек.  12 14:34 dir_list.txt
+-rwxrwxrwx 1 user user   994 окт.   5 14:43 main.cpp
+-rwxrwxrwx 1 user user 58260 дек.  11 16:29 mainwindow.cpp
+-rwxrwxrwx 1 user user  6591 дек.   4 13:15 mainwindow.h
+-rwxrwxrwx 1 user user  2979 окт.   5 14:43 mainwindow.ui
+-rwxrwxrwx 1 user user   916 окт.   5 14:43 Network.png
+drwxr-xr-x 2 user user  4096 дек.  11 12:54 postgres_funcs
+-rwxrwxrwx 1 user user  6174 дек.   4 14:19 sv_can.cpp
+-rwxrwxrwx 1 user user  2450 дек.   4 11:01 sv_can.h
+-rwxrwxrwx 1 user user  2814 окт.   5 14:43 Win.png
+
+/home/user/proj/can_server/build:
+итого 764
+-rw-r--r-- 1 user user  23792 дек.  11 16:29 can_parser.o
+-rw-r--r-- 1 user user   9792 дек.  11 16:29 can_queue.o
+-rwxr-xr-x 1 user user 204580 дек.  11 16:29 can_server
+-rw-r--r-- 1 user user   4736 дек.  11 16:29 command_timer.o
+-rw-r--r-- 1 user user  16576 дек.  11 16:29 db_queue.o
+-rw-r--r-- 1 user user   6336 дек.  11 16:29 main.o
+-rw-r--r-- 1 user user 171480 дек.  11 16:29 mainwindow.o
+-rw-r--r-- 1 user user 138498 дек.  11 11:55 Makefile
+-rw-r--r-- 1 user user   7605 дек.  11 16:29 moc_can_parser.cpp
+-rw-r--r-- 1 user user  10480 дек.  11 16:29 moc_can_parser.o
+-rw-r--r-- 1 user user   5223 дек.  11 16:29 moc_command_timer.cpp
+-rw-r--r-- 1 user user  10680 дек.  11 16:29 moc_command_timer.o
+-rw-r--r-- 1 user user   7537 дек.  11 16:29 moc_mainwindow.cpp
+-rw-r--r-- 1 user user  15664 дек.  11 16:29 moc_mainwindow.o
+-rw-r--r-- 1 user user   5513 дек.  11 16:29 moc_sv_can.cpp
+-rw-r--r-- 1 user user   8840 дек.  11 16:29 moc_sv_can.o
+-rw-r--r-- 1 user user  51668 дек.  11 16:29 qrc_can_server.cpp
+-rw-r--r-- 1 user user  13008 дек.  11 16:29 qrc_can_server.o
+-rw-r--r-- 1 user user  25080 дек.  11 16:29 sv_can.o
+-rw-r--r-- 1 user user   4752 дек.  11 16:29 ui_mainwindow.h
+
+/home/user/proj/can_server/debug:
+итого 9160
+-rw-r--r-- 1 user user  549168 дек.   4 11:17 can_parser.o
+-rw-r--r-- 1 user user  424360 дек.   4 15:24 can_queue.o
+-rwxr-xr-x 1 user user 2515538 дек.  11 11:53 can_server
+-rw-r--r-- 1 user user  344808 дек.   4 11:17 command_timer.o
+-rw-r--r-- 1 user user  435944 дек.   4 11:17 db_queue.o
+-rw-r--r-- 1 user user  760368 дек.   4 15:24 main.o
+-rw-r--r-- 1 user user 1533024 дек.  11 11:53 mainwindow.o
+-rwxrwxrwx 1 user user  133068 окт.   5 14:43 Makefile
+-rw-r--r-- 1 user user    7605 дек.   4 11:17 moc_can_parser.cpp
+-rw-r--r-- 1 user user  448208 дек.   4 11:17 moc_can_parser.o
+-rw-r--r-- 1 user user    5223 дек.   4 11:17 moc_command_timer.cpp
+-rw-r--r-- 1 user user  378608 дек.   4 11:17 moc_command_timer.o
+-rw-r--r-- 1 user user    7537 дек.   4 15:24 moc_mainwindow.cpp
+-rw-r--r-- 1 user user  834048 дек.   4 15:24 moc_mainwindow.o
+-rw-r--r-- 1 user user    5513 дек.   4 11:17 moc_sv_can.cpp
+-rw-r--r-- 1 user user  396592 дек.   4 11:17 moc_sv_can.o
+-rw-r--r-- 1 user user   51668 дек.   4 11:17 qrc_can_server.cpp
+-rw-r--r-- 1 user user   18192 дек.   4 11:17 qrc_can_server.o
+-rw-r--r-- 1 user user  482072 дек.   4 15:24 sv_can.o
+-rw-r--r-- 1 user user    4752 дек.   4 11:17 ui_mainwindow.h
+
+/home/user/proj/can_server/postgres_funcs:
+итого 20
+-rw-r--r-- 1 user user 1683 дек.  11 12:52 function_set_can_val_d.sql
+-rw-r--r-- 1 user user 1285 дек.  11 16:07 function_update_analog_data.sql
+-rwxr-xr-x 1 user user 1781 дек.  11 10:29 get_soeg.sql
+-rwxr-xr-x 1 user user 1497 дек.  11 10:40 set_can_val_a.sql
+-rwxr-xr-x 1 user user 1497 дек.  11 10:12 set_can_val_d.sql
+4,0K	/home/user/proj/can_server/can_server.qrc
+20K	/home/user/proj/can_server/can_server.pro.user.48b2eec
+4,0K	/home/user/proj/can_server/can_queue.h
+4,0K	/home/user/proj/can_server/db_queue.h
+472K	/home/user/proj/can_server/debug/sv_can.o
+52K	/home/user/proj/can_server/debug/qrc_can_server.cpp
+2,5M	/home/user/proj/can_server/debug/can_server
+8,0K	/home/user/proj/can_server/debug/moc_mainwindow.cpp
+428K	/home/user/proj/can_server/debug/db_queue.o
+816K	/home/user/proj/can_server/debug/moc_mainwindow.o
+132K	/home/user/proj/can_server/debug/Makefile
+372K	/home/user/proj/can_server/debug/moc_command_timer.o
+744K	/home/user/proj/can_server/debug/main.o
+8,0K	/home/user/proj/can_server/debug/moc_command_timer.cpp
+8,0K	/home/user/proj/can_server/debug/ui_mainwindow.h
+1,5M	/home/user/proj/can_server/debug/mainwindow.o
+8,0K	/home/user/proj/can_server/debug/moc_sv_can.cpp
+440K	/home/user/proj/can_server/debug/moc_can_parser.o
+340K	/home/user/proj/can_server/debug/command_timer.o
+8,0K	/home/user/proj/can_server/debug/moc_can_parser.cpp
+388K	/home/user/proj/can_server/debug/moc_sv_can.o
+20K	/home/user/proj/can_server/debug/qrc_can_server.o
+416K	/home/user/proj/can_server/debug/can_queue.o
+540K	/home/user/proj/can_server/debug/can_parser.o
+9,0M	/home/user/proj/can_server/debug
+4,0K	/home/user/proj/can_server/can_queue.cpp
+4,0K	/home/user/proj/can_server/sv_can.h
+4,0K	/home/user/proj/can_server/command_timer.h
+60K	/home/user/proj/can_server/mainwindow.cpp
+8,0K	/home/user/proj/can_server/dir_list.txt
+4,0K	/home/user/proj/can_server/main.cpp
+4,0K	/home/user/proj/can_server/Network.png
+4,0K	/home/user/proj/can_server/Danger.ico
+8,0K	/home/user/proj/can_server/db_queue.cpp
+4,0K	/home/user/proj/can_server/mainwindow.ui
+4,0K	/home/user/proj/can_server/Win.png
+4,0K	/home/user/proj/can_server/can_server.pro
+4,0K	/home/user/proj/can_server/postgres_funcs/set_can_val_a.sql
+4,0K	/home/user/proj/can_server/postgres_funcs/function_update_analog_data.sql
+4,0K	/home/user/proj/can_server/postgres_funcs/set_can_val_d.sql
+4,0K	/home/user/proj/can_server/postgres_funcs/get_soeg.sql
+4,0K	/home/user/proj/can_server/postgres_funcs/function_set_can_val_d.sql
+24K	/home/user/proj/can_server/postgres_funcs
+20K	/home/user/proj/can_server/can_server.pro.user
+4,0K	/home/user/proj/can_server/can_parser.h
+28K	/home/user/proj/can_server/build/sv_can.o
+52K	/home/user/proj/can_server/build/qrc_can_server.cpp
+200K	/home/user/proj/can_server/build/can_server
+8,0K	/home/user/proj/can_server/build/moc_mainwindow.cpp
+20K	/home/user/proj/can_server/build/db_queue.o
+16K	/home/user/proj/can_server/build/moc_mainwindow.o
+136K	/home/user/proj/can_server/build/Makefile
+12K	/home/user/proj/can_server/build/moc_command_timer.o
+8,0K	/home/user/proj/can_server/build/main.o
+8,0K	/home/user/proj/can_server/build/moc_command_timer.cpp
+8,0K	/home/user/proj/can_server/build/ui_mainwindow.h
+168K	/home/user/proj/can_server/build/mainwindow.o
+8,0K	/home/user/proj/can_server/build/moc_sv_can.cpp
+12K	/home/user/proj/can_server/build/moc_can_parser.o
+8,0K	/home/user/proj/can_server/build/command_timer.o
+8,0K	/home/user/proj/can_server/build/moc_can_parser.cpp
+12K	/home/user/proj/can_server/build/moc_sv_can.o
+16K	/home/user/proj/can_server/build/qrc_can_server.o
+12K	/home/user/proj/can_server/build/can_queue.o
+24K	/home/user/proj/can_server/build/can_parser.o
+768K	/home/user/proj/can_server/build
+4,0K	/home/user/proj/can_server/Close.png
+8,0K	/home/user/proj/can_server/sv_can.cpp
+4,0K	/home/user/proj/can_server/command_timer.cpp
+4,0K	/home/user/proj/can_server/analog_data.sql
+8,0K	/home/user/proj/can_server/mainwindow.h
+8,0K	/home/user/proj/can_server/can_parser.cpp
+10M	/home/user/proj/can_server

@@ -23,8 +23,6 @@ SOURCES += main.cpp\
     editwindow.cpp \
     ../global/t_aggregate.cpp \
     ../global/t_agg_state_label.cpp \
-    ../global/t_network_state_label.cpp \
-    ../global/t_network_interface.cpp
 
 HEADERS  += \
     ../../svlib/sv_settings.h \
@@ -32,8 +30,6 @@ HEADERS  += \
     editwindow.h \
     ../global/t_aggregate.h \
     ../global/t_agg_state_label.h \
-    ../global/t_network_state_label.h \
-    ../global/t_network_interface.h \
     ../global/autorun_defs.h
 
 FORMS    += \
@@ -42,3 +38,10 @@ FORMS    += \
 
 RESOURCES += \
     res.qrc
+
+unix:!macx: LIBS += -L$$PWD/../global/ -lnetmon
+
+INCLUDEPATH += $$PWD/../libs/netmon
+DEPENDPATH += $$PWD/../libs/netmon
+
+unix:!macx: PRE_TARGETDEPS += $$PWD/../global/libnetmon.a

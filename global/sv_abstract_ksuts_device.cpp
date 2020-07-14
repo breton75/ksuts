@@ -77,13 +77,6 @@ void dev::SvAbstractKsutsDevice::deleteThread()
   // тут надо делать через сигнал слот, иначе ругается что останавливаем сокет или порт из другого потока
   emit stop_thread();
 
-//  if(p_thread) {
-
-//    delete p_thread;
-//    p_thread = nullptr;
-
-//  }
-
 }
 
 sv::log::sender dev::SvAbstractKsutsDevice::make_dbus_sender()
@@ -122,7 +115,7 @@ void dev::SvAbstractUdpThread::setIfcParams(const QString& params) throw(SvExcep
 
 void dev::SvAbstractUdpThread::open() throw(SvException&)
 {
-  if(!p_socket.bind(p_ifc_params.listen_port, QAbstractSocket::DontShareAddress))
+  if(!p_socket.bind(p_ifc_params.recv_port, QAbstractSocket::DontShareAddress))
     throw p_exception.assign(p_socket.errorString());
 
   // с заданным интервалом сбрасываем буфер, чтобы отсекать мусор и битые пакеты
@@ -146,7 +139,12 @@ quint64 dev::SvAbstractUdpThread::write(const QByteArray& data)
               << QString(data.toHex())
               << sv::log::endl;
 
-  return p_socket.writeDatagram(data, QHostAddress(p_ifc_params.host), p_ifc_params.remote_port);
+  QUdpSocket s;
+  quint64 w = s.writeDatagram(data, QHostAddress(p_ifc_params.host), p_ifc_params.send_port);
+//  quint64 w = p_socket.write(data, QHostAddress(p_ifc_params.host), p_ifc_params.remote_port);
+  s.flush();
+
+  return w;
 
 }
 
