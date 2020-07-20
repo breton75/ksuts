@@ -1872,37 +1872,6 @@ void MainWindow::on_bnGetLostSignals_clicked()
 
 }
 
-void MainWindow::on_bnTestGetSoeg_clicked()
-{
-  if(!create_tcp_server(502))
-    return;
-
-  qDebug() << "server started";
-
-}
-
-
-
-bool MainWindow::create_tcp_server(quint16 port)
-{
-  QString dbname = "cms_db";
-  QString dbhost = "localhost";
-  quint16 dbport = 5432;
-  QString dbuser = "postgres";
-  QString dbpass = "postgres";
-
-
-//    _server = new svtcp::SvTcpServer(_log, false);
-//    if(!_server->startServer(port, dbname, dbhost, dbport, dbuser, dbpass)) {
-//      qDebug() << QString("%1").arg(_server->lastError());
-//      return false;
-//    }
-
-
-    return true;
-
-}
-
 void MainWindow::on_bn1SecCycle_clicked()
 {
     if(sec)
@@ -2463,3 +2432,93 @@ qDebug() << "finished";
 
 }
 
+
+void MainWindow::on_bnSignalParams_clicked()
+{
+  if(!connectPGDB("cms_db"))
+    return;
+
+  QSqlError err;
+
+  /*  1  *
+  foreach (quint8 signal_faktor, SIGNALS_TABLE.keys()) {
+
+    signals_by_detector* signals_map = SIGNALS_TABLE.value(signal_faktor);
+
+
+    foreach (int sensor_num, signals_map->keys()) {
+
+      QString signal_name = signals_map->value(sensor_num);
+
+      err = PGDB->execSQL(QString("update signals set signal_params = '{\"sensor\":%1, \"faktor\":%2}' where signal_name = '%3'")
+                          .arg(sensor_num).arg(signal_faktor).arg(signal_name));
+
+      if(err.type() != QSqlError::NoError) {
+
+        qDebug() << err.text();
+        return;
+
+      }
+
+
+      qDebug() << signal_faktor << sensor_num << signal_name;
+
+
+    }
+
+  }
+  *  1  */
+
+  QString q = "INSERT INTO signals( "\
+      "signal_index, cob_id, device_index, sensor_number, alert_type_index, "\
+      "signal_marker, signal_name, timeout, timeout_value, data_offset, "\
+      "data_length, data_type, description, timeout_signal_index, is_involved, "\
+      "storage0_linked, storage1_linked, storage2_linked, soeg_register, "\
+      "soeg_offset, soeg_data_length, soeg_data_type, hardware_code, "\
+      "signal_params) "\
+      "(select signal_index + 2636, cob_id, 21, sensor_number, alert_type_index, "\
+      "signal_marker, 'C8_' || signal_name, timeout, timeout_value, data_offset, "\
+      "data_length, data_type, description, signal_index, true, "\
+      "storage0_linked, storage1_linked, storage2_linked, soeg_register, "\
+      "soeg_offset, soeg_data_length, soeg_data_type, hardware_code, "\
+      "signal_params from signals where signal_index in (%1))";
+
+  QString q1 = "update signals set device_index =20 where signal_index in (%1)";
+
+  QString q2 = "INSERT INTO signals( "\
+      "signal_index, cob_id, device_index, sensor_number, alert_type_index, "\
+      "signal_marker, signal_name, timeout, timeout_value, data_offset, "\
+      "data_length, data_type, description, timeout_signal_index, is_involved, "\
+      "storage0_linked, storage1_linked, storage2_linked, soeg_register, "\
+      "soeg_offset, soeg_data_length, soeg_data_type, hardware_code, "\
+      "signal_params) "\
+      "(select signal_index + 3972, cob_id, 28, sensor_number, alert_type_index, "\
+      "signal_marker, 'C150_' || signal_name, timeout, timeout_value, data_offset, "\
+      "data_length, data_type, description, signal_index, true, "\
+      "storage0_linked, storage1_linked, storage2_linked, NULL, "\
+      "soeg_offset, soeg_data_length, soeg_data_type, hardware_code, "\
+      "signal_params from signals where signal_index in (%1))";
+
+
+
+
+  QString s = "";
+  for(int i: gamma150)
+  {
+    s += QString("%1,").arg(i);
+  }
+
+  s.chop(1);
+
+//  qDebug() << q.arg(s);
+  err = PGDB->execSQL(q2.arg(s));
+
+  if(err.type() != QSqlError::NoError) {
+
+    qDebug() << err.text();
+    return;
+
+  }
+
+qDebug() << "finished";
+}

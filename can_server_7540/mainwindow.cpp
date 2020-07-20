@@ -547,7 +547,6 @@ bool MainWindow::startCan(quint8 id)
 }
 
 bool MainWindow::stopCan(quint8 id)
-
 {
     qDebug() << "stopCan" << id;
     QString dev_name = "can" + QString::number(id);
@@ -625,7 +624,7 @@ bool MainWindow::canStartStop(quint8 id)
     if(!mode_changed) return false; // "не шмагла..."
 
     // выставляем признаки для контроля связи
-    quint8 anotherPortId = id == 0? 1:0;
+    quint8 anotherPortId = id == 0 ? 1 : 0;
     bool anotherPortIsClosed = !can_run[anotherPortId];
     if(can_run[id]) setSingnalsStateOn(id, anotherPortIsClosed);
     else setSingnalsStateOff(id, anotherPortIsClosed);

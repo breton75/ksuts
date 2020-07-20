@@ -5,7 +5,6 @@
 
 SvSKM::SvSKM(sv::SvAbstractLogger *logger):
   dev::SvAbstractKsutsDevice(dev::SKM, logger)
-//  p_logger(logger)
 {
 
 }
@@ -45,72 +44,6 @@ bool SvSKM::create_new_thread()
 }
 
 
-//SvSKM::~SvSKM()
-//{
-//  deleteThread();
-//  deleteLater();
-//}
-
-//bool SvSKM::setup(const dev::DeviceInfo& info)
-//{
-//  p_info = info;
-
-//  try {
-    
-//    p_params = dev::DeviceParams::fromJson(info.device_params);
-
-//    return true;
-      
-//  }
-  
-//  catch(SvException& e) {
-
-//    setLastError(e.error);
-//    return false;
-//  }
-//}
-
-//bool SvSKM::open()
-//{
-//  try {
-
-//    p_thread = new SvSKMThread(this, p_logger);
-//    connect(p_thread, &dev::SvAbstractKsutsDeviceThread::finished, this, &SvSKM::deleteThread);
-//    connect(p_thread, &dev::SvAbstractKsutsDeviceThread::finished, p_thread, &dev::SvAbstractKsutsDeviceThread::deleteLater);
-
-//    p_thread->open();
-//    p_thread->start();
-
-//    return true;
-
-//  } catch(SvException& e) {
-
-//    *p_logger << sv::log::mtError << sv::log::llError << e.error << sv::log::endl;
-
-//    deleteThread();
-
-//    return false;
-
-//  }
-//}
-
-//void SvSKM::close()
-//{
-//  deleteThread();
-
-//  p_isOpened = false;
-//}
-
-//void SvSKM::deleteThread()
-//{
-//  if(p_thread) {
-
-//    delete p_thread;
-//    p_thread = nullptr;
-
-//  }
-//}
-
 /**         skm::SvUDPThread         **/
 skm::SvUDPThread::SvUDPThread(dev::SvAbstractDevice* device, sv::SvAbstractLogger *logger):
   dev::SvAbstractUdpThread(device, logger)
@@ -134,7 +67,7 @@ void skm::SvUDPThread::process_data()
     // ищем признак конца пакета
     if((p_buff.buf[p_buff.offset - 1] == 0x55) && (p_buff.buf[p_buff.offset - 2] == 0x2F)) {
 
-        if(p_logger && p_device->info()->debug_mode)
+        if(p_logger) // && p_device->info()->debug_mode)
           *p_logger << static_cast<dev::SvAbstractKsutsDevice*>(p_device)->make_dbus_sender()
                     << sv::log::mtDebug
                     << sv::log::llDebug
@@ -197,7 +130,7 @@ void skm::SvSerialThread::process_data()
     // ищем признак конца пакета
     if((p_buff.buf[p_buff.offset - 1] == 0x55) && (p_buff.buf[p_buff.offset - 2] == 0x2F)) {
 
-        if(p_logger && p_device->info()->debug_mode)
+        if(p_logger) // && p_device->info()->debug_mode)
           *p_logger << static_cast<dev::SvAbstractKsutsDevice*>(p_device)->make_dbus_sender()
                     << sv::log::mtDebug
                     << sv::log::llDebug

@@ -50,7 +50,6 @@ SOURCES += \
     sv_editconfig.cpp \
     ../../svlib/sv_serial_editor.cpp \
     ../../svlib/sv_dbus.cpp \
-    ../../svlib/sv_clog.cpp \
     ../../svlib/sv_abstract_logger.cpp \
     ../../svlib/sv_fnt.cpp \
     ../../svlib/sv_udp_editor.cpp \
@@ -78,7 +77,6 @@ HEADERS += \
     sv_editconfig.h \
     ../../svlib/sv_busy_window.h \
     ../../svlib/sv_dbus.h \
-    ../../svlib/sv_clog.h \
     ../../svlib/sv_abstract_logger.h \
     ../../svlib/sv_fnt.h \
     ../global/device_params.h \

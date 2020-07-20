@@ -18,7 +18,6 @@
 
 #include "../../svlib/sv_crc.h"
 #include "../../svlib/sv_exception.h"
-#include "../../svlib/sv_clog.h"
 
 
 

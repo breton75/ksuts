@@ -24,12 +24,12 @@ int reconnect(const QString& ifc_name, QTcpSocket* socket, QHostAddress& tcp_hos
   /* For TCP sockets, this function may be used to specify
    * which interface to use for an outgoing connection,
    * which is useful in case of multiple network interfaces */
-  socket->bind(ifc.addressEntries().at(0).ip());
-
+//  socket->bind(ifc.addressEntries().at(0).ip());
   socket->connectToHost(tcp_host, tcp_port);
 
   if(!socket->waitForConnected(1000))
     return -3;
+  qDebug() << "connected!! to " << tcp_host << ifc.addressEntries().at(0).ip() << socket->peerAddress();
 
   return 0;
 
@@ -177,7 +177,7 @@ SvCAN_Reader::SvCAN_Reader(int id, const QString& ifc_name, QHostAddress ip, qui
     tcp_host = ip;
     tcp_port = port;
 
-    connect(&tcp_client, SIGNAL(error(QAbstractSocket::SocketError)), this, SLOT(on_error(QAbstractSocket::SocketError)));
+
 
 }
 
@@ -222,12 +222,14 @@ int SvCAN_Reader::init(QString dev_name, CAN_Queue* out) //can_frame* out)
 
     _connected = true;
 
-    tcp_client.moveToThread(this);
 
     connect(&tcp_client, SIGNAL(error(QAbstractSocket::SocketError)), this, SLOT(on_error(QAbstractSocket::SocketError)));
 //    connect(&tcp_client, &QAbstractSocket::error, [=](QAbstractSocket::SocketError){ tcp_client.disconnectFromHost(); });
 
     this->start();
+
+    tcp_client.moveToThread(this);
+
     return 0;
 }
 
@@ -239,8 +241,8 @@ void SvCAN_Reader::setLogging(bool newLogging, quint32 new_can_id)
 
 void SvCAN_Reader::on_error(QAbstractSocket::SocketError e)
 {
-  Q_UNUSED(e);
-
+//  Q_UNUSED(e);
+qDebug() << tcp_client.localAddress() << tcp_client.peerAddress() << e;
   _connected = false;
 }
 
@@ -274,6 +276,7 @@ void SvCAN_Reader::run()
             if(QChar(hexpack.at(0)).toLower() != QChar('t'))
               continue;
 
+            qDebug() << b;
             memset(&frame, 0, sizeof(frame));
 
             bool ok;
@@ -291,7 +294,7 @@ void SvCAN_Reader::run()
 //            for(int i = 0; i < frame.can_dlc; ++i)
 //              frame.data[i] = d.at(frame.can_dlc - i - 1);
 
-            memcpy((char*)&frame.data, QByteArray::fromHex(hexpack.mid(5, frame.can_dlc)).data(), frame.can_dlc * 2);
+            memcpy((char*)&frame.data, QByteArray::fromHex(hexpack.mid(5, frame.can_dlc * 2)).data(), frame.can_dlc);
 
             {
                 // отладка - контроль пакетов по can_id

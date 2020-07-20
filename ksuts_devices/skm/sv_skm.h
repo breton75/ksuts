@@ -16,7 +16,6 @@
 #include "../global/device_params.h"
 
 #include "../../svlib/sv_exception.h"
-#include "../../svlib/sv_clog.h"
 #include "../../svlib/sv_crc.h"
 
 namespace skm {

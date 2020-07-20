@@ -265,12 +265,12 @@ void SvDeviceList::on_bnRemoveSelected_clicked()
 
     serr = PGDB->execSQL(QString(SQL_DELETE_SELECTED_DEVICES).arg(devices_list));
 
-    if(serr.type() == QSqlError::NoError) {
-      serr = PGDB->execSQL(QString(SQL_DELETE_SIGNALS_WHERE_DEVICE_IN).arg(devices_list));
+//    if(serr.type() == QSqlError::NoError) {
+//      serr = PGDB->execSQL(QString(SQL_DELETE_SIGNALS_WHERE_DEVICE_IN).arg(devices_list));
 
-//      if(serr.type() == QSqlError::NoError)
-//        serr = PGDB->execSQL(SQL_UPDATE_DEVICE_INDEX_OPA_AFTER_DELETE);
-    }
+////      if(serr.type() == QSqlError::NoError)
+////        serr = PGDB->execSQL(SQL_UPDATE_DEVICE_INDEX_OPA_AFTER_DELETE);
+//    }
 
     if(serr.type() != QSqlError::NoError)
       _e.raise(serr.text());

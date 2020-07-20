@@ -1,7 +1,7 @@
 /********************************************************************************
 ** Form generated from reading UI file 'mainwindow.ui'
 **
-** Created by: Qt User Interface Compiler version 5.11.0
+** Created by: Qt User Interface Compiler version 5.5.1
 **
 ** WARNING! All changes made in this file will be lost when recompiling UI file!
 ********************************************************************************/
@@ -10,8 +10,11 @@
 #define UI_MAINWINDOW_H
 
 #include <QtCore/QVariant>
+#include <QtWidgets/QAction>
 #include <QtWidgets/QApplication>
+#include <QtWidgets/QButtonGroup>
 #include <QtWidgets/QHBoxLayout>
+#include <QtWidgets/QHeaderView>
 #include <QtWidgets/QLabel>
 #include <QtWidgets/QLineEdit>
 #include <QtWidgets/QMainWindow>
@@ -72,6 +75,7 @@ public:
     QPushButton *bnAddSensors;
     QPushButton *bnSensorsByPlacements;
     QPushButton *bnTestJson;
+    QPushButton *bnSignalParams;
     QMenuBar *menuBar;
     QToolBar *mainToolBar;
     QStatusBar *statusBar;
@@ -247,6 +251,9 @@ public:
         bnTestJson = new QPushButton(centralWidget);
         bnTestJson->setObjectName(QStringLiteral("bnTestJson"));
         bnTestJson->setGeometry(QRect(370, 280, 80, 25));
+        bnSignalParams = new QPushButton(centralWidget);
+        bnSignalParams->setObjectName(QStringLiteral("bnSignalParams"));
+        bnSignalParams->setGeometry(QRect(350, 160, 141, 25));
         MainWindow->setCentralWidget(centralWidget);
         menuBar = new QMenuBar(MainWindow);
         menuBar->setObjectName(QStringLiteral("menuBar"));
@@ -266,40 +273,41 @@ public:
 
     void retranslateUi(QMainWindow *MainWindow)
     {
-        MainWindow->setWindowTitle(QApplication::translate("MainWindow", "MainWindow", nullptr));
-        bnDec2Hex->setText(QApplication::translate("MainWindow", "hex", nullptr));
-        bnAnalogPattern->setText(QApplication::translate("MainWindow", "Analog", nullptr));
-        bnDigitalPattern->setText(QApplication::translate("MainWindow", "Digital", nullptr));
-        bnSignalPattern->setText(QApplication::translate("MainWindow", "Signal", nullptr));
-        bnDetectors->setText(QApplication::translate("MainWindow", "detectors", nullptr));
-        bnDigitalPatternWithoutSdLd->setText(QApplication::translate("MainWindow", "Digital WithoutSdLd", nullptr));
-        bnSignalPatternWithoutSdLd->setText(QApplication::translate("MainWindow", "Signal WithoutSdLd", nullptr));
-        bnAnalogPatternWithoutSdLd->setText(QApplication::translate("MainWindow", "Analog WithoutSdLd", nullptr));
-        bnPlus1ToDummy->setText(QApplication::translate("MainWindow", "+1 to Dummy", nullptr));
-        bnTreatGAMMA->setText(QApplication::translate("MainWindow", "treat GAMMA", nullptr));
-        pushButton_2->setText(QApplication::translate("MainWindow", "PushButton", nullptr));
-        bnJoinCANSignals->setText(QApplication::translate("MainWindow", "join CAN signals", nullptr));
-        bnTreatSKM->setText(QApplication::translate("MainWindow", "treat SKM", nullptr));
-        bnSOEG_1->setText(QApplication::translate("MainWindow", "SOEG_1", nullptr));
-        bnTreatCANSignals->setText(QApplication::translate("MainWindow", "treat CAN signals", nullptr));
-        bnGetLostSignals->setText(QApplication::translate("MainWindow", "get Lost signals", nullptr));
-        bnTestGetSoeg->setText(QApplication::translate("MainWindow", "test get_soeg", nullptr));
-        bn1SecCycle->setText(QApplication::translate("MainWindow", "1 sec cycle", nullptr));
-        bnDigital2->setText(QApplication::translate("MainWindow", "Digital2", nullptr));
-        bnAnalog2->setText(QApplication::translate("MainWindow", "Analog2", nullptr));
-        bnSignal2->setText(QApplication::translate("MainWindow", "Signal2", nullptr));
-        bnTestNewSignals->setText(QApplication::translate("MainWindow", "test new signals", nullptr));
-        bnNextNewSignal->setText(QApplication::translate("MainWindow", "next", nullptr));
-        bnCloseTestNewSignals->setText(QApplication::translate("MainWindow", "close", nullptr));
-        lblSignalName->setText(QApplication::translate("MainWindow", "TextLabel", nullptr));
-        radioOk->setText(QApplication::translate("MainWindow", "OK", nullptr));
-        radio525->setText(QApplication::translate("MainWindow", "5 % 25", nullptr));
-        radioHladon->setText(QApplication::translate("MainWindow", "Hladon", nullptr));
+        MainWindow->setWindowTitle(QApplication::translate("MainWindow", "MainWindow", 0));
+        bnDec2Hex->setText(QApplication::translate("MainWindow", "hex", 0));
+        bnAnalogPattern->setText(QApplication::translate("MainWindow", "Analog", 0));
+        bnDigitalPattern->setText(QApplication::translate("MainWindow", "Digital", 0));
+        bnSignalPattern->setText(QApplication::translate("MainWindow", "Signal", 0));
+        bnDetectors->setText(QApplication::translate("MainWindow", "detectors", 0));
+        bnDigitalPatternWithoutSdLd->setText(QApplication::translate("MainWindow", "Digital WithoutSdLd", 0));
+        bnSignalPatternWithoutSdLd->setText(QApplication::translate("MainWindow", "Signal WithoutSdLd", 0));
+        bnAnalogPatternWithoutSdLd->setText(QApplication::translate("MainWindow", "Analog WithoutSdLd", 0));
+        bnPlus1ToDummy->setText(QApplication::translate("MainWindow", "+1 to Dummy", 0));
+        bnTreatGAMMA->setText(QApplication::translate("MainWindow", "treat GAMMA", 0));
+        pushButton_2->setText(QApplication::translate("MainWindow", "PushButton", 0));
+        bnJoinCANSignals->setText(QApplication::translate("MainWindow", "join CAN signals", 0));
+        bnTreatSKM->setText(QApplication::translate("MainWindow", "treat SKM", 0));
+        bnSOEG_1->setText(QApplication::translate("MainWindow", "SOEG_1", 0));
+        bnTreatCANSignals->setText(QApplication::translate("MainWindow", "treat CAN signals", 0));
+        bnGetLostSignals->setText(QApplication::translate("MainWindow", "get Lost signals", 0));
+        bnTestGetSoeg->setText(QApplication::translate("MainWindow", "test get_soeg", 0));
+        bn1SecCycle->setText(QApplication::translate("MainWindow", "1 sec cycle", 0));
+        bnDigital2->setText(QApplication::translate("MainWindow", "Digital2", 0));
+        bnAnalog2->setText(QApplication::translate("MainWindow", "Analog2", 0));
+        bnSignal2->setText(QApplication::translate("MainWindow", "Signal2", 0));
+        bnTestNewSignals->setText(QApplication::translate("MainWindow", "test new signals", 0));
+        bnNextNewSignal->setText(QApplication::translate("MainWindow", "next", 0));
+        bnCloseTestNewSignals->setText(QApplication::translate("MainWindow", "close", 0));
+        lblSignalName->setText(QApplication::translate("MainWindow", "TextLabel", 0));
+        radioOk->setText(QApplication::translate("MainWindow", "OK", 0));
+        radio525->setText(QApplication::translate("MainWindow", "5 % 25", 0));
+        radioHladon->setText(QApplication::translate("MainWindow", "Hladon", 0));
         radioEdit->setText(QString());
-        bnAddPlacements->setText(QApplication::translate("MainWindow", "Add placements", nullptr));
-        bnAddSensors->setText(QApplication::translate("MainWindow", "Add Sensors", nullptr));
-        bnSensorsByPlacements->setText(QApplication::translate("MainWindow", "Sensors by Placements", nullptr));
-        bnTestJson->setText(QApplication::translate("MainWindow", "test json", nullptr));
+        bnAddPlacements->setText(QApplication::translate("MainWindow", "Add placements", 0));
+        bnAddSensors->setText(QApplication::translate("MainWindow", "Add Sensors", 0));
+        bnSensorsByPlacements->setText(QApplication::translate("MainWindow", "Sensors by Placements", 0));
+        bnTestJson->setText(QApplication::translate("MainWindow", "test json", 0));
+        bnSignalParams->setText(QApplication::translate("MainWindow", "SignalParams", 0));
     } // retranslateUi
 
 };

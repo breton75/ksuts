@@ -78,8 +78,7 @@ void ktv::SvUDPThread::process_data()
 
         p_buff.offset = offset_of_2f55 + 1;
 
-//        *p_logger << p_logger->options().log_sender_name.arg(p_device->info()->index) << (found ? "true" : "false") << sv::log::endl;
-        if(p_logger && p_device->info()->debug_mode)
+        if(p_logger) // && p_device->info()->debug_mode)
             *p_logger << static_cast<dev::SvAbstractKsutsDevice*>(p_device)->make_dbus_sender()
                       << sv::log::mtDebug
                       << sv::log::llDebug
@@ -149,7 +148,7 @@ void ktv::SvSerialThread::process_data()
 
         p_buff.offset = offset_of_2f55 + 1;
 
-        if(p_logger && p_device->info()->debug_mode)
+        if(p_logger) // && p_device->info()->debug_mode)
             *p_logger << static_cast<dev::SvAbstractKsutsDevice*>(p_device)->make_dbus_sender()
                       << sv::log::mtDebug
                       << sv::log::llDebug

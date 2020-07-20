@@ -20,7 +20,6 @@
 #include "../../svlib/sv_settings.h"
 #include "../../svlib/sv_pgdb.h"
 #include "../../svlib/sv_config.h"
-#include "../../svlib/sv_clog.h"
 #include "../../svlib/sv_busy_window.h"
 #include "../../svlib/sv_dbus.h"
 #include "../../svlib/sv_abstract_logger.h"

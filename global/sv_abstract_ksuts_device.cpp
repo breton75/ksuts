@@ -131,7 +131,7 @@ void dev::SvAbstractUdpThread::open() throw(SvException&)
 
 quint64 dev::SvAbstractUdpThread::write(const QByteArray& data)
 {
-  if(p_logger && p_device->info()->debug_mode)
+  if(p_logger) // && p_device->info()->debug_mode)
     *p_logger << static_cast<dev::SvAbstractKsutsDevice*>(p_device)->make_dbus_sender()
               << sv::log::mtDebug
               << sv::log::llDebug
@@ -219,7 +219,7 @@ void dev::SvAbstractSerialThread::open() throw(SvException&)
 
 quint64 dev::SvAbstractSerialThread::write(const QByteArray& data)
 {
-  if(p_logger && p_device->info()->debug_mode)
+  if(p_logger) // && p_device->info()->debug_mode)
     *p_logger << static_cast<dev::SvAbstractKsutsDevice*>(p_device)->make_dbus_sender()
               << sv::log::mtDebug
               << sv::log::llDebug

@@ -64,7 +64,7 @@ void opa::SvUDPThread::process_data()
 
     if(p_buff.offset >= _hSize + _header.byte_count + 2) {
 
-        if(p_logger && p_device->info()->debug_mode)
+        if(p_logger) // && p_device->info()->debug_mode)
           *p_logger << static_cast<dev::SvAbstractKsutsDevice*>(p_device)->make_dbus_sender()
                     << sv::log::mtDebug
                     << sv::log::llDebug
@@ -169,7 +169,7 @@ void opa::SvSerialThread::process_data()
 
     if(p_buff.offset >= _hSize + _header.byte_count + 2) {
 
-        if(p_logger && p_device->info()->debug_mode)
+        if(p_logger) // && p_device->info()->debug_mode)
           *p_logger << static_cast<dev::SvAbstractKsutsDevice*>(p_device)->make_dbus_sender() // sv::log::sender(p_logger->options().log_sender_name.arg(p_device->info()->index))
                     << sv::log::mtDebug
                     << sv::log::llDebug

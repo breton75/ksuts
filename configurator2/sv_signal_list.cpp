@@ -83,7 +83,9 @@ bool SvSignalList::readSignals(TreeModel* model, QString queryString)
 
     else {
 
-      query = queryString.isEmpty() ? QString(SQL_SELECT_NOT_INVOLVED_SIGNALS_HARDWARE).arg(_hardware_code) : queryString;
+      query = queryString.isEmpty() ? QString(SQL_SELECT_NOT_INVOLVED_SIGNALS_DEVICE).arg(_device_index) : queryString;
+
+//      query = queryString.isEmpty() ? QString(SQL_SELECT_NOT_INVOLVED_SIGNALS_HARDWARE).arg(_hardware_code) : queryString;
 
 //      switch (_device_index) {
 //        case OPA_gamma119:
@@ -252,19 +254,19 @@ void SvSignalList::on_bnRemoveAll_clicked()
 
 void SvSignalList::on_bnAddAll_clicked()
 {
-  ui->tableAvailable->selectAll();
+//  ui->tableAvailable->selectAll();
   
-  QString signals_list = "";
-  for(QModelIndex idx: ui->tableAvailable->selectionModel()->selectedRows(0))
-      signals_list += QString("%1,").arg(_model_available->itemFromIndex(idx)->index);
+//  QString signals_list = "";
+//  for(QModelIndex idx: ui->tableAvailable->selectionModel()->selectedRows(0))
+//      signals_list += QString("%1,").arg(_model_available->itemFromIndex(idx)->index);
 
-  signals_list.chop(1);
+//  signals_list.chop(1);
   
-  QModelIndex current_index = ui->tableCurrent->currentIndex();
+//  QModelIndex current_index = ui->tableCurrent->currentIndex();
 
   try {
 
-    QSqlError serr = PGDB->execSQL(QString(SQL_ADD_SELECTED_SIGNALS).arg(_device_index).arg(signals_list));
+    QSqlError serr = PGDB->execSQL(QString(SQL_ADD_ALL_SIGNALS).arg(_device_index));
     if(serr.type() != QSqlError::NoError) _exception.raise(serr.text());
 
 
@@ -274,9 +276,9 @@ void SvSignalList::on_bnAddAll_clicked()
     readSignals(_model_available); //, query_availaible);
     updateTable(ui->tableAvailable, _model_available);
 
-    setEnabledWidgets(true);
+//    setEnabledWidgets(true);
 
-    if(current_index.isValid()) ui->tableCurrent->setCurrentIndex(current_index);
+//    if(current_index.isValid()) ui->tableCurrent->setCurrentIndex(current_index);
 
   }
 

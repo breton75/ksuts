@@ -450,6 +450,19 @@
      <string>test json</string>
     </property>
    </widget>
+   <widget class="QPushButton" name="bnSignalParams">
+    <property name="geometry">
+     <rect>
+      <x>350</x>
+      <y>160</y>
+      <width>141</width>
+      <height>25</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>SignalParams</string>
+    </property>
+   </widget>
   </widget>
   <widget class="QMenuBar" name="menuBar">
    <property name="geometry">

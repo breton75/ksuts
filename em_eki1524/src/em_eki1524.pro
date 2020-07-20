@@ -1,20 +1,20 @@
 #-------------------------------------------------
 #
-# Project created by QtCreator 2018-09-25T17:01:35
+# Project created by QtCreator 2018-04-02T11:41:46
 #
 #-------------------------------------------------
 
-QT       += core gui sql network
-
+QT       += core gui network
+#CONFIG += console
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
-
-TARGET = transform_model
-TEMPLATE = app
 
 CONFIG += c++11
 
+TARGET = /home/user/ksuts_server/em_eki1524
+TEMPLATE = app
+
 # The following define makes your compiler emit warnings if you use
-# any feature of Qt which has been marked as deprecated (the exact warnings
+# any feature of Qt which as been marked as deprecated (the exact warnings
 # depend on your compiler). Please consult the documentation of the
 # deprecated API in order to know how to port your code away from it.
 DEFINES += QT_DEPRECATED_WARNINGS
@@ -25,19 +25,16 @@ DEFINES += QT_DEPRECATED_WARNINGS
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 
-SOURCES += \
-        main.cpp \
+SOURCES += main.cpp\
         mainwindow.cpp \
-    ../../svlib/sv_pgdb.cpp \
-    sv_1seccycle.cpp \
-    ../../svlib/sv_fnt.cpp
+    ../../../svlib/sv_settings.cpp \
+    ../../../svlib/sv_widget_log.cpp \
+    ../../../svlib/sv_abstract_logger.cpp
 
-HEADERS += \
-        mainwindow.h \
-    ../ksuts_devices/opa/opa_defs.h \
-    ../../svlib/sv_pgdb.h \
-    sv_1seccycle.h \
-    ../../svlib/sv_fnt.h
+HEADERS  += mainwindow.h \
+    ../../../svlib/sv_settings.h \
+    ../../../svlib/sv_widget_log.h \
+    ../../../svlib/sv_abstract_logger.h \
+    ../../../svlib/sv_udp_params.h
 
-FORMS += \
-        mainwindow.ui
+FORMS    += mainwindow.ui
