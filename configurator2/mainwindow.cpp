@@ -454,7 +454,6 @@ bool MainWindow::pourDevicesToRoot(TreeItem* rootItem)
         q->finish();
         delete q;
 
-        throw;
         return false;
 
     }
@@ -520,8 +519,6 @@ bool MainWindow::pourSignalsToDevices(TreeItem* rootItem)
     q->finish();
     delete q;
 
-    throw;
-
     return false;
 
   }
@@ -566,7 +563,6 @@ bool MainWindow::pourStoragesToRoot(TreeItem *rootItem)
         q->finish();
         delete q;
 
-        throw;
         return false;
 
     }
@@ -620,7 +616,7 @@ bool MainWindow::pourDevicesToStorages(TreeItem* rootItem)
         q->finish();
         delete q;
         mainlog << sv::log::Time << sv::log::mtCritical << e.error << sv::log::endl;
-        throw;
+
         return false;
 
     }
@@ -681,7 +677,7 @@ bool MainWindow::pourSignalsToStorages(TreeItem* rootItem)
         q->finish();
         delete q;
         mainlog << sv::log::Time << sv::log::mtCritical << e.error << sv::log::endl;
-        throw e;
+
         return false;
 
     }

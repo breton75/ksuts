@@ -29,7 +29,7 @@ void CAN_Parser::run()
 //    qDebug() << "CAN_Parser - exec() started, id:" << _id;
 //    return;
 
-    qDebug() << QTime::currentTime().toString("hh:mm:ss.zzz") << "Запуск рабочего цикла анализа пакетов из порта CAN" << _id;
+//    qDebug() << QTime::currentTime().toString("hh:mm:ss.zzz") << "Запуск рабочего цикла анализа пакетов из порта CAN" << _id;
     OneCanPack* cp;
     CanSignal *cs;
     can_frame* frame;
@@ -92,12 +92,12 @@ void CAN_Parser::run()
         //if(!cs->isOnLine) { // проклюнулся - восстановление связи
             cs->isOnLine = true;            
             // протоколируем
-            qDebug() << QTime::currentTime().toString("hh:mm:ss.zzz") << "Восстановлена связь с датчиком:" << can_id << "порт" << _id;
+//            qDebug() << QTime::currentTime().toString("hh:mm:ss.zzz") << "Восстановлена связь с датчиком:" << can_id << "порт" << _id;
             qint64 param;
             if(cs->neighbor->isActive) param = 0;
             else {
                 cs->isActive = true;
-                qDebug() << "Датчик сделан активным";
+//                qDebug() << "Датчик сделан активным";
                 param = 1;
             }
             _db_queue->addMessage(5, _id, can_id, param);
@@ -111,7 +111,7 @@ void CAN_Parser::run()
         if(!cs->isActive) {
             cs->lastValue = data_bigint;
             if(_logging && (_check_can_id == can_id)) {
-                qDebug() << QTime::currentTime().toString("hh:mm:ss.zzz") << "Сигнал CAN на данном порту не активен, порт - can_id - значение:" << _id << can_id << data_bigint; // отладка - индикация
+//                qDebug() << QTime::currentTime().toString("hh:mm:ss.zzz") << "Сигнал CAN на данном порту не активен, порт - can_id - значение:" << _id << can_id << data_bigint; // отладка - индикация
             }
             usleep(10);
             continue;
@@ -122,7 +122,7 @@ void CAN_Parser::run()
         // если проклюнулся и активен - нужно обновить значение обязательно
         if((data_bigint == cs->lastValue) && !wakedUp) {
             if(_logging && (_check_can_id == can_id)) {
-                qDebug() << QTime::currentTime().toString("hh:mm:ss.zzz") << "Сигнал CAN не изменился, порт - can_id - значение:" << _id << can_id << data_bigint; // отладка - индикация
+//                qDebug() << QTime::currentTime().toString("hh:mm:ss.zzz") << "Сигнал CAN не изменился, порт - can_id - значение:" << _id << can_id << data_bigint; // отладка - индикация
             }
             usleep(10);
             continue;
@@ -134,7 +134,7 @@ void CAN_Parser::run()
         sm->dtHandle = cdt.time();
 
         if(_logging && (_check_can_id == can_id)) {
-            qDebug() << QTime::currentTime().toString("hh:mm:ss.zzz") << "Анализ пакета CAN, порт - can_id - значение:" << _id << can_id << data_bigint; // отладка - индикация
+//            qDebug() << QTime::currentTime().toString("hh:mm:ss.zzz") << "Анализ пакета CAN, порт - can_id - значение:" << _id << can_id << data_bigint; // отладка - индикация
         }
 
         switch (can_data_type) {
@@ -155,7 +155,7 @@ void CAN_Parser::run()
             break;
         case 3: // command
             //emit command_comfirm(_id, can_id, cdt);
-            qDebug() << "Неожиданно - пакет команды:" << can_id << "порт:" << _id;
+//            qDebug() << "Неожиданно - пакет команды:" << can_id << "порт:" << _id;
             break;
         case 4: // confirm
             //emit command_comfirm(_id, can_id, cdt);
@@ -170,7 +170,7 @@ void CAN_Parser::run()
         usleep(10);
     }
     //run_mode = true;
-    qDebug() << QTime::currentTime().toString("hh:mm:ss.zzz") << "Останов рабочего цикла анализа пакетов из порта CAN" << _id;
+//    qDebug() << QTime::currentTime().toString("hh:mm:ss.zzz") << "Останов рабочего цикла анализа пакетов из порта CAN" << _id;
     //qDebug() << "Finish run cycle CAN parser" << _id;
 }
 

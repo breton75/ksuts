@@ -166,7 +166,7 @@ bool parse_params(const QStringList& args, AppConfig& cfg, const QString& file_n
     // !!! ЭТОТ ПАРАМЕТР МОЖЕТ БЫТЬ ЗАДАН ТОЛЬКО В КОМАНДНОЙ СТРОКЕ
     val = cmd_parser.isSet(OPTION_DEVICE_INDEX) ? cmd_parser.value(OPTION_DEVICE_INDEX) : "-1";
 
-    cfg.device_index = val.toUInt(&ok);
+    cfg.device_index = val.toInt(&ok);
     if(!ok) exception.raise(-1, QString("Неверный индекс устройства: %1").arg(val));
 
     return true;

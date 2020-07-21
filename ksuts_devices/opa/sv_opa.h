@@ -59,6 +59,8 @@ namespace opa {
   void func_0x19(dev::SvAbstractDevice* device, dev::DATA* data);
   void func_set_line_status(dev::SvAbstractDevice* device, dev::DATA* data);
 
+  inline QString getPrefix(quint16 start_register);
+
 }
 
 //idev::SvIDevice* /*OHTSHARED_EXPORT*/ create_device(const QString& params_string);

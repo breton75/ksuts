@@ -29,7 +29,6 @@ int reconnect(const QString& ifc_name, QTcpSocket* socket, QHostAddress& tcp_hos
 
   if(!socket->waitForConnected(1000))
     return -3;
-  qDebug() << "connected!! to " << tcp_host << ifc.addressEntries().at(0).ip() << socket->peerAddress();
 
   return 0;
 
@@ -50,9 +49,6 @@ SvCAN_Writer::SvCAN_Writer(int id, const QString& ifc_name, QHostAddress ip, qui
 
 SvCAN_Writer::~SvCAN_Writer()
 {
-    qDebug() << QTime::currentTime().toString("hh:mm:ss.zzz") << "Деструктор объекта записи в порт CAN" << _id;
-/**    close(sock); **/
-
     tcp_client.disconnectFromHost();
 
     deleteLater();
@@ -141,7 +137,9 @@ void SvCAN_Writer::sendCmd(quint16 can_id, quint16 sender_id, quint64 send_value
     int i;
 
     req_command = send_value;
-    if(_logging) qDebug() << QTime::currentTime().toString("hh:mm:ss.zzz") << "Command to CAN - can_id - sender - value - command:" << can_id << sender_id << send_value << req_command;
+
+    if(_logging)
+      qDebug() << QTime::currentTime().toString("hh:mm:ss.zzz") << "Command to CAN - can_id - sender - value - command:" << can_id << sender_id << send_value << req_command;
 
     // формирование пакета послылки
     for (i = 3; i >= 0; --i) {
@@ -154,9 +152,10 @@ void SvCAN_Writer::sendCmd(quint16 can_id, quint16 sender_id, quint64 send_value
     }
 
     // собственно посылка
-    if(_logging) qDebug() << QTime::currentTime().toString("hh:mm:ss.zzz") << "Посылка команды в сеть - can_id-пакет:" << can_id << b.toHex();
     int n_bytes = writeData(can_id, b);
-    if(_logging) qDebug() << QTime::currentTime().toString("hh:mm:ss.zzz") << "Посылка команды в сеть - записано байт:" << n_bytes;
+
+    if(_logging)
+      qDebug() << QTime::currentTime().toString("hh:mm:ss.zzz") << "Посылка команды в сеть - записано байт:" << n_bytes;
 }
 
 
@@ -183,16 +182,12 @@ SvCAN_Reader::SvCAN_Reader(int id, const QString& ifc_name, QHostAddress ip, qui
 
 SvCAN_Reader::~SvCAN_Reader()
 {
-    qDebug() << QTime::currentTime().toString("hh:mm:ss.zzz") << "Деструктор объекта чтения из порта CAN" << _id;
-//    close(sock);
-
     tcp_client.disconnectFromHost();
-
 }
 
 int SvCAN_Reader::init(QString dev_name, CAN_Queue* out) //can_frame* out)
 {
-    qDebug() << QTime::currentTime().toString("hh:mm:ss.zzz") << "Инициализация чтения из порта" << _id;
+//    qDebug() << QTime::currentTime().toString("hh:mm:ss.zzz") << "Инициализация чтения из порта" << _id;
     this->_out = out;
 
 /**
@@ -242,7 +237,7 @@ void SvCAN_Reader::setLogging(bool newLogging, quint32 new_can_id)
 void SvCAN_Reader::on_error(QAbstractSocket::SocketError e)
 {
 //  Q_UNUSED(e);
-qDebug() << tcp_client.localAddress() << tcp_client.peerAddress() << e;
+//qDebug() << tcp_client.localAddress() << tcp_client.peerAddress() << e;
   _connected = false;
 }
 
@@ -276,7 +271,6 @@ void SvCAN_Reader::run()
             if(QChar(hexpack.at(0)).toLower() != QChar('t'))
               continue;
 
-            qDebug() << b;
             memset(&frame, 0, sizeof(frame));
 
             bool ok;

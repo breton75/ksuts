@@ -4,6 +4,7 @@
 #include "stdio.h"
 #include <QTextCodec>
 #include <QFile>
+#include <iostream>
 //#include <QCommandLineParser>
 
 #include <signal.h>

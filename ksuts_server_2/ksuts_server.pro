@@ -31,7 +31,6 @@ SOURCES += main.cpp \
     ../ksuts_devices/oht/sv_oht.cpp \
     ../global/sv_signal.cpp \
     ../../svlib/sv_pgdb.cpp \
-    ../../svlib/sv_clog.cpp \
     sv_storage.cpp \
     ../../svlib/sv_config.cpp \
     sv_storagewatcher.cpp \
@@ -50,7 +49,6 @@ HEADERS += \
     ../global/sv_signal.h \
     ../../svlib/sv_pgdb.h \
     ../ksuts_devices/oht/oht_defs.h \
-    ../../svlib/sv_clog.h \
     sv_storage.h \
     ../global/gen_defs.h \
     ../ksuts_devices/opa/opa_defs.h \

@@ -27,20 +27,15 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->pushButton->setVisible(false);
     //setVisible(true);
 
-    QAction* pactShowHide =
-        new QAction("&Показать/скрыть окно", this);
+    QAction* pactShowHide = new QAction("&Показать/скрыть окно", this);
     pactShowHide->setIcon(QIcon(":/Win.png"));
     pactShowHide->setIconVisibleInMenu(true);
-    connect(pactShowHide, SIGNAL(triggered()),
-            this,         SLOT(slotShowHide())
-           );
+    connect(pactShowHide, SIGNAL(triggered()), this, SLOT(slotShowHide()));
 
     QAction* pactQuit = new QAction("&Выход", this);
     pactQuit->setIcon(QIcon(":/Close.png"));
     pactQuit->setIconVisibleInMenu(true);
-    connect(pactQuit,       SIGNAL(triggered()),
-            this,           SLOT(slotQuit())
-            );//qApp, SLOT(quit()));
+    connect(pactQuit, SIGNAL(triggered()), this,SLOT(slotQuit()));//qApp, SLOT(quit()));
 
     m_ptrayIconMenu = new QMenu(this);
     m_ptrayIconMenu->addAction(pactShowHide);
@@ -71,7 +66,7 @@ MainWindow::MainWindow(QWidget *parent) :
     check_timer = new QTimer(this);
     connect(check_timer, SIGNAL(timeout()), this, SLOT(check_connect()));
 
-    setWindowState(Qt::WindowMinimized);
+//    setWindowState(Qt::WindowMinimized);
 }
 
 MainWindow::~MainWindow()
@@ -121,9 +116,9 @@ void MainWindow::closeEvent(QCloseEvent *event)
         return;
     }
     // этот метод вызывается всегда
-    qDebug() << QTime::currentTime().toString("hh:mm:ss.zzz") << "closeEvent";// << event;
+//    qDebug() << QTime::currentTime().toString("hh:mm:ss.zzz") << "closeEvent";// << event;
     if(update_running || !update_stopped) {
-        qDebug() << "Остановка процессов";
+//        qDebug() << "Остановка процессов";
         if(can_run[0]) on_bnStartStopCan0_clicked();//canStartStop(0);
         if(can_run[1]) on_bnStartStopCan1_clicked();//canStartStop(1);
         update_running = false;

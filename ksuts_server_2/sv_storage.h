@@ -11,7 +11,7 @@
 #include <QList>
 
 #include "../../svlib/sv_pgdb.h"
-#include "../../svlib/sv_clog.h"
+#include "../../svlib/sv_abstract_logger.h"
 #include "../../svlib/sv_exception.h"
 
 #include "../global/sql_defs.h"

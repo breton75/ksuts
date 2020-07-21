@@ -334,6 +334,10 @@ void opa::func_0x02(dev::SvAbstractDevice* device, dev::DATA* data)
 
           signal_name = sbd->value(detector_num);
 //          qDebug() << QString("detector_num: %1   factor: %2  signal_name: %3").arg(detector_num).arg(factor).arg(signal_name);
+
+          QString prefix = opa::getPrefix(device->params()->start_register);
+          signal_name.push_front(prefix);
+
           device->setSignalValue(signal_name, 1.0);
   
         }
@@ -361,6 +365,10 @@ void opa::func_0x02(dev::SvAbstractDevice* device, dev::DATA* data)
 
               signal_name = sbd->value(detector_num);
       //        qDebug() << QString("detector_num: %1   factor: %2  signal_name: %3").arg(detector_num).arg(factor).arg(signal_name);
+
+              QString prefix = opa::getPrefix(device->params()->start_register);
+              signal_name.push_front(prefix);
+
               device->setSignalValue(signal_name, 1.0);
 
             }
@@ -376,6 +384,10 @@ void opa::func_0x02(dev::SvAbstractDevice* device, dev::DATA* data)
 
           signal_name = sbd->value(detector_num);
 //          qDebug() << QString("detector_num: %1   factor: %2  signal_name: %3").arg(detector_num).arg(factor).arg(signal_name);
+
+          QString prefix = opa::getPrefix(device->params()->start_register);
+          signal_name.push_front(prefix);
+
           device->setSignalValue(signal_name, 1.0);
 
         }
@@ -393,6 +405,10 @@ void opa::func_0x02(dev::SvAbstractDevice* device, dev::DATA* data)
 
               signal_name = sbd->value(detector_num);
       //        qDebug() << QString("detector_num: %1   factor: %2  signal_name: %3").arg(detector_num).arg(factor).arg(signal_name);
+
+              QString prefix = opa::getPrefix(device->params()->start_register);
+              signal_name.push_front(prefix);
+
               device->setSignalValue(signal_name, 1.0);
 
             }
@@ -411,6 +427,10 @@ void opa::func_0x02(dev::SvAbstractDevice* device, dev::DATA* data)
           if(dn == detector_num) {
             
             signal_name = sbd->value(dn);
+
+            QString prefix = opa::getPrefix(device->params()->start_register);
+            signal_name.push_front(prefix);
+
             device->setSignalValue(signal_name, 0.0);
             
           }
@@ -424,6 +444,10 @@ void opa::func_0x02(dev::SvAbstractDevice* device, dev::DATA* data)
           if(dn == detector_num) {
 
             signal_name = sbd->value(dn);
+
+            QString prefix = opa::getPrefix(device->params()->start_register);
+            signal_name.push_front(prefix);
+
             device->setSignalValue(signal_name, 0.0);
 
           }
@@ -451,6 +475,10 @@ void opa::func_0x03(dev::SvAbstractDevice* device, dev::DATA* data)
     if(SIGNALS_BY_ROOMS.contains(room_num)) {
 
       signal_name = SIGNALS_BY_ROOMS.value(room_num);
+
+      QString prefix = opa::getPrefix(device->params()->start_register);
+      signal_name.push_front(prefix);
+
       device->setSignalValue(signal_name, static_cast<qreal>(level));
 
 //      if(config()->debug)
@@ -462,6 +490,10 @@ void opa::func_0x03(dev::SvAbstractDevice* device, dev::DATA* data)
     if(SIGNALS_Z_BY_ROOMS.contains(room_num)) {
 
       signal_name = SIGNALS_Z_BY_ROOMS.value(room_num);
+
+      QString prefix = opa::getPrefix(device->params()->start_register);
+      signal_name.push_front(prefix);
+
       device->setSignalValue(signal_name, static_cast<qreal>(level));
 
 //      if(config()->debug)
@@ -476,7 +508,42 @@ void opa::func_0x03(dev::SvAbstractDevice* device, dev::DATA* data)
 
 void opa::func_0x04(dev::SvAbstractDevice* device, dev::DATA* data)
 {
-  device->setSignalValue(BI25_5SS1_VD1, qreal(CALC_BI25_5SS1_VD1( data->data[0] ) ));
-  device->setSignalValue(BI25_5SS1_VD2, qreal(CALC_BI25_5SS1_VD2( data->data[0] ) ));
-  device->setSignalValue(BI26_6SS1_VD1, qreal(CALC_BI26_6SS1_VD1( data->data[0] ) ));
+  QString prefix = opa::getPrefix(device->params()->start_register);
+
+  device->setSignalValue(QString("%1%2").arg(prefix).arg(BI25_5SS1_VD1), qreal(CALC_BI25_5SS1_VD1( data->data[0] ) ));
+  device->setSignalValue(QString("%1%2").arg(prefix).arg(BI25_5SS1_VD2), qreal(CALC_BI25_5SS1_VD2( data->data[0] ) ));
+  device->setSignalValue(QString("%1%2").arg(prefix).arg(BI26_6SS1_VD1), qreal(CALC_BI26_6SS1_VD1( data->data[0] ) ));
+}
+
+inline QString opa::getPrefix(quint16 start_register)
+{
+  QString prefix = "";
+
+  switch (start_register) {
+
+    case 0x04A0:
+      prefix = "C122_";
+      break;
+
+    case 0x0540:
+      prefix = "C8_";
+
+    case 0x0680:
+      prefix = "C38_";
+
+    case 0x0720:
+      prefix = "C67_";
+
+    case 0x07C0:
+      prefix = "C93_";
+
+    case 0x0860:
+      prefix = "C123_";
+
+    case 0x0900:
+      prefix = "C150_";
+
+  }
+
+  return prefix;
 }
