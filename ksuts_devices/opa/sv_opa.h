@@ -121,8 +121,9 @@ public:
 
     return QString("{\n"
                    "  \"%1\": \"0x0000\",\n"
-                   "  \"%2\": %3\n"
-                   "}").arg(P_START_REGISTER).arg(P_RESET_TIMEOUT).arg(RESET_INTERVAL);
+                   "  \"%2\": \"0x0000\",\n"
+                   "  \"%3\": %4\n"
+                   "}").arg(P_START_REGISTER).arg(P_LAST_REGISTER).arg(P_RESET_TIMEOUT).arg(RESET_INTERVAL);
   }
 
 private:

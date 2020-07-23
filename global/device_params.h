@@ -15,6 +15,7 @@
 
 // имена параметров устройств
 #define P_START_REGISTER  "start_register"
+#define P_LAST_REGISTER  "last_register"
 #define P_RESET_TIMEOUT   "reset_timeout"
 
 namespace dev {
@@ -25,6 +26,7 @@ namespace dev {
   struct DeviceParams {
 
     quint16   start_register = 0;
+    quint16   last_register = 0;
     quint16   reset_timeout = RESET_INTERVAL;
 
     bool isValid = true;
@@ -46,8 +48,19 @@ namespace dev {
 
         bool ok = false;
         p.start_register = h.toUShort(&ok, 0);
-//qDebug() << P_START_REGISTER << ok << QString(h) << h.replace('\"', '1') << "dddd";
         p.isValid = p.isValid && ok;
+
+      }
+
+      if(object.contains(P_LAST_REGISTER)) {
+
+        QByteArray h = object.value(P_LAST_REGISTER).toString().toUtf8();
+
+        bool ok = false;
+        p.last_register = h.toUShort(&ok, 0);
+        p.isValid = p.isValid && ok;
+
+        p.isValid = p.last_register >= p.start_register;
 
       }
 
@@ -63,26 +76,37 @@ namespace dev {
 
     }
 
-    QString toString() const
+    QString toString(QJsonDocument::JsonFormat format = QJsonDocument::Indented) const
     {
       QJsonDocument jd;
       jd.setObject(toJsonObject());
 
-      return QString(jd.toJson(QJsonDocument::Indented));
+      return QString(jd.toJson(format));
     }
 
     QJsonObject toJsonObject() const
     {
       QJsonObject j;
+      QString r;
 
-      QString r = QString::number(start_register, 16);
+      r = QString::number(start_register, 16);
 
       if(r.length() < 4)
         r.push_front(QString(4 - r.length(), QChar('0')));
 
-      QString v = QString("0x%1").arg(r.length() % 2 ? "0" + r : r);
+      QString start_r = QString("0x%1").arg(r.length() % 2 ? "0" + r : r);
 
-      j.insert(P_START_REGISTER, QJsonValue(v));
+
+      r = QString::number(last_register, 16);
+
+      if(r.length() < 4)
+        r.push_front(QString(4 - r.length(), QChar('0')));
+
+      QString last_r = QString("0x%1").arg(r.length() % 2 ? "0" + r : r);
+
+
+      j.insert(P_START_REGISTER, QJsonValue(start_r));
+      j.insert(P_LAST_REGISTER, QJsonValue(last_r));
       j.insert(P_RESET_TIMEOUT, QJsonValue(reset_timeout));
 
       return j;

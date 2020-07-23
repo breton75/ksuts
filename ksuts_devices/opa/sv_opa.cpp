@@ -64,6 +64,16 @@ void opa::SvUDPThread::process_data()
 
     if(p_buff.offset >= _hSize + _header.byte_count + 2) {
 
+        quint16 current_register = (static_cast<quint16>(_header.ADDRESS << 8)) + _header.OFFSET;
+
+        if((current_register < p_device->params()->start_register) ||
+           (current_register > p_device->params()->last_register))
+        {
+           reset_buffer();
+           return;
+        }
+
+
         if(p_logger) // && p_device->info()->debug_mode)
           *p_logger << static_cast<dev::SvAbstractKsutsDevice*>(p_device)->make_dbus_sender()
                     << sv::log::mtDebug
@@ -79,7 +89,7 @@ void opa::SvUDPThread::process_data()
         // ставим состояние данной линии
         opa::func_set_line_status(p_device, &p_data);
 
-        quint16 current_register = (static_cast<quint16>(_header.ADDRESS << 8)) + _header.OFFSET;
+//        quint16 current_register = (static_cast<quint16>(_header.ADDRESS << 8)) + _header.OFFSET;
 
         switch (current_register - p_device->params()->start_register)
         {
@@ -302,6 +312,8 @@ void opa::func_0x77(dev::SvAbstractDevice* device)
 /** в результате несогласованности, получилось 2 набора сигналов состояния линии **/
 void opa::func_set_line_status(dev::SvAbstractDevice* device, dev::DATA* data)
 {
+  Q_UNUSED(dsata);
+
   if(reg2STATUS.contains(device->params()->start_register))
     device->setSignalValue(reg2STATUS.value(device->params()->start_register), 1);
 }

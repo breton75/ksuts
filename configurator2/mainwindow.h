@@ -92,6 +92,10 @@ private:
   QAction *aboutAct;
   QAction *aboutQtAct;
 
+  QAction *actionStartInspector;
+  QAction *actionKillInspector;
+  QAction *actionKillKsuts;
+
   QAction *actionAuth;
   QAction *actionEditConfig;
   QAction *actionEditAutorun;
@@ -200,6 +204,10 @@ private slots:
 
   void restartKsutsServer();
   void restartAggServer();
+
+  void startInspector();
+  void killInspector();
+  void killKsuts();
 
   void on_treeView_doubleClicked(const QModelIndex &index);
 

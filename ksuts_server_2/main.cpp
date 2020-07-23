@@ -73,11 +73,11 @@ bool parse_params(const QStringList &args, AppConfig& cfg, const QString& file_n
 
 bool initConfig(const AppConfig &cfg);
 void close_db();
-bool readDevices(const AppConfig &cfg);
+bool readDevices();
 bool readStorages();
 //bool readCOBs();
 //bool cobToRepository(QString storage_field_name);
-bool readSignals(const AppConfig &cfg);
+bool readSignals();
 
 dev::SvAbstractDevice* create_device(const QSqlQuery* q);
 SvStorage* create_storage(QSqlQuery *q);
@@ -369,10 +369,10 @@ int main(int argc, char *argv[])
     if(!initConfig(cfg)) exception.raise(-10);
 
     /** читаем устройства, репозитории и сигналы. СИГНАЛЫ В ПОСЛЕДНЮЮ ОЧЕРЕДЬ! **/
-    if(!readDevices(cfg)) exception.raise(-20);
+    if(!readDevices()) exception.raise(-20);
     if(!readStorages()) exception.raise(-30);
 
-    if(!readSignals(cfg)) exception.raise(-40);
+    if(!readSignals()) exception.raise(-40);
 
     close_db();
 
@@ -486,7 +486,7 @@ bool initConfig(const AppConfig& cfg)
 }
 
 
-bool readDevices(const AppConfig& cfg)
+bool readDevices()
 {
 
   dbus << llinf << mtinf << me
@@ -502,7 +502,7 @@ bool readDevices(const AppConfig& cfg)
 //      serr = PG->execSQL(QString(SQL_SELECT_SINGLE_INVOLVED_DEVICE).arg(cfg.single_device_index), &q);
 
 //    else
-      serr = PG->execSQL(SQL_SELECT_INVOLVED_DEVICES, &q);
+    serr = PG->execSQL(SQL_SELECT_INVOLVED_DEVICES, &q);
 
     if(serr.type() != QSqlError::NoError) exception.raise(serr.text());
     
@@ -615,7 +615,7 @@ bool readStorages()
   }
 }
 
-bool readSignals(const AppConfig &cfg)
+bool readSignals()
 {
   dbus << llinf << me << mtinf << QString("Читаем данные сигналов:") << sv::log::endl;
   

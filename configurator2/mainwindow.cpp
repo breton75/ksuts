@@ -97,6 +97,12 @@ MainWindow::MainWindow(const AppConfig &cfg, QWidget *parent) :
   a->addSeparator();
   a->addAction(actionRestoreDatabase);
 
+  QMenu* k = serviceMenu->addMenu("Отладочные команды");
+  k->addAction(actionStartInspector);
+  k->addAction(actionKillInspector);
+  k->addSeparator();
+  k->addAction(actionKillKsuts);
+
   helpMenu = menuBar()->addMenu(tr("&Помощь"));
   helpMenu->addAction(aboutQtAct);
 
@@ -956,6 +962,18 @@ void MainWindow::createActions()
   actionSaveConfig->setShortcuts(QKeySequence::SaveAs);
   connect(actionSaveConfig, &QAction::triggered, this, &MainWindow::saveConfigAs);
 
+  /// запуск инспектора
+  actionStartInspector = new QAction(tr("Запуск inspector.sh"), this);
+  connect(actionStartInspector, SIGNAL(triggered()), this, SLOT(startInspector()));
+
+  /// убийство инспектора
+  actionKillInspector = new QAction(tr("Убить inspector.sh"), this);
+  connect(actionKillInspector, SIGNAL(triggered()), this, SLOT(killInspector()));
+
+  /// убийство ksuts
+  actionKillKsuts = new QAction(tr("Убить ksuts_server полностью"), this);
+  connect(actionKillKsuts, SIGNAL(triggered()), this, SLOT(killKsuts()));
+
   /// служебные
   actionExit = new QAction(tr("Выход"), this);
   actionExit->setObjectName(QStringLiteral("actionExit"));
@@ -963,6 +981,7 @@ void MainWindow::createActions()
   actionExit->setWhatsThis("Закрыть программу");
   actionExit->setShortcuts(QKeySequence::Quit);
   connect(actionExit, SIGNAL(triggered()), qApp, SLOT(quit()));
+
 
   aboutQtAct = new QAction(tr("About &Qt"), this);
   connect(aboutQtAct, SIGNAL(triggered()), qApp, SLOT(aboutQt()));
@@ -1602,6 +1621,45 @@ void MainWindow::update_stand_info()
 
 }
 
+void MainWindow::startInspector()
+{
+  QProcess p;
+  p.start("sudo /home/user/ksuts_server/inspector.sh");
+  p.waitForFinished(1000);
+
+  QString result = QString("%1\n%2").arg(QString(p.readAllStandardOutput())).arg(QString(p.readAllStandardError()));
+
+  QMessageBox::information(this, "start inspector.sh", QString("Выполнено sudo /home/user/ksuts_server/inspector.sh\n%1").arg(result));
+
+}
+
+void MainWindow::killInspector()
+{
+  QProcess p;
+  p.start("sudo killall -s 9 inspector.sh");
+  p.waitForFinished(1000);
+
+  QString result = QString("%1\n%2").arg(QString(p.readAllStandardOutput())).arg(QString(p.readAllStandardError()));
+
+  QMessageBox::information(this, "sudo killall -s 9 inspector.sh", QString("Выполнено sudo killall -s 9 inspector.sh\n%1").arg(result));
+
+}
+
+void MainWindow::killKsuts()
+{
+  killInspector();
+
+  QProcess p;
+  p.start("sudo killall -s 9 ksuts_server");
+  p.waitForFinished(1000);
+
+  QString result = QString("%1\n%2").arg(QString(p.readAllStandardOutput())).arg(QString(p.readAllStandardError()));
+
+  QMessageBox::information(this, "sudo killall -s 9 ksuts_server", QString("Выполнено sudo killall -s 9 ksuts_server\n%1").arg(result));
+
+}
+
+
 void MainWindow::restartKsutsServer()
 {
   _ksuts_monitor->restartServer();
@@ -1741,6 +1799,8 @@ void MainWindow::setAuth()
   actionRestoreDatabase->setEnabled(p_authorized);
   actionRestartKsuts->setEnabled(p_authorized);
   actionRestartAgg->setEnabled(p_authorized);
+  actionKillInspector->setEnabled(p_authorized);
+  actionKillKsuts->setEnabled(p_authorized);
 
   ui->widgetControls->setVisible(p_authorized);
 }
