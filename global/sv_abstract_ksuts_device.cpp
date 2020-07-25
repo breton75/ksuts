@@ -131,6 +131,10 @@ void dev::SvAbstractUdpThread::open() throw(SvException&)
 
 quint64 dev::SvAbstractUdpThread::write(const QByteArray& data)
 {
+  // небольшая задержка перед отправкой подтверждения
+  // из-за того, что "шкаф не успевает обработать данные" (c) Гаврилов
+  msleep(10);
+
   if(p_logger) // && p_device->info()->debug_mode)
     *p_logger << static_cast<dev::SvAbstractKsutsDevice*>(p_device)->make_dbus_sender()
               << sv::log::mtDebug
@@ -162,7 +166,7 @@ void dev::SvAbstractUdpThread::run()
           reset_buffer();
 
         /* ... the rest of the datagram will be lost ... */
-        p_buff.offset += p_socket.readDatagram((char*)(&p_buff.buf[0] + p_buff.offset), MAX_PACKET_SIZE - p_buff.offset);
+        p_buff.offset += p_socket.readDatagram((char*)(&p_buff.buf[p_buff.offset]), MAX_PACKET_SIZE - p_buff.offset);
 
         process_data();
 

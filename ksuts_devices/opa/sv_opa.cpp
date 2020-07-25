@@ -127,9 +127,6 @@ void opa::SvUDPThread::process_data()
               }
               else
               {
-                  // небольшая задержка перед отправкой подтверждения
-                  // из-за того, что "шкаф не успевает обработать данные" (c) Гаврилов
-                  msleep(10);
 
                   // формируем и отправляем ответ-квитирование
                   write(confirmation(&_header));
@@ -312,7 +309,7 @@ void opa::func_0x77(dev::SvAbstractDevice* device)
 /** в результате несогласованности, получилось 2 набора сигналов состояния линии **/
 void opa::func_set_line_status(dev::SvAbstractDevice* device, dev::DATA* data)
 {
-  Q_UNUSED(dsata);
+  Q_UNUSED(data);
 
   if(reg2STATUS.contains(device->params()->start_register))
     device->setSignalValue(reg2STATUS.value(device->params()->start_register), 1);

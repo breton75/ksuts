@@ -931,7 +931,7 @@ bool initStorages()
 
 void closeDevices()
 {
-  dbus << llinf << me << mtfal << "Закрываем устройства:" << sv::log::endl;
+  dbus << llinf << me << mtinf << "Закрываем устройства:" << sv::log::endl;
 
   try {
 
@@ -940,7 +940,7 @@ void closeDevices()
 
       dev::SvAbstractDevice* device = DEVICES.value(key);
 
-      dbus << lldbg << me << mtdbg << QString("  %1 (%2):").arg(device->info()->name).arg(device->info()->ifc_name) << sv::log::endi;
+      dbus << llinf << me << mtinf << QString("  %1 (%2):").arg(device->info()->name).arg(device->info()->ifc_name); // << sv::log::endi;
 
       device->close();
       delete DEVICES.take(key);
@@ -967,7 +967,7 @@ void closeDevices()
 void deinitStorages()
 {
 
-  dbus << llinf << me << mtfal << "Закрываем хранилища:" << sv::log::endl;
+  dbus << llinf << me << mtinf << "Закрываем хранилища:" << sv::log::endl;
 
   int counter = 0;
   foreach (int key, STORAGES.keys()) {
@@ -993,7 +993,7 @@ void deinitStorages()
 
 void deleteSignals()
 {
-  dbus << llinf << "Удаляем сигналы:" << sv::log::endl;
+  dbus << llinf << me << mtinf << "Удаляем сигналы:" << sv::log::endl;
 
   int counter = 0;
   foreach (int key, SIGNALS.keys()) {

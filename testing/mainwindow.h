@@ -7,6 +7,7 @@
 #include <QJsonObject>
 #include <QDebug>
 #include <QUdpSocket>
+#include <QThread>
 
 #include "../../svlib/sv_settings.h"
 
@@ -28,6 +29,8 @@ private slots:
   void on_pushButton_clicked();
 
   void on_bnRecvOnly_clicked();
+
+  void on_pushButton_2_clicked();
 
 private:
   Ui::MainWindow *ui;
