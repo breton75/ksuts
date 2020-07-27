@@ -145,6 +145,8 @@ private:
 
   quint8  _confirm[8];
 
+  sv::log::sender me;
+
   void process_data();
 
   void setLineStatus();

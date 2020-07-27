@@ -34,7 +34,7 @@ namespace dev {
  {
    DATA() {}
 
-   quint8  data[MAX_PACKET_SIZE];
+   qint8  data[MAX_PACKET_SIZE];
    quint8  data_type;
    quint8  data_length;
    quint16 crc;

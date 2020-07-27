@@ -43,12 +43,15 @@ QMap<int, SvStorage*> STORAGES;
 //QMap<int, SvCOB*> COBS;
 QMap<int, SvSignal*> SIGNALS;
 
+QMap<int, sv::SvAbstractLogger*> LOGGERS;
+
 SvException exception;
 
 //sv::SvConcoleLogger dbus;
 sv::SvDBus dbus;
 
 const OptionStructList AppOptions = {
+    {{OPTION_DEBUG}, "debug","", "", ""},
     {{OPTION_DB_HOST}, "Адрес сервера базы данных.","localhost", "", ""},
     {{OPTION_DB_PORT}, "Порт сервера базы данных.", "5432", "", ""},
     {{OPTION_DB_NAME}, "Имя базы данных для подключения.", "cms_db", "", ""},
@@ -138,6 +141,9 @@ bool parse_params(const QStringList& args, AppConfig &cfg, const QString& file_n
     /** назначаем значения параметров */
     bool ok;
     QString val;
+
+//    // debug
+//    cfg.debug = cmd_parser.isSet(OPTION_DEBUG);
 
     // db_host
     cfg.db_host = cmd_parser.isSet(OPTION_DB_HOST) ? cmd_parser.value(OPTION_DB_HOST) :
@@ -254,6 +260,9 @@ int main(int argc, char *argv[])
     return 0;
   }
 
+  // запуск в режиме отладки с выводом в терминал
+  bool debug = (argc > 1) && (QString(argv[1]).trimmed() == "-debug");
+
 #ifdef Q_OS_WIN32
     QTextCodec::setCodecForLocale(QTextCodec::codecForName("IBM 866"));
 #else // Q_OS_LINUX
@@ -263,23 +272,26 @@ int main(int argc, char *argv[])
 
   QCoreApplication a(argc, argv);
 
-  // создаем потомка
-  switch (fork()) {
+  if(!debug)
+  {
+    // создаем потомка
+    switch (fork()) {
 
-    case -1:   // если не удалось запустить потомка выведем на экран ошибку и её описание
+      case -1:   // если не удалось запустить потомка выведем на экран ошибку и её описание
 
-      printf("Ошибка при запуске службы сервера (%s)\n", strerror(errno));
-      return -1;
-      break;
+        printf("Ошибка при запуске службы сервера (%s)\n", strerror(errno));
+        return -1;
+        break;
 
-    case 0:
-      break;
+      case 0:
+        break;
 
-    default:
+      default:
 
-      return 0;
-      break;
+        return 0;
+        break;
 
+    }
   }
 
   // инициализируем логгер ПОСЛЕ запуска потомка
@@ -397,9 +409,12 @@ int main(int argc, char *argv[])
 
       setsid(); // отцепляемся от родителя
 
-      close(STDIN_FILENO);
-      close(STDOUT_FILENO);
-      close(STDERR_FILENO);
+      if(!debug)
+      {
+        close(STDIN_FILENO);
+        close(STDOUT_FILENO);
+        close(STDERR_FILENO);
+      }
 
       return a.exec();
 
@@ -415,14 +430,22 @@ void signal_handler(int sig)
 {
   Q_UNUSED(sig);
 
+  foreach (sv::SvAbstractLogger* logger, LOGGERS)
+    delete logger;
+
+  qDebug() << "close_db()";
   close_db();
 
+  qDebug() << "closeDevices()";
   closeDevices();
 
+  qDebug() << "deinitStorages()";
   deinitStorages();
 
+  qDebug() << "deleteSignals()";
   deleteSignals();
 
+  qDebug() << "_Exit(0)";
   _Exit(0);
 }
 
@@ -515,7 +538,9 @@ bool readDevices()
 
         DEVICES.insert(newdev->info()->index, newdev);
 
-        newdev->setLogger(&dbus);
+        LOGGERS.insert(newdev->info()->index, new sv::SvDBus(dbus.options()));
+
+        newdev->setLogger(LOGGERS.value(newdev->info()->index));
 
         dbus << lldbg << mtdbg << me
              << QString("  %1 [Индекс %2]\n Параметры: %3\n  Интерфейс: %4 %5").

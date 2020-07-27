@@ -2,7 +2,6 @@
 
 dev::SvAbstractKsutsDevice::SvAbstractKsutsDevice(dev::HardwareType type, sv::SvAbstractLogger *logger):
   dev::SvAbstractDevice(type, logger)
-//  p_log(log)
 {
 
 }
@@ -126,6 +125,7 @@ void dev::SvAbstractUdpThread::open() throw(SvException&)
 
   // именно после open!
   p_socket.moveToThread(this);
+  p_reset_timer.moveToThread(this);
 
 }
 
@@ -143,10 +143,10 @@ quint64 dev::SvAbstractUdpThread::write(const QByteArray& data)
               << QString(data.toHex())
               << sv::log::endl;
 
-  QUdpSocket s;
-  quint64 w = s.writeDatagram(data, QHostAddress(p_ifc_params.host), p_ifc_params.send_port);
-//  quint64 w = p_socket.write(data, QHostAddress(p_ifc_params.host), p_ifc_params.remote_port);
-  s.flush();
+//  QUdpSocket s;
+//  quint64 w = s.writeDatagram(data, QHostAddress(p_ifc_params.host), p_ifc_params.send_port);
+  quint64 w = p_socket.writeDatagram(data, QHostAddress(p_ifc_params.host), p_ifc_params.send_port);
+  p_socket.flush();
 
   return w;
 
@@ -162,6 +162,10 @@ void dev::SvAbstractUdpThread::run()
 
       while(p_socket.hasPendingDatagrams())
       {
+        qDebug() << p_socket.pendingDatagramSize();
+//        if(p_socket.pendingDatagramSize() <= 0)
+//          continue;
+
         if(p_buff.offset > MAX_PACKET_SIZE)
           reset_buffer();
 

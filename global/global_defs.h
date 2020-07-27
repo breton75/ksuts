@@ -5,6 +5,7 @@
 
 #define ACTUAL_DB_VERSION "1.1.0"
 
+#define OPTION_DEBUG                     "debug"
 #define OPTION_DB_HOST                   "db_host"
 #define OPTION_DB_PORT                   "db_port"
 #define OPTION_DB_NAME                   "db_name"
@@ -29,6 +30,7 @@
 #define OPTION_LOG_SENDER_NAME_FORMAT    "log_sender_name_format"
 
 struct AppConfig {
+    bool debug;
     QString db_name;
     QString db_host;
     quint16 db_port;
