@@ -8,7 +8,7 @@ dev::SvAbstractKsutsDevice::SvAbstractKsutsDevice(dev::HardwareType type, sv::Sv
 
 dev::SvAbstractKsutsDevice::~SvAbstractKsutsDevice()
 {
-  deleteThread();
+  stopThread();
   deleteLater();
 }
 
@@ -43,9 +43,9 @@ bool dev::SvAbstractKsutsDevice::open()
 
     p_thread->setIfcParams(p_info.ifc_params);
 
-//    connect(p_thread, &dev::SvAbstractDeviceThread::finished, this, &dev::SvAbstractKsutsDevice::deleteThread);
+    connect(p_thread, &dev::SvAbstractDeviceThread::finished, this, &dev::SvAbstractKsutsDevice::deleteThread);
     connect(this, &SvAbstractKsutsDevice::stop_thread, p_thread, &dev::SvAbstractDeviceThread::stop);
-    connect(p_thread, &dev::SvAbstractDeviceThread::finished, p_thread, &dev::SvAbstractDeviceThread::deleteLater);
+//    connect(p_thread, &dev::SvAbstractDeviceThread::finished, p_thread, &dev::SvAbstractDeviceThread::deleteLater);
 
     p_thread->open();
     p_thread->start();
@@ -66,16 +66,21 @@ bool dev::SvAbstractKsutsDevice::open()
 
 void dev::SvAbstractKsutsDevice::close()
 {
-  deleteThread();
+  stopThread();
 
   p_isOpened = false;
 }
 
-void dev::SvAbstractKsutsDevice::deleteThread()
+void dev::SvAbstractKsutsDevice::stopThread()
 {
   // тут надо делать через сигнал слот, иначе ругается что останавливаем сокет или порт из другого потока
   emit stop_thread();
 
+}
+
+void dev::SvAbstractKsutsDevice::deleteThread()
+{
+  delete p_thread; //->deleteLater();
 }
 
 sv::log::sender dev::SvAbstractKsutsDevice::make_dbus_sender()
@@ -119,18 +124,21 @@ void dev::SvAbstractUdpThread::open() throw(SvException&)
 
   // с заданным интервалом сбрасываем буфер, чтобы отсекать мусор и битые пакеты
   p_reset_timer.setInterval(p_device->params()->reset_timeout);
+  p_reset_timer.setSingleShot(true);
 
   connect(&p_socket, SIGNAL(readyRead()), &p_reset_timer, SLOT(start()));
   connect(&p_reset_timer, &QTimer::timeout, this, &dev::SvAbstractKsutsThread::reset_buffer);
 
   // именно после open!
   p_socket.moveToThread(this);
-  p_reset_timer.moveToThread(this);
 
 }
 
 quint64 dev::SvAbstractUdpThread::write(const QByteArray& data)
 {
+  if(!p_is_active)
+    return 0;
+
   // небольшая задержка перед отправкой подтверждения
   // из-за того, что "шкаф не успевает обработать данные" (c) Гаврилов
   msleep(10);
@@ -158,16 +166,18 @@ void dev::SvAbstractUdpThread::run()
 
   while(p_is_active) {
 
-    while(p_socket.waitForReadyRead(100)) {
+    while(p_is_active && p_socket.waitForReadyRead(1)) {
 
-      while(p_socket.hasPendingDatagrams())
+      while(p_is_active && p_socket.hasPendingDatagrams())
       {
-        qDebug() << p_socket.pendingDatagramSize();
-//        if(p_socket.pendingDatagramSize() <= 0)
-//          continue;
+        if(p_socket.pendingDatagramSize() <= 0)
+          continue;
 
         if(p_buff.offset > MAX_PACKET_SIZE)
           reset_buffer();
+
+        if(!p_is_active)
+          break;
 
         /* ... the rest of the datagram will be lost ... */
         p_buff.offset += p_socket.readDatagram((char*)(&p_buff.buf[p_buff.offset]), MAX_PACKET_SIZE - p_buff.offset);

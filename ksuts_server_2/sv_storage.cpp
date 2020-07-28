@@ -16,13 +16,18 @@ SvStorage::SvStorage(StorageParams params, sv::SvAbstractLogger &log, QObject *p
 
 SvStorage::~SvStorage()
 {
-  if(_thr)
-    delete _thr;
+//  stop();
+//  if(_thr)
+//    delete _thr;
 
-  /** при завершении работы сервера, сбрасываем все сигналы **/
-  foreach (SvSignal* signal, _signals)
-    signal->setLostValue();
+//  _thr->stop();
 
+//  while(_thr)
+//    QCoreApplication::processEvents();
+
+//  /** при завершении работы сервера, сбрасываем все сигналы **/
+//  foreach (SvSignal* signal, _signals)
+//    signal->setLostValue();
 
   deleteLater();
 
@@ -66,7 +71,7 @@ void SvStorage::logerr(QString e)
 
 void SvStorage::logreconnect()
 {
-  _log << sv::log::TimeZZZ << sv::log::llInfo << QString("Phew! %1 reconnected to %2:%3:%4\n")
+  _log << sv::log::TimeZZZ << sv::log::llInfo << QString("Фух! Восстановлена связь с хранилищем %1 [%2:%3:%4]\n")
           .arg(_params.name).arg(_params.database_name)
           .arg(_params.host).arg(_params.port)
        << sv::log::endl;
@@ -98,6 +103,9 @@ void SvStorage::stop_reconnect_timer()
 
 void SvStorage::stop()
 {
+  if(!_thr)
+    return;
+
   /// при ручном завершении, отключаем переподключение
   disconnect(_thr, &SvStorageThread::finished, this, &SvStorage::start_reconnect_timer);
   disconnect(_thr, &SvStorageThread::connected, this, &SvStorage::logreconnect);
@@ -105,24 +113,37 @@ void SvStorage::stop()
   stop_reconnect_timer();
   delete _reconnect_timer;
 
-  delete _thr;
-  _thr = nullptr;
+  _thr->stop();
 
 }
 
 void SvStorage::start()
 {
-
   if(!_thr)
     return;
 
-  connect(_thr, &SvStorageThread::finished, _thr, &SvStorageThread::deleteLater);
+//  connect(_thr, &SvStorageThread::finished, _thr, &SvStorageThread::deleteLater);
+  connect(_thr, &SvStorageThread::finished, this, &SvStorage::deleteThread);
+//  connect(_thr, &SvStorageThread::finished, [=](){ delete _thr; _thr = nullptr; } );
   connect(_thr, &SvStorageThread::finished, this, &SvStorage::start_reconnect_timer);
   connect(_thr, &SvStorageThread::error, this, &SvStorage::logerr);
 
   _thr->start();
   
 }
+
+//void SvStorage::stopThread()
+//{
+//  _thr->stop();
+//}
+
+void SvStorage::deleteThread()
+{
+  delete _thr;
+  _thr = nullptr;
+}
+
+/** *************  Storage Thread  ******************* */
 
 SvStorageThread::SvStorageThread(StorageParams *params, QList<SvSignal*>* signalList, QObject *parent):
   QThread(parent),
@@ -161,11 +182,11 @@ bool SvStorageThread::init()
 
 SvStorageThread::~SvStorageThread()
 {
-  stop();
+//  stop();
   delete PGDB;
   QSqlDatabase::removeDatabase(QString("PGConn_%1").arg(_params->index));
 
-  deleteLater();  
+  deleteLater();
 }
 
 void SvStorageThread::stop()

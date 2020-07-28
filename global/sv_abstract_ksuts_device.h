@@ -65,6 +65,7 @@ protected:
 
 
 private slots:
+  void stopThread();
   void deleteThread();
 
 signals:
@@ -84,10 +85,7 @@ public:
 
   }
 
-  virtual ~SvAbstractKsutsThread()
-  {
-    stop();
-  }
+  virtual ~SvAbstractKsutsThread() { }
 
   virtual void setIfcParams(const QString& params) throw(SvException&) = 0;
 
@@ -117,7 +115,6 @@ public slots:
   virtual void stop()
   {
     p_is_active = false;
-    while(this->isRunning()) qApp->processEvents();
   }
 
 

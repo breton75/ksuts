@@ -76,7 +76,7 @@ bool parse_params(const QStringList &args, AppConfig& cfg, const QString& file_n
 
 bool initConfig(const AppConfig &cfg);
 void close_db();
-bool readDevices();
+bool readDevices(const AppConfig& cfg);
 bool readStorages();
 //bool readCOBs();
 //bool cobToRepository(QString storage_field_name);
@@ -381,7 +381,7 @@ int main(int argc, char *argv[])
     if(!initConfig(cfg)) exception.raise(-10);
 
     /** читаем устройства, репозитории и сигналы. СИГНАЛЫ В ПОСЛЕДНЮЮ ОЧЕРЕДЬ! **/
-    if(!readDevices()) exception.raise(-20);
+    if(!readDevices(cfg)) exception.raise(-20);
     if(!readStorages()) exception.raise(-30);
 
     if(!readSignals()) exception.raise(-40);
@@ -509,7 +509,7 @@ bool initConfig(const AppConfig& cfg)
 }
 
 
-bool readDevices()
+bool readDevices(const AppConfig& cfg)
 {
 
   dbus << llinf << mtinf << me
@@ -538,9 +538,12 @@ bool readDevices()
 
         DEVICES.insert(newdev->info()->index, newdev);
 
-        LOGGERS.insert(newdev->info()->index, new sv::SvDBus(dbus.options()));
+        if(cfg.log_options.logging)
+        {
+          LOGGERS.insert(newdev->info()->index, new sv::SvDBus(cfg.log_options));
 
-        newdev->setLogger(LOGGERS.value(newdev->info()->index));
+          newdev->setLogger(LOGGERS.value(newdev->info()->index));
+        }
 
         dbus << lldbg << mtdbg << me
              << QString("  %1 [Индекс %2]\n Параметры: %3\n  Интерфейс: %4 %5").
@@ -961,22 +964,20 @@ void closeDevices()
   try {
 
     int counter = 0;
-    for(int key: DEVICES.keys()) {
 
+    foreach (int key, DEVICES.keys())
+    {
       dev::SvAbstractDevice* device = DEVICES.value(key);
 
-      dbus << llinf << me << mtinf << QString("  %1 (%2):").arg(device->info()->name).arg(device->info()->ifc_name); // << sv::log::endi;
+      dbus << llinf << me << mtinf << QString("  %1 (%2):").arg(device->info()->name).arg(device->info()->ifc_name) << sv::log::endl;
 
-      device->close();
+//      device->close();
       delete DEVICES.take(key);
-
-      dbus << llinf << me << mtinf << "\tOK" << sv::log::endl;
 
       counter++;
 
     }
 
-//    lout << llinf << QString("OK\n") << sv::log::endl;
     dbus << llinf << me << mtinf << QString("OK [Закрыто %1]\n").arg(counter)  << sv::log::endl;
 
   }

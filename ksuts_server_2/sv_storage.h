@@ -134,6 +134,9 @@ private slots:
   void start_reconnect_timer();
   void stop_reconnect_timer();
 
+//  void stopThread();
+  void deleteThread();
+
   void logerr(QString e);
   void logreconnect();
   
