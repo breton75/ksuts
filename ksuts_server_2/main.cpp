@@ -430,8 +430,6 @@ void signal_handler(int sig)
 {
   Q_UNUSED(sig);
 
-  foreach (sv::SvAbstractLogger* logger, LOGGERS)
-    delete logger;
 
   qDebug() << "close_db()";
   close_db();
@@ -444,6 +442,10 @@ void signal_handler(int sig)
 
   qDebug() << "deleteSignals()";
   deleteSignals();
+
+  /* логеры в последнюю очередь */
+  foreach (sv::SvAbstractLogger* logger, LOGGERS)
+    delete logger;
 
   qDebug() << "_Exit(0)";
   _Exit(0);

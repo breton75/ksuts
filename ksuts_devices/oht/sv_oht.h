@@ -84,7 +84,7 @@ public:
               "  \"databits\": 8,\n"
               "  \"flowcontrol\": 0,\n"
               "  \"parity\": 0,\n"
-              "  \"stopbits\": 1\n"
+              "  \"stopbits\": 2\n"
               "}");
 
       break;
