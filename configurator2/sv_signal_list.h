@@ -64,7 +64,7 @@ private:
 //  bool readCurrentSignals();
   bool readSignals(TreeModel* model, QString queryString = "");
 
-  void updateTable(QTableView *table, TreeModel* model);
+  void updateTable(QTableView *table, TreeModel* model, bool resizeColumns = false);
 
   void setEnabledWidgets(bool enabled);
 

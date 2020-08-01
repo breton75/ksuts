@@ -256,15 +256,12 @@ void dev::SvAbstractSerialThread::run()
   while(p_is_active) {
 
     while(p_port.waitForReadyRead(1)) {
-
       if(p_buff.offset > MAX_PACKET_SIZE)
         reset_buffer();
 
-      p_buff.offset += p_port.read((char*)(&p_buff.buf[0] + p_buff.offset), MAX_PACKET_SIZE - p_buff.offset);
-
+      p_buff.offset += p_port.read((char*)(&p_buff.buf[p_buff.offset]), MAX_PACKET_SIZE - p_buff.offset);
 
       process_data();
-
 
     }
   }

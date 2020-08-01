@@ -22,6 +22,7 @@
 #include "../global/global_defs.h"
 //#include "../global/dev_defs.h"
 #include "../global/sv_signal.h"
+#include "../global/sv_dbus.h"
 
 #include "../ksuts_devices/oht/sv_oht.h"
 #include "../ksuts_devices/opa/sv_opa.h"
@@ -31,7 +32,6 @@
 #include "../../svlib/sv_sqlite.h"
 #include "../../svlib/sv_exception.h"
 #include "../../svlib/sv_config.h"
-#include "../../svlib/sv_dbus.h"
 
 #include "sv_storage.h"
 

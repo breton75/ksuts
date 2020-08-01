@@ -58,8 +58,6 @@ class /*OHTSHARED_EXPORT*/ SvSKM: public dev::SvAbstractKsutsDevice
 {
     Q_OBJECT
 
-//    sv::SvAbstractLogger& _log;
-  
 public:
   SvSKM(sv::SvAbstractLogger *logger = nullptr);
 
@@ -118,20 +116,6 @@ public:
 private:
   bool create_new_thread();
 
-//  ~SvSKM();
-  
-//  bool open();
-//  void close();
-  
-//  bool setup(const dev::DeviceInfo& info);
-//  bool setParams(const QString& params);
-  
-//private:
-//  SvException* _exception;
-  
-//private slots:
-//  void deleteThread();
-    
 };
 
 

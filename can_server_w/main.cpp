@@ -5,8 +5,9 @@
 #include <QtGui>
 #include <QMessageBox>
 #include <QWidget>
-
 #include <QTextStream>
+
+#include <iostream>
 //#include <QCoreApplication>
 
 //#include<stdio.h>
@@ -31,6 +32,12 @@ void qDebugHandler(QtMsgType type, const QMessageLogContext &context, const QStr
 
 int main(int argc, char *argv[])
 {
+  // запрос версии для монитора
+  if((argc > 1) && (QString(argv[1]).trimmed() == "-v")) {
+    std::cout << QString(APP_VERSION).toStdString().c_str() << std::endl;
+    return 0;
+  }
+
   qInstallMessageHandler(qDebugHandler);
 
     QApplication a(argc, argv);
@@ -56,6 +63,6 @@ int main(int argc, char *argv[])
         return -1;
     }
 
-    w.show();
+//    w.show();
     return a.exec();
 }

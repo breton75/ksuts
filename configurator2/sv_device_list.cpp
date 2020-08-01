@@ -152,7 +152,7 @@ void SvDeviceList::on_bnRemoveAll_clicked()
 
     PGDB->db.transaction();
     serr = PGDB->execSQL(QString(SQL_DELETE_ALL_DEVICES));
-    serr = PGDB->execSQL(QString(SQL_SET_SIGNALS_NOT_INVOLVED));
+//    serr = PGDB->execSQL(QString(SQL_SET_SIGNALS_NOT_INVOLVED));
 
     if(serr.type() != QSqlError::NoError)
       _e.raise(serr.text());

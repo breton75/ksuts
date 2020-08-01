@@ -49,8 +49,8 @@ SvSignalList::SvSignalList(int deviceIndex, QWidget *parent) :
   readSignals(_model_current);
   readSignals(_model_available);
 
-  updateTable(ui->tableCurrent, _model_current);
-  updateTable(ui->tableAvailable, _model_available);
+  updateTable(ui->tableCurrent, _model_current, true);
+  updateTable(ui->tableAvailable, _model_available,true);
 
   connect(ui->bnSave, &QPushButton::clicked, this, &QDialog::accept);
 
@@ -207,7 +207,7 @@ void SvSignalList::accept()
   QDialog::done(Accepted);
 }
 
-void SvSignalList::updateTable(QTableView *table, TreeModel* model)
+void SvSignalList::updateTable(QTableView *table, TreeModel* model, bool resizeColumns)
 {
 
   table->setModel(0);
@@ -219,12 +219,15 @@ void SvSignalList::updateTable(QTableView *table, TreeModel* model)
   table->resizeRowsToContents();
   table->setUpdatesEnabled(true);
 
-  table->setColumnWidth(0, 250);
-  table->setColumnWidth(1, 80);
-  table->setColumnWidth(2, 80);
-  table->setColumnWidth(3, 80);
-  table->setColumnWidth(4, 80);
-  table->setColumnWidth(5, 80);
+  if(resizeColumns)
+  {
+    table->setColumnWidth(0, 250);
+    table->setColumnWidth(1, 80);
+    table->setColumnWidth(2, 80);
+    table->setColumnWidth(3, 80);
+    table->setColumnWidth(4, 80);
+    table->setColumnWidth(5, 80);
+  }
 }
 
 void SvSignalList::on_bnRemoveAll_clicked()

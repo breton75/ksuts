@@ -1,4 +1,4 @@
-#ifndef SV_STORAGE_LIST_H
+﻿#ifndef SV_STORAGE_LIST_H
 #define SV_STORAGE_LIST_H
 
 #include <QDialog>
@@ -75,7 +75,7 @@ private:
 
   bool readSignals(TreeModel *model);
 
-  void updateTable(QTableView *table, TreeModel* model);
+  void updateTable(QTableView *table, TreeModel* model, bool resizeColumns = false);
 
   void setEnabledWidgets(bool enabled);
 

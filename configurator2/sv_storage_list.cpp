@@ -1,4 +1,4 @@
-#include "sv_storage_list.h"
+﻿#include "sv_storage_list.h"
 #include "ui_sv_storage_list.h"
 
 extern SvPGDB* PGDB;
@@ -178,7 +178,7 @@ void SvStorageList::accept()
   QDialog::done(Accepted);
 }
 
-void SvStorageList::updateTable(QTableView *table, TreeModel* model)
+void SvStorageList::updateTable(QTableView *table, TreeModel* model, bool resizeColumns)
 {
 
   table->setModel(0);
@@ -190,12 +190,15 @@ void SvStorageList::updateTable(QTableView *table, TreeModel* model)
   table->resizeRowsToContents();
   table->setUpdatesEnabled(true);
 
-  table->setColumnWidth(0, 250);
-  table->setColumnWidth(1, 80);
-  table->setColumnWidth(2, 80);
-  table->setColumnWidth(3, 80);
-  table->setColumnWidth(4, 80);
-  table->setColumnWidth(5, 80);
+  if(resizeColumns)
+  {
+    table->setColumnWidth(0, 250);
+    table->setColumnWidth(1, 80);
+    table->setColumnWidth(2, 80);
+    table->setColumnWidth(3, 80);
+    table->setColumnWidth(4, 80);
+    table->setColumnWidth(5, 80);
+  }
 }
 
 void SvStorageList::on_bnRemoveAll_clicked()

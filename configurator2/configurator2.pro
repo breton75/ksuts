@@ -49,12 +49,12 @@ SOURCES += \
     edit_autorun.cpp \
     sv_editconfig.cpp \
     ../../svlib/sv_serial_editor.cpp \
-    ../../svlib/sv_dbus.cpp \
     ../../svlib/sv_abstract_logger.cpp \
     ../../svlib/sv_fnt.cpp \
     ../../svlib/sv_udp_editor.cpp \
     ../../svlib/sv_widget_log.cpp \
-    sv_device_log.cpp
+    sv_device_log.cpp \
+    ../global/sv_dbus.cpp
 
 HEADERS += \
         mainwindow.h \
@@ -76,7 +76,6 @@ HEADERS += \
     edit_autorun.h \
     sv_editconfig.h \
     ../../svlib/sv_busy_window.h \
-    ../../svlib/sv_dbus.h \
     ../../svlib/sv_abstract_logger.h \
     ../../svlib/sv_fnt.h \
     ../global/device_params.h \
@@ -87,7 +86,8 @@ HEADERS += \
     ../../svlib/sv_udp_editor.h \
     ../../svlib/sv_widget_log.h \
     sv_device_log.h \
-    ../global/global_defs.h
+    ../global/global_defs.h \
+    ../global/sv_dbus.h
 
 FORMS += \
         mainwindow.ui \

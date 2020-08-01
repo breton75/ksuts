@@ -1,4 +1,4 @@
-#include "can_parser.h"
+﻿#include "can_parser.h"
 #include <QDebug>
 
 CAN_Parser::CAN_Parser(quint8 id)
@@ -92,7 +92,7 @@ void CAN_Parser::run()
         //if(!cs->isOnLine) { // проклюнулся - восстановление связи
             cs->isOnLine = true;            
             // протоколируем
-            qDebug() << QTime::currentTime().toString("hh:mm:ss.zzz") << "Восстановлена связь с датчиком:" << can_id << "порт" << _id;
+//            qDebug() << QTime::currentTime().toString("hh:mm:ss.zzz") << "Восстановлена связь с датчиком:" << can_id << "порт" << _id;
             qint64 param;
             if(cs->neighbor->isActive) param = 0;
             else {

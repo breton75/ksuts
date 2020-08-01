@@ -15,6 +15,9 @@ TEMPLATE = app
 
 QMAKE_CXXFLAGS += -std=c++11
 
+VERSION = 1.1.0    # major.minor.patch
+DEFINES += APP_VERSION=\\\"$$VERSION\\\"
+
 SOURCES += main.cpp\
         mainwindow.cpp \
     can_queue.cpp \

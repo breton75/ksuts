@@ -75,7 +75,6 @@ void opa::SvUDPThread::process_data()
 
 
         if(p_logger) // && p_device->info()->debug_mode)
-//          p_logger->log(sv::log::llDebug, sv::log::mtDebug, QString(QByteArray((const char*)&p_buff.buf[0], p_buff.offset).toHex()), me);
           *p_logger << me
                     << sv::log::mtDebug
                     << sv::log::llDebug
@@ -90,10 +89,6 @@ void opa::SvUDPThread::process_data()
         // ставим состояние данной линии
         opa::func_set_line_status(p_device, &p_data);
 
-//        quint16 current_register = (static_cast<quint16>(_header.ADDRESS << 8)) + _header.OFFSET;
-        if(p_device->info()->index == 20)
-        qDebug() << 1 << me.name << current_register - p_device->params()->start_register << QByteArray((const char*)(&p_data.data[0]), p_data.data_length).toHex();
-
         switch (current_register - p_device->params()->start_register)
         {
             case 0x00:
@@ -106,14 +101,6 @@ void opa::SvUDPThread::process_data()
               if(p_data.data_type == 0x77)
                 func_0x77(p_device);
 
-//              if(p_logger) // && p_device->info()->debug_mode)
-//                p_logger->log(sv::log::llDebug, sv::log::mtDebug, QString(QByteArray((const char*)&p_buff.buf[0], p_buff.offset).toHex()), me);
-////                  << me
-//                          << sv::log::mtDebug
-//                          << sv::log::llDebug
-//                          << sv::log::TimeZZZ << sv::log::in
-//                          << QString(QByteArray((const char*)&p_buff.buf[0], p_buff.offset).toHex())
-//                          << sv::log::endl;
               break;
 
             case 0x06:
@@ -121,16 +108,6 @@ void opa::SvUDPThread::process_data()
             case 0x50:
             case 0x90:
             {
-
-//          if(p_logger) // && p_device->info()->debug_mode)
-//            p_logger->log(sv::log::llDebug, sv::log::mtDebug, QString(QByteArray((const char*)&p_buff.buf[0], p_buff.offset).toHex()), me);
-//              << me
-//                      << sv::log::mtDebug
-//                      << sv::log::llDebug
-//                      << sv::log::TimeZZZ << sv::log::in
-//                      << QString(QByteArray((const char*)&p_buff.buf[0], p_buff.offset).toHex())
-//                      << sv::log::endl;
-
               // парсим и проверяем crc
               quint16 calc_crc = opa::parse_data(&p_buff, &p_data, &_header);
 
@@ -139,8 +116,7 @@ void opa::SvUDPThread::process_data()
               {
                 // если crc не совпадает, то выходим без обработки и ответа
                 if(p_logger)
-//                    p_logger->log(sv::log::llDebug, sv::log::mtDebug, QString(QByteArray((const char*)&p_buff.buf[0], p_buff.offset).toHex()), me);
-                    *p_logger << me //static_cast<dev::SvAbstractKsutsDevice*>(p_device)->make_dbus_sender()
+                    *p_logger << me
                               << sv::log::mtError
                               << sv::log::llError
                               << sv::log::TimeZZZ
@@ -150,8 +126,6 @@ void opa::SvUDPThread::process_data()
               }
               else
               {
-                if(p_device->info()->index == 20)
-          qDebug() << 2 << me.name << QByteArray(/*const_cast<const */(const char*)(&p_data.data[0]), p_data.data_length);
                   // формируем и отправляем ответ-квитирование
                   write(confirmation(&_header));
 
@@ -172,8 +146,7 @@ void opa::SvUDPThread::process_data()
             default:
                 break;
         }
-        if(p_device->info()->index == 20)
-  qDebug() << 3 << me.name;
+
         reset_buffer();
 
     }

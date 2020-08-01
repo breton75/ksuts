@@ -173,7 +173,8 @@ void ktv::SvSerialThread::process_data()
 
         switch (p_data.data_type) {
 
-            case 0x33: ktv::func_0x33; break;
+            case 0x33:
+              ktv::func_0x33(p_device, &p_data); break;
 
         }
 
@@ -187,21 +188,25 @@ void ktv::SvSerialThread::process_data()
 /** ktv general functions **/
 quint16 ktv::parse_data(dev::BUFF* buff, dev::DATA* data, ktv::Header* header)
 {
+  Q_UNUSED(header);
+
+  size_t hSize = sizeof(ktv::Header);
+
   // 'грязная' длина данных вместе с crc. в crc могут быть символы, которые удваиваются
-  data->data_length = buff->offset - 2 /* 2F55 в конце */ - sizeof(header);
+  data->data_length = buff->offset - hSize - 2; /* 2F55 в конце */
 
   // тип данных
-  memcpy(&data->data_type, &buff->buf[sizeof(header)], 1);
+  memcpy(&data->data_type, &buff->buf[hSize], 1);
 
   // вычленяем crc. учитываем, что байты 1F и 2F удваиваются
   // длина crc может увеличиться за счет удвоения управляющих байтов
   int crc_length = 1;
   quint8  crc_tmp[2];
 
-  memcpy(&crc_tmp[1], &buff->buf[0] + sizeof(header) + data->data_length - crc_length++, 1);
+  memcpy(&crc_tmp[1], &buff->buf[0] + hSize + data->data_length - crc_length++, 1);
   if(ktv::check_1F_2F_55(crc_tmp[1])) crc_length++;
 
-  memcpy(&crc_tmp[0], &buff->buf[0] + sizeof(header) + data->data_length - crc_length  , 1);
+  memcpy(&crc_tmp[0], &buff->buf[0] + hSize + data->data_length - crc_length  , 1);
   if(ktv::check_1F_2F_55(crc_tmp[0])) crc_length++;
 
 //  // полученная crc
@@ -211,10 +216,10 @@ quint16 ktv::parse_data(dev::BUFF* buff, dev::DATA* data, ktv::Header* header)
   data->data_length -= crc_length + 1 /* тип данных */;  // чистая длина данных
 
 //  // данные
-  memcpy(&data->data[0], &buff->buf[0] + sizeof(header) + 1, data->data_length);
+  memcpy(&data->data[0], &buff->buf[0] + hSize + 1, data->data_length);
 
 //  // вычисляем crc из данных
-  quint16 crc = CRC::CRC16_CCITT(&buff->buf[0], sizeof(header) + data->data_length);
+  quint16 crc = CRC::CRC16_CCITT(&buff->buf[0], hSize + data->data_length);
 
   return crc;
 

@@ -21,9 +21,9 @@
 #include "../../svlib/sv_pgdb.h"
 #include "../../svlib/sv_config.h"
 #include "../../svlib/sv_busy_window.h"
-#include "../../svlib/sv_dbus.h"
 #include "../../svlib/sv_abstract_logger.h"
 
+#include "../global/sv_dbus.h"
 #include "../global/sql_defs.h"
 #include "../global/autorun_defs.h"
 #include "../global/global_defs.h"

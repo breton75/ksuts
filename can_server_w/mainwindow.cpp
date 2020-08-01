@@ -1151,8 +1151,8 @@ void MainWindow::check_connect()
             //switchOwer = onLine1;//can_run[1] && cs1->isOnLine;
             cs1->isActive = onLine1;//switchOwer;
             // при полной потере связи - обновляем и значение сигнала
-            qDebug() << QTime::currentTime().toString("hh:mm:ss.zzz") << "Порт 0 - потеря связи с датчиком:" << i
-                     << "переключен на другой порт:" << tr("%1").arg(onLine1? "да":"нет, отключен");//onLine1;//switchOwer;
+//            qDebug() << QTime::currentTime().toString("hh:mm:ss.zzz") << "Порт 0 - потеря связи с датчиком:" << i
+//                     << "переключен на другой порт:" << tr("%1").arg(onLine1? "да":"нет, отключен");//onLine1;//switchOwer;
         }
 
         if(onLine1 != cs1->isOnLine) { // потерялся на втором порту
@@ -1166,8 +1166,8 @@ void MainWindow::check_connect()
             else cs1->lastValue = empty_analog_value;
             //switchOwer = can_run[0] && cs0->isOnLine;
             cs0->isActive = onLine0;//switchOwer;
-            qDebug() << QTime::currentTime().toString("hh:mm:ss.zzz") << "Порт 1 - потеря связи с датчиком:" << i
-                     << "переключен на другой порт:" << tr("%1").arg(onLine0? "да":"нет, отключен");//onLine0;//onLine0? "":"";//switchOwer;
+//            qDebug() << QTime::currentTime().toString("hh:mm:ss.zzz") << "Порт 1 - потеря связи с датчиком:" << i
+//                     << "переключен на другой порт:" << tr("%1").arg(onLine0? "да":"нет, отключен");//onLine0;//onLine0? "":"";//switchOwer;
         }
 
         if(!(onLine0 || onLine0)) { // пропала связь на обоих портах

@@ -67,8 +67,14 @@
 //#define SQL_SELECT_NOT_INVOLVED_SIGNALS_HARDWARE (SQL_SELECT_FROM_SIGNALS " WHERE signals.hardware_code = '%1' AND signals.device_index is NULL ORDER BY signals.signal_index ASC")
 #define SQL_SELECT_NOT_INVOLVED_SIGNALS_DEVICE (SQL_SELECT_FROM_SIGNALS " WHERE signals.device_index = %1 AND signals.is_involved = false ORDER BY signals.signal_index ASC")
 
-#define SQL_SELECT_LINKED_SIGNALS_STORAGE_INDEX (SQL_SELECT_FROM_SIGNALS " WHERE signals.storage%1_linked = true AND signals.is_involved = true ORDER BY signals.signal_index ASC")
-#define SQL_SELECT_NOT_LINKED_SIGNALS_STORAGE_INDEX (SQL_SELECT_FROM_SIGNALS " WHERE signals.storage%1_linked = false  AND signals.is_involved = false ORDER BY signals.signal_index ASC")
+#define SQL_SELECT_LINKED_SIGNALS_STORAGE_INDEX (SQL_SELECT_FROM_SIGNALS " WHERE signals.storage%1_linked = true AND "\
+                                                  "signals.is_involved =  true AND "\
+                                                  "signals.device_index in (select device_index from devices where is_involved = true) "\
+                                                  "ORDER BY signals.signal_index ASC")
+#define SQL_SELECT_NOT_LINKED_SIGNALS_STORAGE_INDEX (SQL_SELECT_FROM_SIGNALS " WHERE signals.storage%1_linked = false AND "\
+                                                  "signals.is_involved =  true AND "\
+                                                  "signals.device_index in (select device_index from devices where is_involved = true) "\
+                                                  "ORDER BY signals.signal_index ASC")
 
 
 #define SQL_SELECT_SIGNALS_LIST (SQL_SELECT_FROM_SIGNALS " ORDER BY signals.data_offset ASC")

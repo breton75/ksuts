@@ -100,9 +100,9 @@ void SvCAN_Writer::sendCmd(quint16 can_id, quint16 sender_id, quint64 send_value
     }
 
     // собственно посылка
-    if(_logging) qDebug() << QTime::currentTime().toString("hh:mm:ss.zzz") << "Посылка команды в сеть - can_id-пакет:" << can_id << b.toHex();
+//    if(_logging) qDebug() << QTime::currentTime().toString("hh:mm:ss.zzz") << "Посылка команды в сеть - can_id-пакет:" << can_id << b.toHex();
     int n_bytes = writeData(can_id, b);
-    if(_logging) qDebug() << QTime::currentTime().toString("hh:mm:ss.zzz") << "Посылка команды в сеть - записано байт:" << n_bytes;
+//    if(_logging) qDebug() << QTime::currentTime().toString("hh:mm:ss.zzz") << "Посылка команды в сеть - записано байт:" << n_bytes;
 }
 
 
@@ -167,7 +167,7 @@ void SvCAN_Reader::run()
         // (обработка событий, например, завершение потока, внутри проц. read() ведется)
         int nbytes = read(sock, &frame, sizeof(struct can_frame));
 
-        qDebug() << QByteArray((char*)&frame, frame_size) << frame.can_id;
+//        qDebug() << QByteArray((char*)&frame, frame_size) << frame.can_id;
 
         if (nbytes < 0)
         {
