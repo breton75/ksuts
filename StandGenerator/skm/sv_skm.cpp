@@ -385,7 +385,7 @@ void SvSKM::setData_0x01()
           
           fcount++;
           
-          checkAndAppend(faktors, FaktorCodes.at(i).second);
+          checkAndAppend(faktors, FaktorCodes.at(j).second);
           
         }
       }

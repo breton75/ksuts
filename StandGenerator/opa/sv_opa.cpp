@@ -590,7 +590,7 @@ void SvOPA::setData()
       p_data.data_duty = QByteArray::fromHex(QString(OPA_DefByteArray_duty).toUtf8());
       
       p_data.data_duty[2] = (p_device_params.start_register + 0x0000) >> 8;
-      p_data.data_duty[3] = ( + 0x0000) & 0xFF;
+      p_data.data_duty[3] = (p_device_params.start_register + 0x0000) & 0xFF;
       
       quint16 crc_0x00 = CRC::MODBUS_CRC16((uchar*)p_data.data_duty.data(), p_data.data_duty.length());
       p_data.data_duty.append(crc_0x00 & 0xFF).append(crc_0x00 >> 8);
