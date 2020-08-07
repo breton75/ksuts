@@ -2522,3 +2522,18 @@ void MainWindow::on_bnSignalParams_clicked()
 
 qDebug() << "finished";
 }
+
+void MainWindow::on_pushButton_clicked()
+{
+  QMap<QSerialPort::DataBits, QString>    DataBits     = {{QSerialPort::Data5, "5"},
+                                                                {QSerialPort::Data6, "6"},
+                                                                {QSerialPort::Data7, "7"},
+                                                                {QSerialPort::Data8, "8"}};
+  int f = 5666;
+  QSerialPort::Parity d = static_cast<QSerialPort::Parity>(f);
+
+  bool r = DataBits.keys().contains(static_cast<QSerialPort::DataBits>(f));
+
+
+  qDebug() << QSerialPort::Parity(d) << r;
+}

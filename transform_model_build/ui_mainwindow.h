@@ -76,6 +76,7 @@ public:
     QPushButton *bnSensorsByPlacements;
     QPushButton *bnTestJson;
     QPushButton *bnSignalParams;
+    QPushButton *pushButton;
     QMenuBar *menuBar;
     QToolBar *mainToolBar;
     QStatusBar *statusBar;
@@ -254,6 +255,9 @@ public:
         bnSignalParams = new QPushButton(centralWidget);
         bnSignalParams->setObjectName(QStringLiteral("bnSignalParams"));
         bnSignalParams->setGeometry(QRect(350, 160, 141, 25));
+        pushButton = new QPushButton(centralWidget);
+        pushButton->setObjectName(QStringLiteral("pushButton"));
+        pushButton->setGeometry(QRect(180, 300, 80, 25));
         MainWindow->setCentralWidget(centralWidget);
         menuBar = new QMenuBar(MainWindow);
         menuBar->setObjectName(QStringLiteral("menuBar"));
@@ -308,6 +312,7 @@ public:
         bnSensorsByPlacements->setText(QApplication::translate("MainWindow", "Sensors by Placements", 0));
         bnTestJson->setText(QApplication::translate("MainWindow", "test json", 0));
         bnSignalParams->setText(QApplication::translate("MainWindow", "SignalParams", 0));
+        pushButton->setText(QApplication::translate("MainWindow", "PushButton", 0));
     } // retranslateUi
 
 };

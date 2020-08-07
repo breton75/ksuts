@@ -6,6 +6,7 @@
 #include <QMessageBox>
 #include <QFile>
 #include <QDebug>
+#include <QtSerialPort/QSerialPort>
 
 //#include "../../svlib/sv_clog.h"
 
@@ -71,6 +72,8 @@ private slots:
 //  void on_bnTestJson_clicked();
 
   void on_bnSignalParams_clicked();
+
+  void on_pushButton_clicked();
 
 private:
   Ui::MainWindow *ui;
