@@ -277,6 +277,9 @@ void skm::func_0x02(dev::SvAbstractDevice* device, dev::DATA *data)
 
 void skm::func_0x03(dev::SvAbstractDevice* device, dev::DATA *data)
 {
-    qDebug() << "len:" << data->data_length
-             << "data:" << QByteArray((const char*)data->data[0], data->data_length).toHex();
+  Q_UNUSED(device);
+  Q_UNUSED(data);
+
+//    qDebug() << "len:" << data->data_length
+//             << "data:" << QByteArray((const char*)data->data[0], data->data_length).toHex();
 }

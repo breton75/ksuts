@@ -69,7 +69,7 @@ void ktv::SvUDPThread::process_data()
 
     while(!found && offset_of_2f55 < p_buff.offset) {
 
-        found = *(reinterpret_cast<quint16*>(&p_buff.buf[offset_of_2f55])) == 0x552F;
+        found = (p_buff.buf[offset_of_2f55] == 0x2F) && (p_buff.buf[offset_of_2f55 + 1] == 0x55);
         offset_of_2f55++;
     }
 
@@ -102,7 +102,7 @@ void ktv::SvUDPThread::process_data()
 
         switch (p_data.data_type) {
 
-            case 0x33: ktv::func_0x33; break;
+            case 0x33: ktv::func_0x33(p_device, &p_data); break;
 
         }
 
@@ -139,7 +139,7 @@ void ktv::SvSerialThread::process_data()
 
     while(!found && offset_of_2f55 < p_buff.offset) {
 
-        found = *(reinterpret_cast<quint16*>(&p_buff.buf[offset_of_2f55])) == 0x552F;
+        found = (p_buff.buf[offset_of_2f55] == 0x2F) && (p_buff.buf[offset_of_2f55 + 1] == 0x55);
         offset_of_2f55++;
     }
 

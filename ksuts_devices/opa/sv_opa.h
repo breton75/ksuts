@@ -143,14 +143,9 @@ private:
   opa::Header _header;
   size_t _hSize = sizeof(opa::Header);
 
-  quint8  _confirm[8];
-
   sv::log::sender me;
 
   void process_data();
-
-  void setLineStatus();
-
 
 };
 
@@ -165,6 +160,8 @@ private:
 
   opa::Header _header;
   size_t _hSize = sizeof(opa::Header);
+
+  sv::log::sender me;
 
   void process_data();
 

@@ -160,8 +160,8 @@ class dev::SvAbstractDeviceThread: public QThread
   
 public:
   SvAbstractDeviceThread(dev::SvAbstractDevice* device, sv::SvAbstractLogger* logger = nullptr):
+    p_logger(logger),
     p_device(device)
-    , p_logger(logger)
   {  }
 
 //  ~SvAbstractDeviceThread() = 0;
@@ -177,8 +177,8 @@ public:
   }
   
 protected:
-  sv::SvAbstractLogger  *p_logger = nullptr;
-  dev::SvAbstractDevice *p_device = nullptr;
+  sv::SvAbstractLogger  *p_logger;
+  dev::SvAbstractDevice *p_device;
 
   virtual void process_data() = 0;
 

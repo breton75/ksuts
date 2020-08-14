@@ -157,7 +157,7 @@ void opa::SvUDPThread::process_data()
 opa::SvSerialThread::SvSerialThread(dev::SvAbstractDevice* device, sv::SvAbstractLogger *logger):
   dev::SvAbstractSerialThread(device, logger)
 {
-
+  me = static_cast<dev::SvAbstractKsutsDevice*>(p_device)->make_dbus_sender();
 }
 
 void opa::SvSerialThread::process_data()
@@ -174,83 +174,89 @@ void opa::SvSerialThread::process_data()
 
     if(p_buff.offset >= _hSize + _header.byte_count + 2) {
 
-        if(p_logger) // && p_device->info()->debug_mode)
-          *p_logger << static_cast<dev::SvAbstractKsutsDevice*>(p_device)->make_dbus_sender() // sv::log::sender(p_logger->options().log_sender_name.arg(p_device->info()->index))
-                    << sv::log::mtDebug
-                    << sv::log::llDebug
-                    << sv::log::TimeZZZ << sv::log::in
-                    << QString(QByteArray((const char*)&p_buff.buf[0], p_buff.offset).toHex())
-                    << sv::log::endl;
+      quint16 current_register = (static_cast<quint16>(_header.ADDRESS << 8)) + _header.OFFSET;
 
-        // если хоть какие то пакеты сыпятся (для данного получателя), то
-        // считаем, что линия передачи в порядке и задаем новую контрольную точку времени
-        p_device->setNewLostEpoch();
+      if((current_register < p_device->params()->start_register) ||
+         (current_register > p_device->params()->last_register))
+      {
+         reset_buffer();
+         return;
+      }
 
-        // ставим состояние данной линии
-        opa::func_set_line_status(p_device, &p_data);
+      if(p_logger) // && p_device->info()->debug_mode)
+        *p_logger << me
+                  << sv::log::mtDebug
+                  << sv::log::llDebug
+                  << sv::log::TimeZZZ << sv::log::in
+                  << QString(QByteArray((const char*)&p_buff.buf[0], p_buff.offset).toHex())
+                  << sv::log::endl;
 
-        quint16 current_register = (static_cast<quint16>(_header.ADDRESS) << 8) + _header.OFFSET;
+      // если хоть какие то пакеты сыпятся (для данного получателя), то
+      // считаем, что линия передачи в порядке и задаем новую контрольную точку времени
+      p_device->setNewLostEpoch();
 
-        switch (current_register - p_device->params()->start_register)
-        {
+      // ставим состояние данной линии
+      opa::func_set_line_status(p_device, &p_data);
 
-            case 0x00:
-            case 0x03:
-            case 0x05:
+      switch (current_register - p_device->params()->start_register)
+      {
+          case 0x00:
+          case 0x03:
+          case 0x05:
 
-              // здесь просто отправляем ответ-квитирование
-              write(confirmation(&_header));
+            // здесь просто отправляем ответ-квитирование
+            write(confirmation(&_header));
 
-              if(p_data.data_type == 0x77)
-                func_0x77(p_device);
+            if(p_data.data_type == 0x77)
+              func_0x77(p_device);
 
-              break;
+            break;
 
-            case 0x06:
-            case 0x10:
-            case 0x50:
-            case 0x90:
+          case 0x06:
+          case 0x10:
+          case 0x50:
+          case 0x90:
+          {
+            // парсим и проверяем crc
+            quint16 calc_crc = opa::parse_data(&p_buff, &p_data, &_header);
+
+            if(calc_crc != p_data.crc)
             {
-              // парсим и проверяем crc
-              quint16 calc_crc = opa::parse_data(&p_buff, &p_data, &_header);
+              // если crc не совпадает, то выходим без обработки и ответа
+              if(p_logger)
+                  *p_logger << static_cast<dev::SvAbstractKsutsDevice*>(p_device)->make_dbus_sender()
+                            << sv::log::mtError
+                            << sv::log::llError
+                            << sv::log::TimeZZZ
+                            << QString("Ошибка crc! Ожидалось %1, получено %2").arg(calc_crc, 0, 16).arg(p_data.crc, 0, 16)
+                            << sv::log::endl;
 
-              if(calc_crc != p_data.crc)
-              {
-                // если crc не совпадает, то выходим без обработки и ответа
-                if(p_logger)
-                    *p_logger << static_cast<dev::SvAbstractKsutsDevice*>(p_device)->make_dbus_sender()
-                              << sv::log::mtError
-                              << sv::log::llError
-                              << sv::log::TimeZZZ
-                              << QString("Ошибка crc! Ожидалось %1, получено %2").arg(calc_crc, 0, 16).arg(p_data.crc, 0, 16)
-                              << sv::log::endl;
-
-              }
-              else
-              {
-                  // небольшая задержка перед отправкой подтверждения
-                  // из-за того, что "шкаф не успевает обработать данные" (c) Гаврилов
-                  msleep(10);
-
-                  // формируем и отправляем ответ-квитирование
-                  write(confirmation(&_header));
-
-                  // раскидываем данные по сигналам, в зависимости от типа данных
-                  switch (p_data.data_type) {
-
-                    case 0x19: opa::func_0x19(p_device, &p_data); break;
-                    case 0x02: opa::func_0x02(p_device, &p_data); break;
-                    case 0x03: opa::func_0x03(p_device, &p_data); break;
-                    case 0x04: opa::func_0x04(p_device, &p_data); break;
-
-                  }
-                }
-
-              break;
             }
+            else
+            {
+                // небольшая задержка перед отправкой подтверждения
+                // из-за того, что "шкаф не успевает обработать данные" (c) Гаврилов
+                msleep(10);
 
-            default:
-                break;
+                // формируем и отправляем ответ-квитирование
+                write(confirmation(&_header));
+
+                // раскидываем данные по сигналам, в зависимости от типа данных
+                switch (p_data.data_type) {
+
+                  case 0x19: opa::func_0x19(p_device, &p_data); break;
+                  case 0x02: opa::func_0x02(p_device, &p_data); break;
+                  case 0x03: opa::func_0x03(p_device, &p_data); break;
+                  case 0x04: opa::func_0x04(p_device, &p_data); break;
+
+                }
+              }
+
+            break;
+          }
+
+          default:
+              break;
         }
 
         reset_buffer();
