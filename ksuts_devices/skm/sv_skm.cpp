@@ -58,21 +58,37 @@ void skm::SvUDPThread::process_data()
 
     memcpy(&_header, &p_buff.buf[0], sizeof(_header));
 
-    if((_header.begin_0x1F != 0x1F) || (_header.SRC != 0x01) || (_header.DST != 0x02) || (_header.version_0x24 != 0x24)) {
+    if((_header.begin_0x1F != 0x1F) ||
+       (_header.SRC != p_device->params()->src) ||
+       (_header.DST != p_device->params()->dst) ||
+       (_header.version != p_device->params()->protocol_version)) {
 
       reset_buffer();
       return;
     }
 
     // ищем признак конца пакета
-    if((p_buff.buf[p_buff.offset - 1] == 0x55) && (p_buff.buf[p_buff.offset - 2] == 0x2F)) {
+    bool found = false;
+    quint64 offset_of_2f55 = sizeof(_header) + 1;
 
-        if(p_logger) // && p_device->info()->debug_mode)
-          *p_logger << static_cast<dev::SvAbstractKsutsDevice*>(p_device)->make_dbus_sender()
-                    << sv::log::mtDebug
-                    << sv::log::llDebug
-                    << sv::log::TimeZZZ << sv::log::in
-                    << QString(QByteArray((const char*)&p_buff.buf[0], p_buff.offset).toHex()) << sv::log::endl;
+    while(!found && offset_of_2f55 < p_buff.offset) {
+
+        found = (p_buff.buf[offset_of_2f55] == 0x2F) && (p_buff.buf[offset_of_2f55 + 1] == 0x55);
+        offset_of_2f55++;
+    }
+
+    // если нашли конец пакета, то начинаем парсить его
+    if(found) {
+
+      p_buff.offset = offset_of_2f55 + 1;
+
+      if(p_logger) // && p_device->info()->debug_mode)
+        *p_logger << static_cast<dev::SvAbstractKsutsDevice*>(p_device)->make_dbus_sender()
+                  << sv::log::mtDebug
+                  << sv::log::llDebug
+                  << sv::log::TimeZZZ << sv::log::in
+                  << QString(QByteArray((const char*)&p_buff.buf[0], p_buff.offset).toHex())
+                  << sv::log::endl;
 
 
         /* кто-то неправильно считает crc, или скм или я. поэтому crc не проверяем */
@@ -121,14 +137,29 @@ void skm::SvSerialThread::process_data()
 
     memcpy(&_header, &p_buff.buf[0], sizeof(_header));
 
-    if((_header.begin_0x1F != 0x1F) || (_header.SRC != 0x01) || (_header.DST != 0x02) || (_header.version_0x24 != 0x24)) {
+    if((_header.begin_0x1F != 0x1F) ||
+       (_header.SRC != p_device->params()->src) ||
+       (_header.DST != p_device->params()->dst) ||
+       (_header.version != p_device->params()->protocol_version)) {
 
       reset_buffer();
       return;
     }
 
     // ищем признак конца пакета
-    if((p_buff.buf[p_buff.offset - 1] == 0x55) && (p_buff.buf[p_buff.offset - 2] == 0x2F)) {
+    bool found = false;
+    quint64 offset_of_2f55 = sizeof(_header) + 1;
+
+    while(!found && offset_of_2f55 < p_buff.offset) {
+
+        found = (p_buff.buf[offset_of_2f55] == 0x2F) && (p_buff.buf[offset_of_2f55 + 1] == 0x55);
+        offset_of_2f55++;
+    }
+
+    // если нашли конец пакета, то начинаем парсить его
+    if(found) {
+
+        p_buff.offset = offset_of_2f55 + 1;
 
         if(p_logger) // && p_device->info()->debug_mode)
           *p_logger << static_cast<dev::SvAbstractKsutsDevice*>(p_device)->make_dbus_sender()

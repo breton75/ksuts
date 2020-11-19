@@ -26,7 +26,7 @@ namespace skm {
     quint8  begin_0x1F;
     quint8  DST;
     quint8  SRC;
-    quint8  version_0x24;
+    quint8  version;
   };
   #pragma pack(pop)
 
@@ -109,8 +109,14 @@ public:
   {
 
     return QString("{\n"
-                   "  \"%1\": %2\n"
-                   "}").arg(P_RESET_TIMEOUT).arg(RESET_INTERVAL);
+                   "  \"%1\": %2,\n"
+                   "  \"%3\": \"%4\",\n"
+                   "  \"%5\": \"%6\",\n"
+                   "  \"%7\": \"%8\"\n"
+                   "}").arg(P_RESET_TIMEOUT).arg(RESET_INTERVAL)
+                       .arg(P_SRC).arg("0x01")
+                       .arg(P_DST).arg("0x02")
+                       .arg(P_PROTOCOL_VERSION).arg("0x24");
   }
 
 private:

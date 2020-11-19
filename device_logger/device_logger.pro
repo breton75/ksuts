@@ -11,7 +11,7 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 TARGET = /home/user/ksuts_server/device_logger
 TEMPLATE = app
 
-VERSION = 1.0.0    # major.minor.patch
+VERSION = 1.1.0    # major.minor.patch
 DEFINES += APP_VERSION=\\\"$$VERSION\\\"
 DEFINES += VERSION_2
 
@@ -21,14 +21,14 @@ SOURCES += main.cpp\
         mainwindow.cpp \
     ../../svlib/sv_abstract_logger.cpp \
     ../../svlib/sv_config.cpp \
-    ../../svlib/sv_dbus.cpp \
+    ../global/sv_dbus.cpp \
     ../../svlib/sv_widget_log.cpp \
     ../../svlib/sv_pgdb.cpp
 
 HEADERS  += mainwindow.h \
     ../global/global_defs.h \
     ../../svlib/sv_config.h \
-    ../../svlib/sv_dbus.h \
+    ../global/sv_dbus.h \
     ../../svlib/sv_widget_log.h \
     ../../svlib/sv_abstract_logger.h \
     ../../svlib/sv_pgdb.h

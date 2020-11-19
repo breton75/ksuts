@@ -76,8 +76,28 @@ void oht::SvUDPThread::process_data()
         // считаем, что линия передачи в порядке и задаем новую контрольную точку времени
         p_device->setNewLostEpoch();
 
+        // парсим и проверяем crc
+        quint16 calc_crc = oht::parse_data(&p_buff, &p_data, &_header);
 
-        switch (_header.OFFSET)
+        if(calc_crc != p_data.crc)
+        {
+          // если crc не совпадает, то выходим без обработки и ответа
+          if(p_logger)
+              *p_logger << static_cast<dev::SvAbstractKsutsDevice*>(p_device)->make_dbus_sender()
+                        << sv::log::mtError
+                        << sv::log::llError
+                        << sv::log::TimeZZZ
+                        << QString("Ошибка crc! Ожидалось %1, получено %2").arg(calc_crc, 0, 16).arg(p_data.crc, 0, 16)
+                        << sv::log::endl;
+
+          reset_buffer();
+          return;
+
+        }
+
+        quint16 current_register = (static_cast<quint16>(_header.ADDRESS) << 8) + _header.OFFSET;
+
+        switch (current_register - p_device->params()->start_register)
         {
           case 0x00:
           case 0x03:
@@ -91,43 +111,28 @@ void oht::SvUDPThread::process_data()
                 // здесь просто отправляем ответ-квитирование
                 write(oht::confirmation(&_header));
 
+                if(p_data.data_type == 0x77)
+                  oht::func_0x77(p_device);
+
                 break;
 
           case 0x06:
           case 0xA0:
           case 0xFA:
           {
-              // парсим и проверяем crc
-              quint16 calc_crc = oht::parse_data(&p_buff, &p_data, &_header);
 
-              if(calc_crc != p_data.crc)
-              {
-                // если crc не совпадает, то выходим без обработки и ответа
-                if(p_logger)
-                    *p_logger << static_cast<dev::SvAbstractKsutsDevice*>(p_device)->make_dbus_sender()
-                              << sv::log::mtError
-                              << sv::log::llError
-                              << sv::log::TimeZZZ
-                              << QString("Ошибка crc! Ожидалось %1, получено %2").arg(calc_crc, 0, 16).arg(p_data.crc, 0, 16)
-                              << sv::log::endl;
+              msleep(10); // небольшая задержка перед отправкой подтверждения
 
-              }
-              else
-              {
+              // формируем и отправляем ответ-квитирование
+              write(confirmation(&_header));
 
-                msleep(10); // небольшая задержка перед отправкой подтверждения
+              // раскидываем данные по сигналам, в зависимости от типа данных
+              switch (p_data.data_type) {
 
-                // формируем и отправляем ответ-квитирование
-                write(confirmation(&_header));
+                case 0x19: oht::func_0x19(p_device, &p_data); break;
+                case 0x13: oht::func_0x13(p_device, &p_data); break;
+                case 0x14: oht::func_0x14(p_device, &p_data); break;
 
-                // раскидываем данные по сигналам, в зависимости от типа данных
-                switch (p_data.data_type) {
-
-                  case 0x19: oht::func_0x19(p_device, &p_data); break;
-                  case 0x13: oht::func_0x13(p_device, &p_data); break;
-                  case 0x14: oht::func_0x14(p_device, &p_data); break;
-
-                }
               }
 
               break;
@@ -177,6 +182,25 @@ void oht::SvSerialThread::process_data()
         // считаем, что линия передачи в порядке и задаем новую контрольную точку времени
         p_device->setNewLostEpoch();
 
+        // парсим и проверяем crc
+        quint16 calc_crc = oht::parse_data(&p_buff, &p_data, &_header);
+
+        if(calc_crc != p_data.crc)
+        {
+          // если crc не совпадает, то выходим без обработки и ответа
+          if(p_logger)
+              *p_logger << static_cast<dev::SvAbstractKsutsDevice*>(p_device)->make_dbus_sender()
+                        << sv::log::mtError
+                        << sv::log::llError
+                        << sv::log::TimeZZZ
+                        << QString("Ошибка crc! Ожидалось %1, получено %2").arg(calc_crc, 0, 16).arg(p_data.crc, 0, 16)
+                        << sv::log::endl;
+
+          reset_buffer();
+          return;
+
+        }
+
         quint16 current_register = (static_cast<quint16>(_header.ADDRESS) << 8) + _header.OFFSET;
 
         switch (current_register - p_device->params()->start_register)
@@ -191,6 +215,9 @@ void oht::SvSerialThread::process_data()
                 // здесь просто отправляем ответ-квитирование
                 write(confirmation(&_header));
 
+                if(p_data.data_type == 0x77)
+                  oht::func_0x77(p_device);
+
                 break;
 
           case 0x06:
@@ -198,36 +225,18 @@ void oht::SvSerialThread::process_data()
           case 0xFA:
           {
 
-            // парсим и проверяем crc
-            quint16 calc_crc = oht::parse_data(&p_buff, &p_data, &_header);
+              msleep(10); // небольшая задержка перед отправкой подтверждения
 
-            if(calc_crc != p_data.crc)
-            {
-              // если crc не совпадает, то выходим без обработки и ответа
-              if(p_logger)
-                  *p_logger << static_cast<dev::SvAbstractKsutsDevice*>(p_device)->make_dbus_sender()
-                            << sv::log::mtError
-                            << sv::log::llError
-                            << sv::log::TimeZZZ
-                            << QString("Ошибка crc! Ожидалось %1, получено %2").arg(calc_crc, 0, 16).arg(p_data.crc, 0, 16)
-                            << sv::log::endl;
+              // формируем и отправляем ответ-квитирование
+              write(confirmation(&_header));
 
-            }
-            else
-            {
-                msleep(10); // небольшая задержка перед отправкой подтверждения
+              // раскидываем данные по сигналам, в зависимости от типа данных
+              switch (p_data.data_type) {
 
-                // формируем и отправляем ответ-квитирование
-                write(confirmation(&_header));
+                case 0x19: oht::func_0x19(p_device, &p_data); break;
+                case 0x13: oht::func_0x13(p_device, &p_data); break;
+                case 0x14: oht::func_0x14(p_device, &p_data); break;
 
-                // раскидываем данные по сигналам, в зависимости от типа данных
-                switch (p_data.data_type) {
-
-                  case 0x19: oht::func_0x19(p_device, &p_data); break;
-                  case 0x13: oht::func_0x13(p_device, &p_data); break;
-                  case 0x14: oht::func_0x14(p_device, &p_data); break;
-
-                }
               }
 
               break;
@@ -281,6 +290,12 @@ QByteArray oht::confirmation(const oht::Header* header)
 
   return confirm;
 
+}
+
+void oht::func_0x77(dev::SvAbstractDevice* device)
+{
+  foreach (SvSignal* signal, device->Signals()->values())
+    signal->setValue(0.0);
 }
 
 void oht::func_0x19(dev::SvAbstractDevice* device, dev::DATA *data)

@@ -1021,6 +1021,7 @@ void MainWindow::iconActivated(QSystemTrayIcon::ActivationReason reason)
         case QSystemTrayIcon::DoubleClick:
 
             show();
+            setWindowState(Qt::WindowActive);
             break;
 
         case QSystemTrayIcon::MiddleClick:

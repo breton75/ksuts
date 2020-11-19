@@ -51,8 +51,8 @@ namespace oht {
   quint16 parse_data(dev::BUFF* buff, dev::DATA* data, oht::Header* header);
   QByteArray confirmation(const oht::Header* header);
 
+  void func_0x77(dev::SvAbstractDevice* device);
   void func_0x19(dev::SvAbstractDevice* device, dev::DATA* data);
-//  void func_0x19(dev::SvAbstractKsutsDeviceThread* thr);
   void func_0x13(dev::SvAbstractDevice* device, dev::DATA* data);
   void func_0x14(dev::SvAbstractDevice* device, dev::DATA* data);
 

@@ -2537,3 +2537,410 @@ void MainWindow::on_pushButton_clicked()
 
   qDebug() << QSerialPort::Parity(d) << r;
 }
+
+void MainWindow::on_bnTestRE_clicked()
+{
+    QRegularExpression re(ui->lineRE->text());
+
+    QRegularExpressionMatch m = re.match(ui->lineTextForTestRE->text());
+
+    QString msg = m.hasMatch() ? "MATCH" : "no";
+    msg.append("\ncaptCount: ").append(QString::number(re.captureCount()));
+    for(int i = 0; i <= re.captureCount(); i++)
+      msg.append(QString("\n%1: ").arg(i)).append(m.captured(i));
+
+    QMessageBox::information(this, "", msg);
+}
+
+
+void MainWindow::on_bnUploadSignals_0x02_clicked()
+{
+  if(!connectPGDB("cms_db"))
+    return;
+
+  foreach (quint8 STK, SIGNALS_Z_TABLE.keys()) {
+
+    signals_by_detector* signals_map = SIGNALS_Z_TABLE.value(STK);
+
+    QString f_z = "_z.json";
+    QString lnum = "150";
+    QIODevice::OpenModeFlag flag = QIODevice::Append;
+    QString fname;
+    QString faktor;
+    QString comment;
+
+    switch (STK) {
+      case FACTOR_f_TRESHOLD1:
+      fname = lnum + "/0x02_f1";
+      faktor = "0x1";
+      comment = "Дым 1-ый порог";
+      break;
+
+      case FACTOR_T_TRESHOLD1   :
+      fname = lnum + "/0x02_T1";
+      faktor = "0x2";
+      comment = "Температура 1-ый порог";
+      break;
+
+      case FACTOR_dT_TRESHOLD1  :
+      fname = lnum + "/0x02_dT1";
+      faktor = "0x3";
+      comment = "Дифф. температуры 1-ый порог";
+      break;
+
+      case FACTOR_DP_TRESHOLD1  :
+      fname = lnum + "/0x02_DP";
+      faktor = "0x4";
+      comment = "Пламя";
+      break;
+
+      case FACTOR_CO_TRESHOLD1  :
+      fname = lnum + "/0x02_CO";
+      faktor = "0x5";
+      comment = "CO";
+      break;
+
+      case FACTOR_U_TRESHOLD1   :
+      fname = lnum + "/0x02_U1";
+      faktor = "0x7";
+      comment = "Температура на повышение (ТТС) 1-ый порог";
+      break;
+
+      case FACTOR_VLAG_TRESHOLD1:
+      fname = lnum + "/0x02_VLAG1";
+      faktor = "0xC";
+      comment = "Влажность 1-ый порог";
+      break;
+
+      case FACTOR_GOTV_TRESHOLD1:
+      fname = lnum + "/0x02_GOTV1";
+      faktor = "0xD";
+      comment = "ГОТВ 1-ый порог";
+      break;
+
+      case FACTOR_HAND_TRESHOLD1:
+      fname = lnum + "/0x02_HAND";
+      faktor = "0xFF";
+      comment = "Ручной извещатель";
+      break;
+
+      case FACTOR_f_TRESHOLD2   :
+      fname = lnum + "/0x02_f2";
+      faktor = "0x81";
+      comment = "Дым 2-ой порог";
+      break;
+
+      case FACTOR_T_TRESHOLD2   :
+      fname = lnum + "/0x02_T2";
+      faktor = "0x82";
+      comment = "Температура 2-ой порог";
+      break;
+
+      case FACTOR_U_TRESHOLD2   :
+      fname = lnum + "/0x02_U2";
+      faktor = "0x87";
+      comment = "Температура на повышение (ТТС) 2-ой порог";
+      break;
+
+      case FACTOR_VLAG_TRESHOLD2:
+      fname = lnum + "/0x02_VLAG2";
+      faktor = "0x8C";
+      comment = "Влажность 2-ой порог";
+      break;
+
+      case FACTOR_GOTV_TRESHOLD2:
+      fname = lnum + "/0x02_GOTV2";
+      faktor = "0x8D";
+      comment = "ГОТВ 2-ой порог";
+      break;
+
+    default:
+      continue;
+      break;
+    }
+
+    fname = lnum + "/0x02";
+    fname.append(f_z);
+
+
+    QSqlError err;
+
+
+    QFile f ("/home/user/Modus/signals/12700/OPA/" + fname);
+    if(!f.open(QIODevice::WriteOnly | flag)) {
+      qDebug() << f.errorString();
+      return;
+    }
+
+    QTextStream stream(&f);
+
+    stream << "{" << '\n' << "  \"signals\":" << "  [\n";
+
+//    QString s = "SELECT '{ \"name\": \"' || s1.signal_name ||'\",' || E'\t' || '\"id\":' || "
+//                "s1.signal_index || ',' || E'\t' || '\"device\": 3, \"storages\":[2], \"type\":\"D\", "
+//                "\"timeout\":' || s1.timeout || ',' || E'\t' || '\"tag\": \"0x02\", \"params\": "
+//                "{\"sensor\":\"' || s1.sensor_number || '\",' || E'\t' || '\"faktor\":\"%1\"},' "
+//                "|| E'\t' || '\"description\": \"' || s1.description || '\" }' as ssst "
+//                "from signals as s1 "
+//                "where s1.signal_name in (%2) order by s1.signal_name";
+
+    QString s = "SELECT '{ \"name\": \"' || s2.signal_name ||'\",' || E'\t' || '\"id\":' || "
+                "s2.signal_index || ',' || E'\t' || '\"device\": 3, \"storages\":[2], \"type\":\"D\", "
+                "\"timeout\":' || s1.timeout || ',' || E'\t' || '\"tag\": \"0x02\", \"params\": "
+                "{\"sensor\":\"' || s1.sensor_number || '\",' || E'\t' || '\"faktor\":\"%1\"},' "
+                "|| E'\t' || '\"description\": \"' || s1.description || '\" }' as ssst "
+                "from signals as s1 "
+                "left join signals as s2 on s2.signal_name = 'C%2_' || s1.signal_name "
+                "where s1.signal_name in (%3) order by s2.signal_name";
+
+    QString signal_names;
+    foreach (int sensor_num, signals_map->keys()) {
+      signal_names.append("'").append(signals_map->value(sensor_num)).append("',");
+
+    }
+
+    signal_names.chop(1);
+//    qDebug() << signal_names;
+
+    QSqlQuery q(PGDB->db);
+
+    err = PGDB->execSQL(QString(s).arg(faktor).arg(lnum).arg(signal_names), &q);
+//    err = PGDB->execSQL(QString(s).arg(faktor).arg(signal_names), &q);
+    if(err.type() != QSqlError::NoError) {
+
+      qDebug() << err.text();
+      q.finish();
+
+      f.close();
+
+      return;
+
+    }
+
+    int i = 1;
+    int qcnt = q.numRowsAffected();
+    while(q.next())
+    {
+      stream << "    " << q.value("ssst").toString() << (i++ == qcnt ? "\n" : ",\n");
+    }
+
+    q.finish();
+
+    stream << "  ]" << '\n' << "}";
+
+    qDebug() << QString("  { \"file\": \"%1/\", \"enable\": true, \"count\": %2, \"comment\": \"%3\"}")
+                .arg(fname).arg(qcnt).arg(comment);
+
+    f.close();
+
+
+  }
+
+qDebug() << "finished";
+
+}
+
+void MainWindow::on_bnUploadSignals_0x03_clicked()
+{
+  if(!connectPGDB("cms_db"))
+    return;
+
+  QString signal_names;
+  QString f_z = "_z.json";
+  QString lnum = "150";
+  QIODevice::OpenModeFlag flag = QIODevice::Truncate;
+  QString fname;
+//    QString faktor;
+  QString comment;
+
+  fname = "0x03";
+  fname.append(f_z);
+
+
+  QSqlError err;
+
+  QFile f ("/home/user/Modus/signals/12700/OPA/" + fname);
+  if(!f.open(QIODevice::WriteOnly | flag)) {
+    qDebug() << f.errorString();
+    return;
+  }
+
+  QTextStream stream(&f);
+  stream << "{" << '\n' << "  \"signals\":" << "  [\n";
+
+  int qcnt = SIGNALS_Z_BY_ROOMS.count();
+
+  foreach (quint16 room, SIGNALS_Z_BY_ROOMS.keys()) {
+
+    QString signal_name = SIGNALS_Z_BY_ROOMS.value(room);
+
+
+
+    QString s = "SELECT '{ \"name\": \"' || signal_name ||'\",' || E'\t' || '\"id\":' || "
+                "signal_index || ',' || E'\t' || '\"device\": 3, \"storages\":[2], \"type\":\"D\", "
+                "\"timeout\":' || timeout || ',' || E'\t' || '\"tag\": \"0x03\", \"params\": "
+                "{ \"room\":\"%1\" },' || E'\t' || '\"description\": \"' || description || '\" }' as ssst "
+                "from signals "
+                "where signal_name = '%2'";
+
+    QSqlQuery q(PGDB->db);
+
+    err = PGDB->execSQL(QString(s).arg(room).arg(signal_name), &q);
+    if(err.type() != QSqlError::NoError) {
+
+      qDebug() << err.text();
+      q.finish();
+
+      f.close();
+
+      return;
+
+    }
+
+    int i = 1;
+
+    while(q.next())
+    {
+      stream << "    " << q.value("ssst").toString() <<  (i++ == qcnt ? "\n" : ",\n");
+    }
+
+    q.finish();
+
+  }
+
+    stream << "  ]" << '\n' << "}";
+
+
+
+  qDebug() << QString("  { \"file\": \"%1/\", \"enable\": true, \"count\": %2, \"comment\": \"%3\"}")
+              .arg(fname).arg(qcnt).arg(comment);
+
+  f.close();
+
+  qDebug() << "finished";
+
+}
+
+void MainWindow::on_bnUpdateGammaMnemokaders_clicked()
+{
+  QString fpath = "/home/user/tmp/gamma_export_new";
+
+  QStringList fnl = QFileDialog::getOpenFileNames(this, "", fpath, "*.prs");
+
+  if(fnl.isEmpty()) return;
+
+  QString sPattern = "select[\s]{0,}[(]{1}[\s]{0,}{users.admin.devices.database2:signals_data_rs}[,\s]+'value'[,\s]+'signal_name'[,\s]+'(?<sn>[A-Z0-9_]+(_T|_f){1})'[)]{1}[\s]{0,}==[\s]{0,}1.0[\s]{0,}[|]{2}";
+
+  QRegularExpression reg(sPattern);
+
+//  QString sPattern("st('val_%1', cell({users.admin.queries.getSignalValue:execute(\"%1\")}, \"sdvSignals_data_rsValue\"))");
+//  QString aPattern("st('val_%1 _%2', st(%1, %2))");
+  for(QString fn: fnl) {
+
+    QFile f(fn);
+    if(!f.open(QFile::Text | QFile::ReadOnly)) {
+
+      QMessageBox::critical(this, "", f.errorString(), QMessageBox::Ok);
+      return;
+    }
+
+    qDebug() << fn;
+
+//    QString ssp = "select({users.admin.devices.cms_db:signals_data_rs}";
+    QString ssp = "cell({users.admin.queries.getSignalValue:execute(";
+    QStringList new_text;
+    QString panic = "";
+
+    while(!f.atEnd()) {
+
+      QByteArray line = f.readLine();
+
+      while(true) {
+
+        if(line.contains(ssp.toUtf8())) {
+
+          while(!line.trimmed().endsWith(QString("</value>").toUtf8())) {
+            line += '\n' + f.readLine();
+          }
+
+          int ssp_start = line.indexOf(ssp);
+          int ssp_end = line.indexOf("\"))", ssp_start) + 1;
+
+          int sname_begin = line.indexOf('\"', ssp_start) + 1;
+          int sname_end = line.indexOf('\"', sname_begin);
+
+          QString sname_str = line.mid(sname_begin, sname_end - sname_begin);
+
+         qDebug() << sname_str;
+//         qDebug() << canid_str << devindex_str;
+
+         line.replace(ssp_start, ssp_end - ssp_start + 1, QString("[~%1~]").arg(sname_str).toUtf8());
+
+//         qDebug() << line;
+//         qDebug() << line;
+
+        }
+        else
+          break;
+
+      }
+
+
+      while(true) {
+
+        if(line.contains("[~")) {
+
+          int r_start = line.indexOf("[~");
+          int r_end = line.indexOf("~]");
+
+          QString sname(line.mid(r_start + 2, r_end - r_start - 2));
+
+          if(!SGNS.contains(sname))
+            qDebug() << "no signal" << sname;
+
+//          line.replace(r_start, r_end - r_start + 2, QString(sPattern).arg(sname).arg(SGNS[sname]).toUtf8());
+          line.replace(QString("[~%1~]").arg(sname).toUtf8(), QString(sPattern).arg(sname).toUtf8());
+//          line.replace(QString("[~%1~]").arg(sname).toUtf8(), QString("ld('val_%1')").arg(sname).toUtf8());
+
+
+//          qDebug() << line;
+//          qDebug() <<  ' ';
+
+        }
+        else
+          break;
+
+
+      }
+
+      new_text.append(line);
+
+//      if(!panic.isEmpty()) break;
+
+    }
+
+    f.close();
+
+    QFileInfo fi(fn);
+    QString newfn = fi.path() + "/s" + fi.fileName();
+//    QString newfn = fi.path() + "/" + fi.fileName().replace(0, 4, "_sda_");
+
+    f.setFileName(newfn);
+    if(!f.open(QFile::Text | QFile::WriteOnly)) {
+
+      QMessageBox::critical(this, "", f.errorString(), QMessageBox::Ok);
+      return;
+    }
+
+    for(QString line: new_text)
+      f.write(line.toUtf8());
+
+    f.close();
+
+    qDebug() << "done";
+
+//    qDebug() << "done";
+
+  }
+}
+

@@ -57,7 +57,10 @@ void ktv::SvUDPThread::process_data()
 
     memcpy(&_header, &p_buff.buf[0], sizeof(_header));
 
-    if((_header.begin_0x1F != 0x1F) /*|| (_header.SRC != 0x01)*/ || (_header.DST != 0x09) || (_header.version_0x24 != 0x24)) {
+    if((_header.begin_0x1F != 0x1F) ||
+       (_header.SRC != p_device->params()->src) ||
+       (_header.DST != p_device->params()->dst) ||
+       (_header.version != p_device->params()->protocol_version)) {
 
       reset_buffer();
       return;
@@ -92,7 +95,7 @@ void ktv::SvUDPThread::process_data()
         ktv::parse_data(&p_buff, &p_data, &_header);
 
         /* к тому же неправильно считается crc. надо разбираться и переделывать.
-         * поэотому, чтобы не тратить ресурсы, убрал отправку подтверждения.
+         * поэтому, чтобы не тратить ресурсы, убрал отправку подтверждения.
          *
 
         /// формируем и отправляем ответ-квитирование. если отправился, то разбираем данные
@@ -127,7 +130,10 @@ void ktv::SvSerialThread::process_data()
 
     memcpy(&_header, &p_buff.buf[0], sizeof(_header));
 
-    if((_header.begin_0x1F != 0x1F) /*|| (_header.SRC != 0x01)*/ || (_header.DST != 0x09) || (_header.version_0x24 != 0x24)) {
+    if((_header.begin_0x1F != 0x1F) ||
+       (_header.SRC != p_device->params()->src) ||
+       (_header.DST != p_device->params()->dst) ||
+       (_header.version != p_device->params()->protocol_version)) {
 
       reset_buffer();
       return;

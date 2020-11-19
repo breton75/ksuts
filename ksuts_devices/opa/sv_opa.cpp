@@ -89,6 +89,25 @@ void opa::SvUDPThread::process_data()
         // ставим состояние данной линии
         opa::func_set_line_status(p_device, &p_data);
 
+        // парсим и проверяем crc
+        quint16 calc_crc = opa::parse_data(&p_buff, &p_data, &_header);
+
+        if(calc_crc != p_data.crc)
+        {
+          // если crc не совпадает, то выходим без обработки и ответа
+          if(p_logger)
+              *p_logger << me
+                        << sv::log::mtError
+                        << sv::log::llError
+                        << sv::log::TimeZZZ
+                        << QString("Ошибка crc! Ожидалось %1, получено %2").arg(calc_crc, 0, 16).arg(p_data.crc, 0, 16)
+                        << sv::log::endl;
+
+          reset_buffer();
+          return;
+
+        }
+
         switch (current_register - p_device->params()->start_register)
         {
             case 0x00:
@@ -108,37 +127,22 @@ void opa::SvUDPThread::process_data()
             case 0x50:
             case 0x90:
             {
-              // парсим и проверяем crc
-              quint16 calc_crc = opa::parse_data(&p_buff, &p_data, &_header);
+              // небольшая задержка перед отправкой подтверждения
+              // из-за того, что "шкаф не успевает обработать данные" (c) Гаврилов
+              msleep(10);
 
+              // формируем и отправляем ответ-квитирование
+              write(confirmation(&_header));
 
-              if(calc_crc != p_data.crc)
-              {
-                // если crc не совпадает, то выходим без обработки и ответа
-                if(p_logger)
-                    *p_logger << me
-                              << sv::log::mtError
-                              << sv::log::llError
-                              << sv::log::TimeZZZ
-                              << QString("Ошибка crc! Ожидалось %1, получено %2").arg(calc_crc, 0, 16).arg(p_data.crc, 0, 16)
-                              << sv::log::endl;
+              // раскидываем данные по сигналам, в зависимости от типа данных
+              switch (p_data.data_type) {
+
+                case 0x19: opa::func_0x19(p_device, &p_data); break;
+                case 0x02: opa::func_0x02(p_device, &p_data); break;
+                case 0x03: opa::func_0x03(p_device, &p_data); break;
+                case 0x04: opa::func_0x04(p_device, &p_data); break;
 
               }
-              else
-              {
-                  // формируем и отправляем ответ-квитирование
-                  write(confirmation(&_header));
-
-                  // раскидываем данные по сигналам, в зависимости от типа данных
-                  switch (p_data.data_type) {
-
-                    case 0x19: opa::func_0x19(p_device, &p_data); break;
-                    case 0x02: opa::func_0x02(p_device, &p_data); break;
-                    case 0x03: opa::func_0x03(p_device, &p_data); break;
-                    case 0x04: opa::func_0x04(p_device, &p_data); break;
-
-                  }
-                }
 
               break;
             }
@@ -198,6 +202,25 @@ void opa::SvSerialThread::process_data()
       // ставим состояние данной линии
       opa::func_set_line_status(p_device, &p_data);
 
+      // парсим и проверяем crc
+      quint16 calc_crc = opa::parse_data(&p_buff, &p_data, &_header);
+
+      if(calc_crc != p_data.crc)
+      {
+        // если crc не совпадает, то выходим без обработки и ответа
+        if(p_logger)
+            *p_logger << me
+                      << sv::log::mtError
+                      << sv::log::llError
+                      << sv::log::TimeZZZ
+                      << QString("Ошибка crc! Ожидалось %1, получено %2").arg(calc_crc, 0, 16).arg(p_data.crc, 0, 16)
+                      << sv::log::endl;
+
+        reset_buffer();
+        return;
+
+      }
+
       switch (current_register - p_device->params()->start_register)
       {
           case 0x00:
@@ -217,39 +240,21 @@ void opa::SvSerialThread::process_data()
           case 0x50:
           case 0x90:
           {
-            // парсим и проверяем crc
-            quint16 calc_crc = opa::parse_data(&p_buff, &p_data, &_header);
+              // небольшая задержка перед отправкой подтверждения
+              // из-за того, что "шкаф не успевает обработать данные" (c) Гаврилов
+              msleep(10);
 
-            if(calc_crc != p_data.crc)
-            {
-              // если crc не совпадает, то выходим без обработки и ответа
-              if(p_logger)
-                  *p_logger << static_cast<dev::SvAbstractKsutsDevice*>(p_device)->make_dbus_sender()
-                            << sv::log::mtError
-                            << sv::log::llError
-                            << sv::log::TimeZZZ
-                            << QString("Ошибка crc! Ожидалось %1, получено %2").arg(calc_crc, 0, 16).arg(p_data.crc, 0, 16)
-                            << sv::log::endl;
+              // формируем и отправляем ответ-квитирование
+              write(confirmation(&_header));
 
-            }
-            else
-            {
-                // небольшая задержка перед отправкой подтверждения
-                // из-за того, что "шкаф не успевает обработать данные" (c) Гаврилов
-                msleep(10);
+              // раскидываем данные по сигналам, в зависимости от типа данных
+              switch (p_data.data_type) {
 
-                // формируем и отправляем ответ-квитирование
-                write(confirmation(&_header));
+                case 0x19: opa::func_0x19(p_device, &p_data); break;
+                case 0x02: opa::func_0x02(p_device, &p_data); break;
+                case 0x03: opa::func_0x03(p_device, &p_data); break;
+                case 0x04: opa::func_0x04(p_device, &p_data); break;
 
-                // раскидываем данные по сигналам, в зависимости от типа данных
-                switch (p_data.data_type) {
-
-                  case 0x19: opa::func_0x19(p_device, &p_data); break;
-                  case 0x02: opa::func_0x02(p_device, &p_data); break;
-                  case 0x03: opa::func_0x03(p_device, &p_data); break;
-                  case 0x04: opa::func_0x04(p_device, &p_data); break;
-
-                }
               }
 
             break;

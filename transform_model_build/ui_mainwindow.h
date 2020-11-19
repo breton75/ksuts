@@ -77,6 +77,16 @@ public:
     QPushButton *bnTestJson;
     QPushButton *bnSignalParams;
     QPushButton *pushButton;
+    QWidget *layoutWidget2;
+    QHBoxLayout *horizontalLayout_3;
+    QVBoxLayout *verticalLayout_3;
+    QLineEdit *lineTextForTestRE;
+    QLineEdit *lineRE;
+    QPushButton *bnTestRE;
+    QWidget *layoutWidget3;
+    QVBoxLayout *verticalLayout_4;
+    QPushButton *bnUploadSignals_0x02;
+    QPushButton *bnUploadSignals_0x03;
     QMenuBar *menuBar;
     QToolBar *mainToolBar;
     QStatusBar *statusBar;
@@ -85,7 +95,7 @@ public:
     {
         if (MainWindow->objectName().isEmpty())
             MainWindow->setObjectName(QStringLiteral("MainWindow"));
-        MainWindow->resize(704, 610);
+        MainWindow->resize(1040, 719);
         centralWidget = new QWidget(MainWindow);
         centralWidget->setObjectName(QStringLiteral("centralWidget"));
         bnDec2Hex = new QPushButton(centralWidget);
@@ -251,17 +261,64 @@ public:
 
         bnTestJson = new QPushButton(centralWidget);
         bnTestJson->setObjectName(QStringLiteral("bnTestJson"));
-        bnTestJson->setGeometry(QRect(370, 280, 80, 25));
+        bnTestJson->setGeometry(QRect(370, 310, 80, 25));
         bnSignalParams = new QPushButton(centralWidget);
         bnSignalParams->setObjectName(QStringLiteral("bnSignalParams"));
         bnSignalParams->setGeometry(QRect(350, 160, 141, 25));
         pushButton = new QPushButton(centralWidget);
         pushButton->setObjectName(QStringLiteral("pushButton"));
         pushButton->setGeometry(QRect(180, 300, 80, 25));
+        layoutWidget2 = new QWidget(centralWidget);
+        layoutWidget2->setObjectName(QStringLiteral("layoutWidget2"));
+        layoutWidget2->setGeometry(QRect(10, 580, 1021, 60));
+        horizontalLayout_3 = new QHBoxLayout(layoutWidget2);
+        horizontalLayout_3->setSpacing(6);
+        horizontalLayout_3->setContentsMargins(11, 11, 11, 11);
+        horizontalLayout_3->setObjectName(QStringLiteral("horizontalLayout_3"));
+        horizontalLayout_3->setContentsMargins(0, 0, 0, 0);
+        verticalLayout_3 = new QVBoxLayout();
+        verticalLayout_3->setSpacing(6);
+        verticalLayout_3->setObjectName(QStringLiteral("verticalLayout_3"));
+        lineTextForTestRE = new QLineEdit(layoutWidget2);
+        lineTextForTestRE->setObjectName(QStringLiteral("lineTextForTestRE"));
+
+        verticalLayout_3->addWidget(lineTextForTestRE);
+
+        lineRE = new QLineEdit(layoutWidget2);
+        lineRE->setObjectName(QStringLiteral("lineRE"));
+
+        verticalLayout_3->addWidget(lineRE);
+
+
+        horizontalLayout_3->addLayout(verticalLayout_3);
+
+        bnTestRE = new QPushButton(layoutWidget2);
+        bnTestRE->setObjectName(QStringLiteral("bnTestRE"));
+
+        horizontalLayout_3->addWidget(bnTestRE);
+
+        layoutWidget3 = new QWidget(centralWidget);
+        layoutWidget3->setObjectName(QStringLiteral("layoutWidget3"));
+        layoutWidget3->setGeometry(QRect(750, 40, 281, 93));
+        verticalLayout_4 = new QVBoxLayout(layoutWidget3);
+        verticalLayout_4->setSpacing(6);
+        verticalLayout_4->setContentsMargins(11, 11, 11, 11);
+        verticalLayout_4->setObjectName(QStringLiteral("verticalLayout_4"));
+        verticalLayout_4->setContentsMargins(0, 0, 0, 0);
+        bnUploadSignals_0x02 = new QPushButton(layoutWidget3);
+        bnUploadSignals_0x02->setObjectName(QStringLiteral("bnUploadSignals_0x02"));
+
+        verticalLayout_4->addWidget(bnUploadSignals_0x02);
+
+        bnUploadSignals_0x03 = new QPushButton(layoutWidget3);
+        bnUploadSignals_0x03->setObjectName(QStringLiteral("bnUploadSignals_0x03"));
+
+        verticalLayout_4->addWidget(bnUploadSignals_0x03);
+
         MainWindow->setCentralWidget(centralWidget);
         menuBar = new QMenuBar(MainWindow);
         menuBar->setObjectName(QStringLiteral("menuBar"));
-        menuBar->setGeometry(QRect(0, 0, 704, 22));
+        menuBar->setGeometry(QRect(0, 0, 1040, 22));
         MainWindow->setMenuBar(menuBar);
         mainToolBar = new QToolBar(MainWindow);
         mainToolBar->setObjectName(QStringLiteral("mainToolBar"));
@@ -313,6 +370,11 @@ public:
         bnTestJson->setText(QApplication::translate("MainWindow", "test json", 0));
         bnSignalParams->setText(QApplication::translate("MainWindow", "SignalParams", 0));
         pushButton->setText(QApplication::translate("MainWindow", "PushButton", 0));
+        lineTextForTestRE->setPlaceholderText(QApplication::translate("MainWindow", "text for test", 0));
+        lineRE->setPlaceholderText(QApplication::translate("MainWindow", "regular expression", 0));
+        bnTestRE->setText(QApplication::translate("MainWindow", "test RE", 0));
+        bnUploadSignals_0x02->setText(QApplication::translate("MainWindow", "UploadSignals_0x02", 0));
+        bnUploadSignals_0x03->setText(QApplication::translate("MainWindow", "UploadSignals_0x03", 0));
     } // retranslateUi
 
 };

@@ -14,9 +14,12 @@
 #define RESET_INTERVAL  10
 
 // имена параметров устройств
-#define P_START_REGISTER  "start_register"
-#define P_LAST_REGISTER  "last_register"
-#define P_RESET_TIMEOUT   "reset_timeout"
+#define P_START_REGISTER    "start_register"
+#define P_LAST_REGISTER     "last_register"
+#define P_RESET_TIMEOUT     "reset_timeout"
+#define P_SRC               "src"
+#define P_DST               "dst"
+#define P_PROTOCOL_VERSION  "protocol_version"
 
 namespace dev {
 
@@ -28,6 +31,9 @@ namespace dev {
     quint16   start_register = 0;
     quint16   last_register = 0;
     quint16   reset_timeout = RESET_INTERVAL;
+    quint8    src = 0x01;
+    quint8    dst = 0x09;
+    quint8    protocol_version = 0x24;
 
     bool isValid = true;
 
@@ -69,6 +75,36 @@ namespace dev {
         p.reset_timeout = object.value(P_RESET_TIMEOUT).toInt(RESET_INTERVAL);
 //qDebug() << p.isValid << P_RESET_TIMEOUT << p.reset_timeout;
         p.isValid = p.isValid && (p.reset_timeout > 0);
+
+      }
+
+      if(object.contains(P_SRC)) {
+
+        QByteArray h = object.value(P_SRC).toString().toUtf8();
+
+        bool ok = false;
+        p.src = h.toUShort(&ok, 0);
+        p.isValid = p.isValid && ok;
+
+      }
+
+      if(object.contains(P_SRC)) {
+
+        QByteArray h = object.value(P_DST).toString().toUtf8();
+
+        bool ok = false;
+        p.dst = h.toUShort(&ok, 0);
+        p.isValid = p.isValid && ok;
+
+      }
+
+      if(object.contains(P_PROTOCOL_VERSION)) {
+
+        QByteArray h = object.value(P_PROTOCOL_VERSION).toString().toUtf8();
+
+        bool ok = false;
+        p.protocol_version = h.toUShort(&ok, 0);
+        p.isValid = p.isValid && ok;
 
       }
 

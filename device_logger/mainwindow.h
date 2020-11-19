@@ -7,9 +7,9 @@
 #include <QFileDialog>
 
 #include "../../svlib/sv_widget_log.h"
-#include "../../svlib/sv_dbus.h"
 #include "../../svlib/sv_pgdb.h"
 
+#include "../global/sv_dbus.h"
 #include "../global/global_defs.h"
 #include "../global/sql_defs.h"
 

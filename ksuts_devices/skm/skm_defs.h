@@ -1,4 +1,4 @@
-#ifndef SKM_DEFS_H
+﻿#ifndef SKM_DEFS_H
 #define SKM_DEFS_H
 
 #include <QMap>
@@ -12,6 +12,9 @@
 #define FACTOR_5   0x05U
 #define FACTOR_6   0x06U
 
+/* на корблях 523 и 524 на 19.11.2020 стоят прошивки СКМ \
+ * в которых такая нумерация камер.
+ * начиная с корабля 525 они поставили новые камеры и изменили нумерацию камер
 #define VIN_TK1    2U
 #define VIN_TK2    3U
 #define VIN_TK3    5U
@@ -45,6 +48,42 @@
 #define VIN_TK31   33U
 #define VIN_TK32   34U
 #define VIN_TK33   36U
+*/
+
+/* нумерация камер начиная с коорабля 525 */
+#define VIN_TK1    1U
+#define VIN_TK2    2U
+#define VIN_TK3    3U
+#define VIN_TK4    4U
+#define VIN_TK5    5U
+#define VIN_TK6    6U
+#define VIN_TK7    7U
+#define VIN_TK8    8U
+#define VIN_TK9    9U
+#define VIN_TK10   10U
+#define VIN_TK11   11U
+#define VIN_TK12   12U
+#define VIN_TK13   13U
+#define VIN_TK14   14U
+#define VIN_TK15   15U
+#define VIN_TK16   16U
+#define VIN_TK17   17U
+#define VIN_TK18   18U
+#define VIN_TK19   19U
+#define VIN_TK20   20U
+#define VIN_TK21   21U
+#define VIN_TK22   22U
+#define VIN_TK23   23U
+#define VIN_TK24   24U
+#define VIN_TK25   25U
+#define VIN_TK26   26U
+#define VIN_TK27   27U
+#define VIN_TK28   28U
+#define VIN_TK29   29U
+#define VIN_TK30   30U
+#define VIN_TK31   31U
+#define VIN_TK32   32U
+#define VIN_TK33   33U
 
 typedef QMap<quint8, QString> signal_by_factor;
 

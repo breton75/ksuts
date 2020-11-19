@@ -145,11 +145,7 @@ signals_by_detector signals_T_Treshold1 = {{1, "BI21_1SS1_DK3_T_1"},        {2, 
                                            {309, "BI30_10SS1_DK2_T_1"},     {314, "BI30_10SS1_DT5_T1"},     {316, "BI30_10SS1_DK4_T_1"},
                                            {317, "BI30_10SS1_DT6_T1"},      {321, "BI30_10SS1_DK3_T_1"},    {322, "BI30_10SS1_DT4_T1"},
                                            {323, "BI30_10SS1_DT2_T1"},      {324, "BI30_10SS1_DK1_T_1"},    {325, "BI30_10SS1_DT1_T1"},
-                                           {326, "BI30_10SS1_DK5_T_1"},     {331, "BI82_12SS1_DTV1_T1"},    {334, "BI82_12SS1_DTV2_T1"},
-                                           {339, "BI82_12SS1_DTV6_T1"},     {341, "BI82_12SS1_DTV4_T1"},    {344, "BI82_12SS1_DTV3_T1"},
-                                           {346, "BI82_12SS1_DTV7_T1"},     {349, "BI82_12SS1_DTV8_T1"},    {351, "BI82_12SS1_DTV9_T1"},
-                                           {354, "BI82_12SS1_DTV10_T1"},    {356, "BI82_12SS1_DTV11_T1"},   {359, "BI82_12SS1_DTV12_T1"},
-                                           {336, "BI82_12SS1_DTV5_T1"}};
+                                           {326, "BI30_10SS1_DK5_T_1"}};
 
 signals_by_detector signals_U_Treshold1 = {{331, "BI82_12SS1_DTV1_T1"},     {334, "BI82_12SS1_DTV2_T1"},    {336, "BI82_12SS1_DTV5_T1"},
                                            {339, "BI82_12SS1_DTV6_T1"},     {341, "BI82_12SS1_DTV4_T1"},    {344, "BI82_12SS1_DTV3_T1"},
@@ -375,10 +371,6 @@ signals_by_detector signals_T_Treshold2 = {{4, "BI21_1SS1_DT1_T2"},     {14, "BI
                                            {314, "BI30_10SS1_DT5_T2"},	{317, "BI30_10SS1_DT6_T2"},		{322, "BI30_10SS1_DT4_T2"},
                                            {323, "BI30_10SS1_DT2_T2"},	{325, "BI30_10SS1_DT1_T2"},   {227, "BI25_5SS1_VTE2_T"},
                                            {122, "BI24_4SS1_VTE1_T"},   {223, "BI25_5SS1_VTE1_T"},    {327, "BI30_10SS1_VTE1_T"},
-                                           {331, "BI82_12SS1_DTV1_T2"}, {334, "BI82_12SS1_DTV2_T2"},    {336, "BI82_12SS1_DTV5_T2"},
-                                           {339, "BI82_12SS1_DTV6_T2"}, {341, "BI82_12SS1_DTV4_T2"},    {344, "BI82_12SS1_DTV3_T2"},
-                                           {346, "BI82_12SS1_DTV7_T2"}, {349, "BI82_12SS1_DTV8_T2"},    {351, "BI82_12SS1_DTV9_T2"},
-                                           {354, "BI82_12SS1_DTV10_T2"},{356, "BI82_12SS1_DTV11_T2"},   {359, "BI82_12SS1_DTV12_T2"},
                                            {330, "BI30_10SS1_VTE2_T"},
                                            {1, "BI21_1SS1_DK3_T"},           {2, "BI21_1SS1_DK2_T"},         {3, "BI21_1SS1_DK1_T"},
                                            {5, "BI21_1SS1_DTV1_T"},          {8, "BI21_1SS1_DTV2_T"},        {25, "BI22_2SS1_DK2_T"},
@@ -579,12 +571,6 @@ const QMap<quint16, QString> reg2FI  = {{0x0400, FI20_SS1_119},
                                         {0x07C0, FI82_12SS1_93},
                                         {0x0860, FI82_12SS1_123},
                                         {0x0900, FI82_12SS1_150}};
-
-
-
-
-
-
 
 
 

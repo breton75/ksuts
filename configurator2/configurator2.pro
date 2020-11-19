@@ -13,7 +13,7 @@ TEMPLATE = app
 
 CONFIG += c++11
 
-VERSION = 2.2.0    # major.minor.patch
+VERSION = 2.5.5    # major.minor.patch
 DEFINES += APP_VERSION=\\\"$$VERSION\\\"
 DEFINES += VERSION_2
 

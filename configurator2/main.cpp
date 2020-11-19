@@ -276,6 +276,7 @@ void signal_handler(int sig)
   {
     case SIGUSR1:
       wptr->show();
+      wptr->setWindowState(Qt::WindowActive);
       break;
 
     case SIGUSR2:

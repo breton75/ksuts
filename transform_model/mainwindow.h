@@ -7,6 +7,7 @@
 #include <QFile>
 #include <QDebug>
 #include <QtSerialPort/QSerialPort>
+#include <QRegularExpression>
 
 //#include "../../svlib/sv_clog.h"
 
@@ -74,6 +75,14 @@ private slots:
   void on_bnSignalParams_clicked();
 
   void on_pushButton_clicked();
+
+  void on_bnTestRE_clicked();
+
+  void on_bnUploadSignals_0x02_clicked();
+
+  void on_bnUploadSignals_0x03_clicked();
+
+  void on_bnUpdateGammaMnemokaders_clicked();
 
 private:
   Ui::MainWindow *ui;
