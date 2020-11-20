@@ -182,6 +182,15 @@ protected:
 
   virtual void process_data() = 0;
 
+  virtual void renovate_signals()
+  {
+    foreach (SvSignal* signal, p_device->Signals()->values()) {
+      if((signal->params()->timeout > 0 && !signal->isAlive()) ||
+         (signal->params()->timeout == 0 && !signal->isDeviceAlive()))
+            signal->setLostValue();
+    }
+  }
+
 public slots:
   virtual void stop() = 0;
 //  {

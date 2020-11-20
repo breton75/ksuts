@@ -2823,13 +2823,16 @@ void MainWindow::on_bnUploadSignals_0x03_clicked()
 
 void MainWindow::on_bnUpdateGammaMnemokaders_clicked()
 {
+  if(!connectPGDB("cms_db"))
+    return;
+
   QString fpath = "/home/user/tmp/gamma_export_new";
 
   QStringList fnl = QFileDialog::getOpenFileNames(this, "", fpath, "*.prs");
 
   if(fnl.isEmpty()) return;
 
-  QString sPattern = "select[\s]{0,}[(]{1}[\s]{0,}{users.admin.devices.database2:signals_data_rs}[,\s]+'value'[,\s]+'signal_name'[,\s]+'(?<sn>[A-Z0-9_]+(_T|_f){1})'[)]{1}[\s]{0,}==[\s]{0,}1.0[\s]{0,}[|]{2}";
+  QString sPattern = "select[\\s]{0,}[(]{1}[\\s]{0,}{users.admin.devices.database2:signals_data_rs}[,\\s]+'value'[,\\s]+'signal_name'[,\\s]+'(?<sn>[A-Z0-9_]+)(_T|_f){1}'[)]{1}[\\s]{0,}==[\\s]{0,}1.0[\\s]{0,}[|]{2}";
 
   QRegularExpression reg(sPattern);
 
@@ -2855,63 +2858,102 @@ void MainWindow::on_bnUpdateGammaMnemokaders_clicked()
 
       QByteArray line = f.readLine();
 
-      while(true) {
+//      while(true) {
 
-        if(line.contains(ssp.toUtf8())) {
+        QRegularExpressionMatch match = reg.match(line);
+        if(match.hasMatch()) { //.contains(ssp.toUtf8())) {
 
           while(!line.trimmed().endsWith(QString("</value>").toUtf8())) {
-            line += '\n' + f.readLine();
+            QString n = f.readLine();
+            line += '\n' + n;
+
+          }
+          line.replace("</value>", "");
+
+          QString signal_like = match.captured("sn");
+
+          QSqlQuery q(PGDB->db);
+
+          QSqlError r = PGDB->execSQL(QString("select signal_name from signals "
+                                       "where signal_name like '%1\\_\%'").arg(signal_like), &q);
+
+          if(r.type() != QSqlError::NoError) {
+
+            qDebug() << r.text();
+            break;
           }
 
-          int ssp_start = line.indexOf(ssp);
-          int ssp_end = line.indexOf("\"))", ssp_start) + 1;
-
-          int sname_begin = line.indexOf('\"', ssp_start) + 1;
-          int sname_end = line.indexOf('\"', sname_begin);
-
-          QString sname_str = line.mid(sname_begin, sname_end - sname_begin);
-
-         qDebug() << sname_str;
-//         qDebug() << canid_str << devindex_str;
-
-         line.replace(ssp_start, ssp_end - ssp_start + 1, QString("[~%1~]").arg(sname_str).toUtf8());
-
-//         qDebug() << line;
-//         qDebug() << line;
-
-        }
-        else
-          break;
-
-      }
-
-
-      while(true) {
-
-        if(line.contains("[~")) {
-
-          int r_start = line.indexOf("[~");
-          int r_end = line.indexOf("~]");
-
-          QString sname(line.mid(r_start + 2, r_end - r_start - 2));
-
-          if(!SGNS.contains(sname))
-            qDebug() << "no signal" << sname;
-
-//          line.replace(r_start, r_end - r_start + 2, QString(sPattern).arg(sname).arg(SGNS[sname]).toUtf8());
-          line.replace(QString("[~%1~]").arg(sname).toUtf8(), QString(sPattern).arg(sname).toUtf8());
-//          line.replace(QString("[~%1~]").arg(sname).toUtf8(), QString("ld('val_%1')").arg(sname).toUtf8());
-
+          line.push_front("/*\n");
+          line.push_back("*/\n\n");
 
 //          qDebug() << line;
-//          qDebug() <<  ' ';
+          qDebug() << signal_like << q.size();
+
+          if(q.size() == 0) {
+
+            q.finish();
+            continue;
+          }
+
+
+          QString nlor = "";
+          QString nland = "";
+
+          while(q.next()) {
+
+
+            nlor.append(QString("select({users.admin.devices.database2:signals_data_rs}, 'value', 'signal_name', '%1') == 1.0 || ")
+                      .arg(q.value("signal_name").toString()));
+
+            nland.append(QString("select({users.admin.devices.database2:signals_data_rs}, 'value', 'signal_name', '%1') == 0.0 &amp;&amp; ")
+                      .arg(q.value("signal_name").toString()));
+          }
+          q.finish();
+
+          nlor.chop(3);
+          nland.chop(11);
+
+          QString nl = QString("%1 ? '1' : %2 ? '2' : '3'</value>\n")
+              .arg(nlor).arg(nland);
+
+          line.append(nl);
+
+//         qDebug() << line;
+//         qDebug() << line;
 
         }
-        else
-          break;
+//        else
+//          break;
+
+//      }
 
 
-      }
+//      while(true) {
+
+//        if(line.contains("[~")) {
+
+//          int r_start = line.indexOf("[~");
+//          int r_end = line.indexOf("~]");
+
+//          QString sname(line.mid(r_start + 2, r_end - r_start - 2));
+
+//          if(!SGNS.contains(sname))
+//            qDebug() << "no signal" << sname;
+
+////          line.replace(r_start, r_end - r_start + 2, QString(sPattern).arg(sname).arg(SGNS[sname]).toUtf8());
+//          line.replace(QString("[~%1~]").arg(sname).toUtf8(), QString(sPattern).arg(sname).toUtf8());
+////          line.replace(QString("[~%1~]").arg(sname).toUtf8(), QString("ld('val_%1')").arg(sname).toUtf8());
+
+
+////          qDebug() << line;
+////          qDebug() <<  ' ';
+
+//        }
+//        else
+//          break;
+
+
+//      }
 
       new_text.append(line);
 
@@ -2922,7 +2964,7 @@ void MainWindow::on_bnUpdateGammaMnemokaders_clicked()
     f.close();
 
     QFileInfo fi(fn);
-    QString newfn = fi.path() + "/s" + fi.fileName();
+    QString newfn = fi.path() + "/f_1_T_1_" + fi.fileName();
 //    QString newfn = fi.path() + "/" + fi.fileName().replace(0, 4, "_sda_");
 
     f.setFileName(newfn);

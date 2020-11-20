@@ -161,7 +161,8 @@ public:
 private:
   StorageParams* _params;
   QList<SvSignal*>* _signals;
-  
+  QMap<SvSignal*, qreal> _signals_prev_values;
+
   SvPGDB* PGDB = nullptr;
   
   QString _last_error = "";

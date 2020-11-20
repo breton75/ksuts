@@ -87,6 +87,7 @@ public:
     QVBoxLayout *verticalLayout_4;
     QPushButton *bnUploadSignals_0x02;
     QPushButton *bnUploadSignals_0x03;
+    QPushButton *bnUpdateGammaMnemokaders;
     QMenuBar *menuBar;
     QToolBar *mainToolBar;
     QStatusBar *statusBar;
@@ -315,6 +316,9 @@ public:
 
         verticalLayout_4->addWidget(bnUploadSignals_0x03);
 
+        bnUpdateGammaMnemokaders = new QPushButton(centralWidget);
+        bnUpdateGammaMnemokaders->setObjectName(QStringLiteral("bnUpdateGammaMnemokaders"));
+        bnUpdateGammaMnemokaders->setGeometry(QRect(780, 230, 211, 25));
         MainWindow->setCentralWidget(centralWidget);
         menuBar = new QMenuBar(MainWindow);
         menuBar->setObjectName(QStringLiteral("menuBar"));
@@ -375,6 +379,7 @@ public:
         bnTestRE->setText(QApplication::translate("MainWindow", "test RE", 0));
         bnUploadSignals_0x02->setText(QApplication::translate("MainWindow", "UploadSignals_0x02", 0));
         bnUploadSignals_0x03->setText(QApplication::translate("MainWindow", "UploadSignals_0x03", 0));
+        bnUpdateGammaMnemokaders->setText(QApplication::translate("MainWindow", "bnUpdateGammaMnemokaders", 0));
     } // retranslateUi
 
 };

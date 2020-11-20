@@ -152,7 +152,10 @@ SvStorageThread::SvStorageThread(StorageParams *params, QList<SvSignal*>* signal
   _params = params;
   
   _signals = signalList;
-  
+
+  foreach (SvSignal* signal, *_signals)
+    _signals_prev_values.insert(signal, signal->params()->timeout_value);
+
 }
 
 bool SvStorageThread::init()
@@ -256,12 +259,13 @@ void SvStorageThread::run()
 
         else
 
-          if(signal->setLostValue())
+          if(_signals_prev_values.value(signal) != signal->value())
             signals_values += QString("%1;%2|").arg(signal->index()).arg(signal->params()->timeout_value);
         
       }
 
-      
+      _signals_prev_values[signal] = signal->value();
+
       signal = nextSignal(); 
         
     }

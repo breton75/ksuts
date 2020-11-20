@@ -243,9 +243,6 @@ bool skm::check_1F_2F_55(quint8 byte)
 
 void skm::func_0x01(dev::SvAbstractDevice* device, dev::DATA *data)
 {
-  if(data->data_length < 3)
-    return;
-
   quint8 offset = 0;
 
   while(offset < data->data_length)
@@ -253,13 +250,17 @@ void skm::func_0x01(dev::SvAbstractDevice* device, dev::DATA *data)
     quint8 vin = data->data[offset++];
     quint8 factors_cnt = data->data[offset++];
 
-    signal_by_factor *sbf = signal_by_vin.value(vin);
+    signal_by_factor *sbf = nullptr;
+
+    if(signal_by_vin.contains(vin))
+      sbf = signal_by_vin.value(vin);
 
 //    QString f = "";
 //    qDebug() << "vin" << vin << "factors_cnt" << factors_cnt;
 
     if(skm::check_1F_2F_55(factors_cnt)) offset++;
 
+    QList<quint8> flist = QList<quint8>();
     while(factors_cnt) {
 
         quint8 factor = data->data[offset++];
@@ -267,10 +268,16 @@ void skm::func_0x01(dev::SvAbstractDevice* device, dev::DATA *data)
 
         factors_cnt--;
 
-        if(sbf->contains(factor))
-            device->setSignalValue(sbf->value(factor), 1.0);
+        flist << factor;
+    }
 
-//        f += QString("%1").arg(factor, 2, 16).replace(" ", "0") + " ";
+    if(!sbf)
+      continue;
+
+    foreach (quint8 factor, sbf->keys()) {
+
+      qreal val = flist.contains(factor) ? 1.0 : 0.0;
+      device->setSignalValue(sbf->value(factor), val);
 
     }
   }

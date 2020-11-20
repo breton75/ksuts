@@ -166,6 +166,8 @@ void dev::SvAbstractUdpThread::run()
 
   while(p_is_active) {
 
+    renovate_signals();
+
     while(p_is_active && p_socket.waitForReadyRead(1)) {
 
       while(p_is_active && p_socket.hasPendingDatagrams())
@@ -255,7 +257,10 @@ void dev::SvAbstractSerialThread::run()
 
   while(p_is_active) {
 
+    renovate_signals();
+
     while(p_port.waitForReadyRead(1)) {
+
       if(p_buff.offset > MAX_PACKET_SIZE)
         reset_buffer();
 
