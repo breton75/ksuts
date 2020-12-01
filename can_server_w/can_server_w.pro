@@ -24,14 +24,17 @@ SOURCES += main.cpp\
     sv_can.cpp \
     db_queue.cpp \
     can_parser.cpp \
-    command_timer.cpp
+    command_timer.cpp \
+    sv_can2file.cpp
 
 HEADERS  += mainwindow.h \
     can_queue.h \
     sv_can.h \
     db_queue.h \
     can_parser.h \
-    command_timer.h
+    command_timer.h \
+    ../../svlib/sv_abstract_logger.h \
+    sv_can2file.h
 
 FORMS    += mainwindow.ui
 

@@ -9,6 +9,7 @@
 #include <QHideEvent>
 #include <QShowEvent>
 #include <QTextEdit>
+#include <QFileInfo>
 
 #include "sv_can.h"
 #include "can_queue.h"
@@ -16,6 +17,37 @@
 #include "db_queue.h"
 //#include <QCanBusFrame>
 //#include <QCanBusDevice>
+
+#include <sys/vfs.h>
+
+
+#include "../../svlib/sv_config.h"
+
+#define OPTION_DB_HOST                   "db_host"
+#define OPTION_DB_PORT                   "db_port"
+#define OPTION_DB_NAME                   "db_name"
+#define OPTION_DB_USER                   "db_user"
+#define OPTION_DB_PASS                   "db_pass"
+#define OPTION_LOG_VOLTAGE               "log_voltage"
+#define OPTION_TOTAL_DURATION            "total_duration"
+#define OPTION_FILE_DURATION             "file_duration"
+#define OPTION_PATH                      "path"
+#define OPTION_FILE_NAME_PATTERN         "file_name_pattern"
+#define OPTION_CAN_ID_LIST               "can_id_list"
+
+struct AppConfig {
+    QString   db_name;
+    QString   db_host;
+    quint16   db_port;
+    QString   db_user;
+    QString   db_pass;
+    bool      log_voltage;
+    QDateTime total_duration;
+    QDateTime file_duration;
+    QString   path;
+    QString   file_name_pattern;
+    QString   can_id_list;
+};
 
 namespace Ui {
 class MainWindow;
@@ -34,7 +66,7 @@ public:
 
     // инициализация переменных и списков
     void setPGPort(int newPGPort);
-    bool init();
+    bool init(const AppConfig &cfg);
     // стоп машина, в штатном режиме
     void deinit();
 
@@ -108,6 +140,11 @@ private:
     void debugProc(); // отладочная процедура - всё, что понадобится впредь
     void debugGetSignalsList(bool skipValues = false); // отладочная процедура - списки сигналов canList[]
     void checkCanPacks(bool check, quint32 can_id = 0); // отладка - контроль прихода, анализа  и записи пакета по can_id
+
+    /// свиридов
+    /// тестирование напряжений
+    AppConfig config;
+    QList<quint16> TestVoltage_CAN_IDs;
 
 public slots:
     void digital_signal(quint8 port_id, quint32 pack_can_id, qint64 signal_value, QDateTime dt);

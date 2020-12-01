@@ -142,8 +142,11 @@ void MainWindow::showEvent(QShowEvent *)
 }
 */
 //========================== init part ==================================
-bool MainWindow::init()
+bool MainWindow::init(const AppConfig& cfg)
 {
+
+  config = cfg;
+
 //    int ppid = getppid(); // parent process id
 //    if(ppid < 10) {
 //        QMessageBox* mb = new QMessageBox(QMessageBox::Warning,//Critical,
@@ -343,6 +346,23 @@ bool MainWindow::init()
     // активизируем таймер контроля потери связи
     check_timer->start(1000);
     qDebug() << "Активизирован таймер контроля связи";
+
+    /// свиридов
+    /// тестирование напряжений
+    for(QString v: config.can_id_list.split(",")) {
+
+      bool ok;
+      quint16 cid = v.toUInt(&ok);
+
+      if(!ok) {
+
+        qDebug() << QString("Неверное значение can_id в списке: %1").arg(config.can_id_list);
+        return false;
+      }
+
+      TestVoltage_CAN_IDs.append(cid);
+
+    }
 
 
 return true;
@@ -877,10 +897,22 @@ void MainWindow::can_packs_cycle()
         cs = canList[port_id][can_id];
         cs->updateCount += 1;
 
-        if(_logging && _check_can_id == can_id) {
-            qDebug() << QTime::currentTime().toString("hh:mm:ss.zzz") << "Обновление сигнала в БД, can_id - тип данных - значение:"
-                     << can_id << data_type << data_bi; // отладка - индикация
+        /// свиридов
+        /// пишем в файл заданных can_id
+        if(config.log_voltage && TestVoltage_CAN_IDs.contains(can_id)) {
+
+
+            statfs();
+
+
+
         }
+
+
+//        if(_logging && _check_can_id == can_id) {
+//            qDebug() << QTime::currentTime().toString("hh:mm:ss.zzz") << "Обновление сигнала в БД, can_id - тип данных - значение:"
+//                     << can_id << data_type << data_bi; // отладка - индикация
+//        }
 
         switch (data_type) {
         case 1: // пакет цифровых данных
@@ -971,9 +1003,9 @@ void MainWindow::can_packs_cycle()
             break;
         }
 
-        if(_logging && _check_can_id == can_id) {
-            qDebug() << QTime::currentTime().toString("hh:mm:ss.zzz") << "Запуск запроса на обновление сигнала в БД, can_id:" << can_id;
-        }
+//        if(_logging && _check_can_id == can_id) {
+//            qDebug() << QTime::currentTime().toString("hh:mm:ss.zzz") << "Запуск запроса на обновление сигнала в БД, can_id:" << can_id;
+//        }
         if(!query_update->exec(qry)) {
             qDebug() << "Обновление сигналов - ошибка сигнала порт-can_id-тип данных:" << port_id << can_id << data_type;
             qDebug() << query_update->lastError().text();
@@ -982,9 +1014,9 @@ void MainWindow::can_packs_cycle()
         }
         query_update->finish();
 
-        if(_logging && _check_can_id == can_id) {
-            qDebug() << QTime::currentTime().toString("hh:mm:ss.zzz") << "Завершено обновление сигнала в БД, can_id:" << can_id; // отладка - индикация
-        }
+//        if(_logging && _check_can_id == can_id) {
+//            qDebug() << QTime::currentTime().toString("hh:mm:ss.zzz") << "Завершено обновление сигнала в БД, can_id:" << can_id; // отладка - индикация
+//        }
 
         QApplication::processEvents();
         usleep(10);

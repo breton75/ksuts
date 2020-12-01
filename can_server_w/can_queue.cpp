@@ -1,4 +1,4 @@
-#include "can_queue.h"
+﻿#include "can_queue.h"
 #include <QDebug>
 
 CAN_Queue::CAN_Queue(int id)
@@ -26,10 +26,12 @@ OneCanPack *CAN_Queue::getPack()
     if(idxHandle >= queue_size) idxHandle = 0;
     QTime ct = QTime::currentTime();
     cp->dtHandle = ct;
+
     if(_logging && (_check_can_id == cp->readed_pack.can_id)) {
         qint64* p_bi = (qint64*) &cp->readed_pack.data;
         qDebug() << ct.toString("hh:mm:ss.zzz") << "Пакет CAN уходит на обработку, буфер - can_id - значение:" << _id << _check_can_id << *p_bi;
     }
+
     return cp;
 }
 
@@ -48,10 +50,12 @@ void CAN_Queue::addPack(can_frame *pack)
 
     memcpy(&cp->readed_pack, pack, 16);
     cp->dtRead = QTime::currentTime();
+
     if(_logging && (_check_can_id == cp->readed_pack.can_id)) {
         qint64* p_bi = (qint64*) &cp->readed_pack.data;
         qDebug() << cp->dtRead.toString("hh:mm:ss.zzz") << "Пакет CAN добавлен, буфер - can_id - значение:" << _id << _check_can_id << *p_bi;
     }
+
     m_mutex.unlock();
 }
 
