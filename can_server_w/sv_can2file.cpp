@@ -23,21 +23,55 @@ bool SvCan2File::init(const AppConfig& cfg)
 
   }
 
-  m_total_duration_msec = (config.file_duration.date().month() * 30 * 86400 +
-                           config.file_duration.date().day() * 86400 +
-                           config.file_duration.time().hour() * 3600 +
-                           config.file_duration.time().minute() * 60 +
-                           config.file_duration.time().second()) * 1000;
+  // создаем файл, чтобы убедиться, что есть права на создание и запись файлов
+  // также этот файл нужен дальше для функции statfs
+  m_statfs_file = QFileInfo(m_path, QString("%1_%2.statfs")
+                            .arg(QDate::currentDate().toString("yyyy_MM_dd"))
+                            .arg(QTime::currentTime().toString("hh_mm_ss")))
+      .absoluteFilePath();
+
+  m_currrent_file.setFileName(m_statfs_file);
+  if(!m_currrent_file.open(QIODevice::WriteOnly)) {
+
+    m_last_error.clear();
+    m_last_error.append(QString("Ошибка открытия файла %1: ").arg(m_statfs_file));
+    m_last_error.append(m_currrent_file.errorString());
+    return false;
+
+  }
+  else if(m_currrent_file.write("test") == -1) {
+
+    m_last_error.clear();
+    m_last_error.append("Ошибка записи в файл: ").append(m_currrent_file.errorString());
+    return false;
+
+  }
+
+  m_total_duration_msec = (config.total_duration.months * 30 * 86400 +
+                           config.total_duration.days * 86400 +
+                           config.total_duration.time.hour() * 3600 +
+                           config.total_duration.time.minute() * 60 +
+                           config.total_duration.time.second()) * 1000;
 
   m_file_duration_msec = (config.file_duration.time().hour() * 3600 +
                           config.file_duration.time().minute() * 60 +
                           config.file_duration.time().second()) * 1000;
+
+  // вычисляем размер одного файла (примерно), чтобы учитывать свободное место
+  // считаем, исходя из того, что  запись идет каждую 1 мсек.
+  m_file_space_required = m_file_duration_msec *
+                          config.can_id_list.split(",").count() *
+                          (sizeof(QDateTime) + sizeof(quint8) + sizeof(quint16) + sizeof(qint64));
+
+  m_file_space_required *= 10; // берем с 10-кратным запасом
 
   m_new_file = true;
   m_total_finished = false;
 
   m_total_epoch = QDateTime::currentMSecsSinceEpoch();
   m_file_epoch = m_total_epoch;
+
+  m_stream.setVersion(QDataStream::Qt_5_5);
 
   return true;
 }
@@ -82,9 +116,19 @@ bool SvCan2File::write(quint8 port_idx, quint16 can_id, qint64 data)
   /******** открываем новый файл для записи **********/
   if(m_new_file)
   {
+    // проверяем, достаточно ли места на диске для записи файла
+    if(get_fs_free(m_statfs_file.toStdString().c_str()) < (long)m_file_space_required) {
+
+      m_last_error = "Место для записи архива данных can шины исчерпано";
+      m_total_finished = true;
+      return false;
+
+    }
+
+
     QString current_file_name = QFileInfo(m_path, QString("%1_%2.arch")
-                                                  .arg(QDate::currentDate().toString("ddMMyy"))
-                                                  .arg(QTime::currentTime().toString("hhmmss")))
+                                                  .arg(QDate::currentDate().toString("yyyy_MM_dd"))
+                                                  .arg(QTime::currentTime().toString("hh_mm_ss")))
                             .canonicalPath();
 
     m_currrent_file.setFileName(current_file_name);
@@ -99,10 +143,34 @@ bool SvCan2File::write(quint8 port_idx, quint16 can_id, qint64 data)
     m_file_epoch = QDateTime::currentMSecsSinceEpoch();
     m_new_file = false;
 
+    m_stream.setDevice(&m_currrent_file);
+
   }
 
-  m_currrent_file.write(&port_idx, sizeof(quint8));
-  m_currrent_file.write(&can_id, sizeof(quint16));
-  m_currrent_file.write(&data, sizeof(qint64));
+  m_stream << QDateTime::currentDateTime() << port_idx << can_id << data;
 
+  return true;
+
+}
+
+
+inline long get_fs_size(const char *anyfile)
+{
+  struct statfs buf;
+  statfs(anyfile, &buf);
+  return buf.f_blocks * blksize(anyfile);
+}
+
+inline long get_fs_free(const char *anyfile)
+{
+  struct statfs buf;
+  statfs(anyfile, &buf);
+  return buf.f_bfree * blksize(anyfile);
+}
+
+inline size_t blksize(const char *anyfile)
+{
+  struct stat st;
+  stat(anyfile, &st);
+  return st.st_blksize;
 }

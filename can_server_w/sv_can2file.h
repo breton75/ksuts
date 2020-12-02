@@ -7,8 +7,32 @@
 #include <QDir>
 #include "time.h"
 #include <QDateTime>
+#include <sys/vfs.h>
+#include <sys/stat.h>
 
-#include "mainwindow.h"
+#include "defs.h"
+
+/**
+ * get_fs_size - Определяет размер ФС.
+ * @param anyfile Путь к любому файлу на этой ФС.
+ * @return Размер ФС в блоках.
+ */
+inline long get_fs_size(const char *anyfile);
+
+/**
+ * get_fs_free - Определяет свободное место на ФС.
+ * @param anyfile Путь к любому файлу на этой ФС.
+ * @return Размер ФС в блоках.
+ */
+inline long get_fs_free(const char *anyfile);
+
+/**
+ * get_fs_free - Определяет размер блока для ФС.
+ * @param anyfile Путь к любому файлу на этой ФС.
+ * @return Размер блока.
+ */
+inline size_t blksize(const char *anyfile);
+
 
 class SvCan2File : public QObject
 {
@@ -22,11 +46,13 @@ public:
 
   const QString lastError() const { return m_last_error; }
 
-  const bool totalFinished() const { return m_total_finished; }
+  bool totalFinished() const { return m_total_finished; }
 
 private:
   QFile m_currrent_file;
+  QDataStream m_stream;
   QDir  m_path;
+  QString m_statfs_file;
 
   QString m_last_error = "";
 
@@ -35,6 +61,8 @@ private:
   qint64 m_total_epoch;
   qint64 m_file_epoch;
   bool   m_new_file;
+
+  quint64 m_file_space_required;
 
   bool   m_total_finished;
 

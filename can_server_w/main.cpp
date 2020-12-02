@@ -1,14 +1,16 @@
-﻿#include "mainwindow.h"
-#include <QApplication>
+﻿#include <QApplication>
 #include <QDebug>
 #include <QProcess>
 #include <QtGui>
 #include <QMessageBox>
 #include <QWidget>
 #include <QTextStream>
+#include <QHostAddress>
 
 #include <iostream>
-//#include <QCoreApplication>
+
+#include "mainwindow.h"
+#include "defs.h"
 
 #include "../../svlib/sv_abstract_logger.h"
 
@@ -24,10 +26,10 @@ const OptionStructList AppOptions = {
     {{OPTION_DB_NAME}, "Имя базы данных для подключения.", "cms_db", "", ""},
     {{OPTION_DB_USER}, "Имя пользователя базы данных.", "postgres", "", ""},
     {{OPTION_DB_PASS}, "Пароль для подключения к базе данных.", "postgres", "", ""},
-    {{OPTION_LOG_VOLTAGE},    "Включить логироввание вольтажа", "false", "", ""},
+    {{OPTION_LOG_CAN_DATA},   "Включить логирование данных can шины", "false", "", ""},
     {{OPTION_TOTAL_DURATION}, "Общая длительность записи архивных данных в формате 'MMddhhmmss'. После запись в архив прекращается. По умолчанию длительность не ограничена.", "0000000000", "", ""},
     {{OPTION_FILE_DURATION},  "Время записи одного файла архивных данных в формате 'hhmmss'. По умолчанию 1 час.", "010000", "", ""},
-    {{OPTION_PATH},           "Путь к каталогу архива.", "./voltage", "", ""},
+    {{OPTION_PATH},           "Путь к каталогу архива.", "./can_log", "", ""},
     {{OPTION_CAN_ID_LIST},    "Список can_id через запятую, которые необходимо архивировать.", "", "", ""}
 //    {{OPTION_FILE_NAME_PATTERN},   "Шаблон имени файла. Допустимо использование выражений {DEVICE}, {DATETIME}, {DATE}, {TIME}. По умолчанию '{DEVICE}_{DATETIME}.'", "", "", ""}
 
@@ -54,7 +56,7 @@ void parse_params(const QStringList& args, AppConfig &cfg, const QString& file_n
     /** читаем параметры конфигурации из файла .cfg **/
     SvConfigFileParser cfg_parser(AppOptions);
     if(!cfg_parser.parse(file_name))
-        exception.raise(cfg_parser.lastError());
+      throw SvException(cfg_parser.lastError());
 
     /** разбираем параметры командной строки **/
     SvCommandLineParser cmd_parser(AppOptions);
@@ -65,13 +67,13 @@ void parse_params(const QStringList& args, AppConfig &cfg, const QString& file_n
     cmd_parser.addVersionOption();
 
     if (!cmd_parser.parse(args))
-      exception.raise(-1, QString("%1\n\n%2").arg(cmd_parser.errorText()).arg(cmd_parser.helpText()));
+      throw SvException(QString("%1\n\n%2").arg(cmd_parser.errorText()).arg(cmd_parser.helpText()), -1);
 
     if (cmd_parser.isSetVersionOption())
-      exception.raise(-1, QString("Сервер CAN"));
+      throw SvException(QString("Сервер CAN"), -1);
 
     if (cmd_parser.isSetHelpOption())
-      exception.raise(-1, cmd_parser.helpText());
+      throw SvException(cmd_parser.helpText(), -1);
 
     /** назначаем значения параметров */
     bool ok;
@@ -81,27 +83,33 @@ void parse_params(const QStringList& args, AppConfig &cfg, const QString& file_n
     cfg.db_host = cmd_parser.isSet(OPTION_DB_HOST) ? cmd_parser.value(OPTION_DB_HOST) :
                                                      cfg_parser.value(OPTION_DB_HOST);
     if ((cfg.db_host != "localhost") && QHostAddress(cfg.db_host).isNull())
-      exception.raise(-1, QString("Неверный адрес сервера БД: %1").arg(cfg.db_host));
+      throw SvException(QString("Неверный адрес сервера БД: %1").arg(cfg.db_host), -1);
 
     // db_port
     val = cmd_parser.isSet(OPTION_DB_PORT) ? cmd_parser.value(OPTION_DB_PORT) :
                                              cfg_parser.value(OPTION_DB_PORT);
     cfg.db_port = val.toUInt(&ok);
-    if(!ok) exception.raise(-1, QString("Неверный порт сервера БД: %1").arg(val));
+    if(!ok) throw SvException(QString("Неверный порт сервера БД: %1").arg(val), -1);
 
     // log_voltage
-    val = cmd_parser.isSet(OPTION_LOG_VOLTAGE) ? cmd_parser.value(OPTION_LOG_VOLTAGE) :
-                                                 cfg_parser.value(OPTION_LOG_VOLTAGE);
-    cfg.log_voltage = sv::log::stringToBool(val);
+    val = cmd_parser.isSet(OPTION_LOG_CAN_DATA) ? cmd_parser.value(OPTION_LOG_CAN_DATA) :
+                                                  cfg_parser.value(OPTION_LOG_CAN_DATA);
+    cfg.log_can_data = sv::log::stringToBool(val);
 
     // total_duration
     val = cmd_parser.isSet(OPTION_TOTAL_DURATION) ? cmd_parser.value(OPTION_TOTAL_DURATION) :
                                                     cfg_parser.value(OPTION_TOTAL_DURATION);
 
-    cfg.total_duration = QDateTime::fromString(val, "MMddhhmmss");
+    QByteArray b = QByteArray::fromHex(val.toUtf8());
+    if(b.length() != 5)
+      throw SvException(QString("Неверное общее время записи: %1").arg(val), -1);
 
-    if(!cfg.total_duration.isValid())
-      exception.raise(-1, QString("Неверное общее время записи: %1").arg(val));
+    cfg.total_duration.months = b.at(0);
+    cfg.total_duration.days = b.at(1);
+    cfg.total_duration.time.setHMS(b.at(2), b.at(3), b.at(4));
+
+    if(!cfg.total_duration.time.isValid())
+      throw SvException(QString("Неверное общее время записи: %1").arg(val), -1);
 
     // file_duration_sec
     val = cmd_parser.isSet(OPTION_FILE_DURATION) ? cmd_parser.value(OPTION_FILE_DURATION) :
@@ -110,14 +118,14 @@ void parse_params(const QStringList& args, AppConfig &cfg, const QString& file_n
     cfg.file_duration = QDateTime::fromString(val, "hhmmss");
 
     if(!cfg.file_duration.isValid())
-      exception.raise(-1, QString("Неверное время записи одного файла: %1").arg(val));
+      throw SvException(QString("Неверное время записи одного файла: %1").arg(val), -1);
 
     // path
     cfg.path = cmd_parser.isSet(OPTION_PATH) ? cmd_parser.value(OPTION_PATH) :
                                                cfg_parser.value(OPTION_PATH);
 
     if(!QDir::current().mkpath(cfg.path))
-      exception.raise(-1, QString("Неверный путь для сохранения архивов: %1").arg(cfg.path));
+      throw SvException(QString("Неверный путь для сохранения архивов: %1").arg(cfg.path), -1);
 
     // can_id_list
     cfg.can_id_list = cmd_parser.isSet(OPTION_CAN_ID_LIST) ? cmd_parser.value(OPTION_CAN_ID_LIST) :
@@ -126,7 +134,7 @@ void parse_params(const QStringList& args, AppConfig &cfg, const QString& file_n
 //    cfg.file_name_pattern = "";// cmd_parser.isSet(OPTION_IFC2_IP) ? cmd_parser.value(OPTION_IFC2_IP) :
 //                                                     cfg_parser.value(OPTION_IFC2_IP);
 //    cfg.ifc2_port = val.toUInt(&ok);
-//    if(!ok) exception.raise(-1, QString("Неверный порт для подключения: %1").arg(val));
+//    if(!ok) throw SvException(-1, QString("Неверный порт для подключения: %1").arg(val));
 
 
 //    return true;
@@ -149,7 +157,7 @@ int main(int argc, char *argv[])
     return 0;
   }
 
-  qInstallMessageHandler(qDebugHandler);
+//  qInstallMessageHandler(qDebugHandler);
 
     QApplication a(argc, argv);
 

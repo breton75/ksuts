@@ -349,7 +349,7 @@ bool MainWindow::init(const AppConfig& cfg)
 
     /// свиридов
     /// тестирование напряжений
-    for(QString v: config.can_id_list.split(",")) {
+    for(QString v: config.can_id_list.split(",", QString::SkipEmptyParts)) {
 
       bool ok;
       quint16 cid = v.toUInt(&ok);
@@ -361,6 +361,13 @@ bool MainWindow::init(const AppConfig& cfg)
       }
 
       TestVoltage_CAN_IDs.append(cid);
+
+    }
+
+    if(!can2file.init(config)) {
+
+      qDebug() << can2file.lastError();
+      return false;
 
     }
 
@@ -898,14 +905,15 @@ void MainWindow::can_packs_cycle()
         cs->updateCount += 1;
 
         /// свиридов
-        /// пишем в файл заданных can_id
-        if(config.log_voltage && TestVoltage_CAN_IDs.contains(can_id)) {
+        /// пишем в файл заданные can_id
+        if(config.log_can_data && !can2file.totalFinished() && TestVoltage_CAN_IDs.contains(can_id)) {
 
+          if(!can2file.write(port_id, can_id, data_bi)) {
 
-            statfs();
+            qDebug() << can2file.lastError();
+            config.log_can_data = false;
 
-
-
+          }
         }
 
 
