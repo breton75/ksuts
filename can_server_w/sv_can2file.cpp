@@ -39,13 +39,16 @@ bool SvCan2File::init(const AppConfig& cfg)
     return false;
 
   }
-  else if(m_currrent_file.write("test") == -1) {
+
+  if(m_currrent_file.write("test") == -1) {
 
     m_last_error.clear();
     m_last_error.append("Ошибка записи в файл: ").append(m_currrent_file.errorString());
     return false;
 
   }
+
+  m_currrent_file.close();
 
   m_total_duration_msec = (config.total_duration.months * 30 * 86400 +
                            config.total_duration.days * 86400 +
@@ -72,6 +75,7 @@ bool SvCan2File::init(const AppConfig& cfg)
   m_file_epoch = m_total_epoch;
 
   m_stream.setVersion(QDataStream::Qt_5_5);
+  m_stream.setDevice(&m_currrent_file);
 
   return true;
 }
@@ -105,10 +109,6 @@ bool SvCan2File::write(quint8 port_idx, quint16 can_id, qint64 data)
   /****** проверяем не истекло ли время записи текущего файла *****/
   if(currentMSecsSinceEpoch > m_file_epoch + m_file_duration_msec)
   {
-    /* close output */
-    if(m_currrent_file.isOpen())
-      m_currrent_file.close();
-
     m_new_file = true;
 
   }
@@ -116,6 +116,10 @@ bool SvCan2File::write(quint8 port_idx, quint16 can_id, qint64 data)
   /******** открываем новый файл для записи **********/
   if(m_new_file)
   {
+    /* close output */
+    if(m_currrent_file.isOpen())
+      m_currrent_file.close();
+
     // проверяем, достаточно ли места на диске для записи файла
     if(get_fs_free(m_statfs_file.toStdString().c_str()) < (long)m_file_space_required) {
 
@@ -129,7 +133,7 @@ bool SvCan2File::write(quint8 port_idx, quint16 can_id, qint64 data)
     QString current_file_name = QFileInfo(m_path, QString("%1_%2.arch")
                                                   .arg(QDate::currentDate().toString("yyyy_MM_dd"))
                                                   .arg(QTime::currentTime().toString("hh_mm_ss")))
-                            .canonicalPath();
+                            .absoluteFilePath();
 
     m_currrent_file.setFileName(current_file_name);
     if(!m_currrent_file.open(QIODevice::WriteOnly))
@@ -143,7 +147,7 @@ bool SvCan2File::write(quint8 port_idx, quint16 can_id, qint64 data)
     m_file_epoch = QDateTime::currentMSecsSinceEpoch();
     m_new_file = false;
 
-    m_stream.setDevice(&m_currrent_file);
+//    m_stream.setDevice(&m_currrent_file);
 
   }
 

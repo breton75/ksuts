@@ -906,6 +906,7 @@ void MainWindow::can_packs_cycle()
 
         /// свиридов
         /// пишем в файл заданные can_id
+        //qDebug() << port_id << can_id << config.log_can_data << can2file.totalFinished() << TestVoltage_CAN_IDs.contains(can_id);
         if(config.log_can_data && !can2file.totalFinished() && TestVoltage_CAN_IDs.contains(can_id)) {
 
           if(!can2file.write(port_id, can_id, data_bi)) {
@@ -949,6 +950,10 @@ void MainWindow::can_packs_cycle()
                 data_st += one_data_st;
             }
             qry.replace(":can_val", data_st);
+//            QByteArray b;
+//            b.append((const char*)(&data_bi)[0]).append((const char*)(&data_bi)[1]).append((const char*)(&data_bi)[2]).append((const char*)(&data_bi)[3]);
+
+//            qDebug() << "b" << b.toDouble() << qry;
             countAnalog++;
             }
             break;
