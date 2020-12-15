@@ -543,7 +543,7 @@ inline QString opa::getPrefix(quint16 start_register)
       prefix = "C122_";
       break;
 
-    case 0x0540:
+    case 0x05E0:
       prefix = "C8_";
 
     case 0x0680:

@@ -8,7 +8,7 @@ QT       += core gui sql network
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
-TARGET = transform_model
+TARGET =/home/user/ksuts_server/transform_model
 TEMPLATE = app
 
 CONFIG += c++11

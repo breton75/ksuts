@@ -291,25 +291,25 @@ void skm::func_0x02(dev::SvAbstractDevice* device, dev::DATA *data)
     int b1 = skm::check_1F_2F_55(data->data[b0]) ? b0 + 2 : b0 + 1;
     int b2 = skm::check_1F_2F_55(data->data[b1]) ? b1 + 2 : b1 + 1;
 
-    device->setSignalValue(BI83_SS4_VD1 , CALC_VD1( ~data->data[b0]) );
-    device->setSignalValue(BI83_SS4_VD2 , CALC_VD2( ~data->data[b0]) );
-    device->setSignalValue(BI83_SS4_VD3 , CALC_VD3( ~data->data[b0]) );
-    device->setSignalValue(BI83_SS4_VD4 , CALC_VD4( ~data->data[b0]) );
-    device->setSignalValue(BI83_SS4_VD5 , CALC_VD5( ~data->data[b0]) );
-    device->setSignalValue(BI83_SS4_VD6 , CALC_VD6( ~data->data[b0]) );
-    device->setSignalValue(BI83_SS4_VD7 , CALC_VD7( ~data->data[b0]) );
-    device->setSignalValue(BI83_SS4_VD8 , CALC_VD8( ~data->data[b0]) );
-    device->setSignalValue(BI83_SS4_VD9 , CALC_VD9( ~data->data[b1]) );
-    device->setSignalValue(BI83_SS4_VD10, CALC_VD10(~data->data[b1]) );
-    device->setSignalValue(BI83_SS4_VD11, CALC_VD11(~data->data[b1]) );
-    device->setSignalValue(BI83_SS4_VD12, CALC_VD12(~data->data[b1]) );
-    device->setSignalValue(BI83_SS4_VD13, CALC_VD13(~data->data[b1]) );
-    device->setSignalValue(BI83_SS4_VD14, CALC_VD14(~data->data[b1]) );
-    device->setSignalValue(BI83_SS4_VD15, CALC_VD15(~data->data[b1]) );
-    device->setSignalValue(BI83_SS4_VDV1, CALC_VDV1(~data->data[b1]) );
-    device->setSignalValue(BI83_SS4_VDV2, CALC_VDV2(~data->data[b2]) );
-    device->setSignalValue(BI83_SS4_VDV3, CALC_VDV3(~data->data[b2]) );
-    device->setSignalValue(BI83_SS4_VD16, CALC_VD16(~data->data[b2]) );
+    device->setSignalValue(BI83_SS4_VD1 , CALC_VD1( data->data[b0]) );
+    device->setSignalValue(BI83_SS4_VD2 , CALC_VD2( data->data[b0]) );
+    device->setSignalValue(BI83_SS4_VD3 , CALC_VD3( data->data[b0]) );
+    device->setSignalValue(BI83_SS4_VD4 , CALC_VD4( data->data[b0]) );
+    device->setSignalValue(BI83_SS4_VD5 , CALC_VD5( data->data[b0]) );
+    device->setSignalValue(BI83_SS4_VD6 , CALC_VD6( data->data[b0]) );
+    device->setSignalValue(BI83_SS4_VD7 , CALC_VD7( data->data[b0]) );
+    device->setSignalValue(BI83_SS4_VD8 , CALC_VD8( data->data[b0]) );
+    device->setSignalValue(BI83_SS4_VD9 , CALC_VD9( data->data[b1]) );
+    device->setSignalValue(BI83_SS4_VD10, CALC_VD10(data->data[b1]) );
+    device->setSignalValue(BI83_SS4_VD11, CALC_VD11(data->data[b1]) );
+    device->setSignalValue(BI83_SS4_VD12, CALC_VD12(data->data[b1]) );
+    device->setSignalValue(BI83_SS4_VD13, CALC_VD13(data->data[b1]) );
+    device->setSignalValue(BI83_SS4_VD14, CALC_VD14(data->data[b1]) );
+    device->setSignalValue(BI83_SS4_VD15, CALC_VD15(data->data[b1]) );
+    device->setSignalValue(BI83_SS4_VDV1, CALC_VDV1(data->data[b1]) );
+    device->setSignalValue(BI83_SS4_VDV2, CALC_VDV2(data->data[b2]) );
+    device->setSignalValue(BI83_SS4_VDV3, CALC_VDV3(data->data[b2]) );
+    device->setSignalValue(BI83_SS4_VD16, CALC_VD16(data->data[b2]) );
   }
 }
 
